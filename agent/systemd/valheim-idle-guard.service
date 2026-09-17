@@ -1,7 +1,9 @@
 [Unit]
 Description=발헤임 유휴 감시 및 자동 종료
 After=docker.service
-Requires=docker.service
+# Requires 대신 Wants를 쓴다. Docker 데몬 장애 시에도 이 유닛은 계속 활성화되어야
+# 비용 안전장치(유휴 자동 종료)가 죽지 않는다.
+Wants=docker.service
 
 [Service]
 Type=oneshot
