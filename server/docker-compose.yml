@@ -1,0 +1,74 @@
+# 발헤임 데디케이티드 서버 (집 PC 자가 호스팅)
+#
+# 실행:  cd server && docker compose up -d
+# 로그:  docker compose logs -f
+# 중지:  docker compose stop
+#
+# 월드 데이터는 명명 볼륨(valheim-config)에 둔다.
+# Windows 폴더를 직접 마운트하면 WSL2 경유로 느리고, 컨테이너가 chown 을
+# 수행하지 못해 권한 문제가 반복된다. 백업만 Windows 쪽으로 내보낸다.
+
+services:
+  valheim:
+    image: ghcr.io/lloesche/valheim-server:latest
+    container_name: valheim
+    restart: unless-stopped
+
+    # 월드 저장이 끝날 시간을 준다. 이 값이 짧으면 종료 중 월드가 손상될 수 있다.
+    stop_grace_period: 2m
+
+    cap_add:
+      - sys_nice
+
+    ports:
+      # 2456 = 게임 접속, 2457 = Steam 쿼리. 둘 다 UDP 다.
+      - "2456:2456/udp"
+      - "2457:2457/udp"
+
+    volumes:
+      - valheim-config:/config
+      # 백업은 Windows 쪽에서 바로 확인할 수 있도록 내보낸다.
+      # 시간당 1회 zip 쓰기라 바인드 마운트 속도가 문제되지 않는다.
+      - ${BACKUP_HOST_DIR:-./backups}:/backups-out
+
+    env_file:
+      - .env
+
+    environment:
+      SERVER_PORT: "2456"
+
+      # Steam 서버 목록에 등록한다. 접속 인원 조회(status.json)에도 필요하다.
+      # 비밀번호 보호는 그대로 유지된다.
+      SERVER_PUBLIC: "true"
+
+      # 크로스플레이는 켜지 않는다. BepInEx 는 Steam 네트워킹에 후킹하므로
+      # PlayFab 네트워킹과 양립하지 않는다. 인자를 주지 않는 것이 곧 비활성이다.
+
+      # 자동 업데이트 금지.
+      # 게임이나 BepInEx 가 무인 상태에서 올라가면 모드 스택이 깨져
+      # 아무도 접속하지 못하게 된다. 업데이트는 사람이 판단해서 수행한다.
+      UPDATE_CRON: ""
+      BEPINEX_UPDATE_CRON: ""
+
+      # 백업. 컨테이너가 직접 Windows 쪽 디렉터리에 쓴다.
+      BACKUPS: "true"
+      BACKUPS_DIRECTORY: "/backups-out"
+      BACKUPS_CRON: "5 * * * *"
+      BACKUPS_MAX_AGE: "7"
+      BACKUPS_ZIP: "true"
+
+      # 접속 인원 조회용 상태 HTTP. 호스트에 포트를 노출하지 않으므로
+      # 컨테이너 내부에서만 읽을 수 있다.
+      STATUS_HTTP: "true"
+
+      # 모드는 바닐라 안정화 이후에 켠다.
+      # 모드 문제와 인프라 문제를 동시에 겪으면 원인을 구분할 수 없다.
+      BEPINEX: "false"
+
+      PUID: "1000"
+      PGID: "1000"
+      TZ: "Asia/Seoul"
+
+volumes:
+  valheim-config:
+    name: valheim-config

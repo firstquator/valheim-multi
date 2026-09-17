@@ -146,6 +146,58 @@ gcloud compute scp 받은파일.zip valheim-server:~/world.zip \
 
 ### 2-4. 압축을 풀고 배치한다
 
+> ⚠️ **Windows에서 만든 ZIP의 함정**
+>
+> 윈도우 탐색기의 "압축(ZIP) 폴더로 보내기"나 PowerShell의 `Compress-Archive`는
+> 경로 구분자를 역슬래시(`gaybar\_main.9.db2`)로 기록한다. ZIP 규격은 슬래시를
+> 요구하므로, 리눅스에서 풀면 디렉터리가 만들어지지 않고 `gaybar\_main.9.db2`
+> 라는 이름의 파일 하나가 생긴다. 그러면 서버가 월드를 찾지 못한다.
+>
+> 압축을 푼 뒤 반드시 확인한다.
+>
+>     unzip -l ~/world.zip | head
+>
+> 출력에 역슬래시가 보이면 아래 "폴더째 직접 올리기"를 쓴다.
+
+**권장: 폴더째 직접 올리기 (ZIP 함정 회피)**
+
+압축을 거치지 않고 버킷을 경유하면 구분자 문제가 아예 없다.
+
+```bash
+BUCKET="$(./scripts/tf.sh output -raw bucket_name)"
+
+# 로컬에서 월드 폴더를 버킷에 올린다
+gcloud storage cp --recursive ./gaybar "gs://${BUCKET}/world-import/gaybar"
+
+# VM에서 내려받는다
+gcloud compute ssh valheim-server --zone=asia-northeast3-a --tunnel-through-iap \
+  --command="sudo mkdir -p /srv/valheim/config/worlds_local && \
+             sudo gcloud storage cp --recursive \
+               'gs://${BUCKET}/world-import/gaybar' \
+               /srv/valheim/config/worlds_local/"
+```
+
+이 방법을 쓰면 2-5의 권한 설정으로 바로 넘어간다.
+
+> ⚠️ **폴더를 압축했는가, 내용물을 압축했는가**
+>
+> 친구가 폴더 안에 들어가서 파일들을 전부 선택해 압축하면, ZIP 최상위에
+> 월드 이름 폴더가 없고 `.chunk` 와 `_main.9.*` 파일들이 바로 놓인다.
+>
+>     unzip -l ~/world.zip
+>
+> 출력이 `gaybar/_main.9.db2` 형태면 정상이다.
+> `_main.9.db2` 처럼 폴더 없이 바로 나오면 **월드 이름 정보가 없는 상태**이므로,
+> 직접 월드 이름의 폴더를 만들어 그 안에 넣어야 한다.
+>
+> 이때 월드 이름은 `_main.9.fwl2` 안에 텍스트로 들어 있다. 다음으로 확인한다.
+>
+>     strings _main.9.fwl2 | head -3
+>
+> 월드 이름과 시드가 보인다.
+
+**또는: ZIP으로 옮기기**
+
 ```bash
 gcloud compute ssh valheim-server --zone=asia-northeast3-a --tunnel-through-iap
 ```
