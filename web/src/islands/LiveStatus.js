@@ -27,8 +27,11 @@ function render(judged) {
   const ver = document.getElementById("game-version");
   if (!badge) return;
 
-  badge.textContent = judged.label;
-  badge.dataset.state = judged.state;
+  // status-badge 는 aria-live="polite" 영역이다. 값이 안 바뀌었는데도
+  // textContent 를 다시 대입하면 스크린리더가 매 30초 틱마다 같은 문장을
+  // 또 읽어줄 수 있다. 실제로 바뀔 때만 쓴다.
+  if (badge.textContent !== judged.label) badge.textContent = judged.label;
+  if (badge.dataset.state !== judged.state) badge.dataset.state = judged.state;
   if (age) age.textContent = formatAge(judged.ageSec);
 
   // 게임 버전을 마크업에 박아두면 서버가 업데이트될 때 틀린 안내가 된다.

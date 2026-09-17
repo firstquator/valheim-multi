@@ -22,19 +22,38 @@ const { label, value, mono = false, masked = false } = Astro.props;
 </div>
 
 <script>
+  import { createCopyFeedback } from "../lib/copy-feedback.mjs";
+
+  // 버튼마다 하나의 피드백 컨트롤러만 쓴다. 연타해도 타이머가 하나만
+  // 살아있도록 보장하는 책임은 copy-feedback.mjs 에 있다.
+  const feedbacks = new WeakMap();
+
+  function getFeedback(btn) {
+    let feedback = feedbacks.get(btn);
+    if (!feedback) {
+      const span = btn.querySelector(".copy-label");
+      feedback = createCopyFeedback({
+        // 되돌아갈 라벨은 지금 이 시점(아직 아무 것도 안 바뀐 상태)에 딱 한 번만
+        // 읽는다. 클릭할 때마다 다시 읽으면 연타 시 "복사됨"을 원래 라벨로
+        // 착각하는 버그가 생긴다.
+        defaultLabel: span.textContent,
+        applyLabel: (text) => { span.textContent = text; },
+        applyDoneClass: (on) => btn.classList.toggle("done", on),
+        setTimer: (fn, ms) => window.setTimeout(fn, ms),
+        clearTimer: (id) => window.clearTimeout(id),
+      });
+      feedbacks.set(btn, feedback);
+    }
+    return feedback;
+  }
+
   document.addEventListener("click", async (e) => {
     const btn = e.target.closest(".copy");
     if (!btn) return;
+    const feedback = getFeedback(btn);
     try {
       await navigator.clipboard.writeText(btn.dataset.copy);
-      const span = btn.querySelector(".copy-label");
-      const prev = span.textContent;
-      span.textContent = "복사됨";
-      btn.classList.add("done");
-      setTimeout(() => {
-        span.textContent = prev;
-        btn.classList.remove("done");
-      }, 1400);
+      feedback.show("복사됨", 1400, { done: true });
     } catch {
       // 클립보드 권한이 없으면 값을 선택 상태로 만들어 수동 복사를 돕는다.
       const v = btn.parentElement.querySelector(".v");
@@ -45,12 +64,7 @@ const { label, value, mono = false, masked = false } = Astro.props;
       sel.addRange(r);
 
       // 실패도 화면과 스크린리더 양쪽에 보여야 한다. 조용히 넘어가면 안 된다.
-      const span = btn.querySelector(".copy-label");
-      const prev = span.textContent;
-      span.textContent = "선택됨, 직접 복사하세요";
-      setTimeout(() => {
-        span.textContent = prev;
-      }, 2000);
+      feedback.show("선택됨, 직접 복사하세요", 2000);
     }
   });
 </script>
