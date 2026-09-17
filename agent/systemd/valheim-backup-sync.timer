@@ -1,0 +1,10 @@
+[Unit]
+Description=발헤임 백업 동기화를 15분마다 실행
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=15min
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

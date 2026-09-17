@@ -1,0 +1,9 @@
+[Unit]
+Description=발헤임 백업을 GCS로 동기화
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/valheim/agent/backup-sync.sh
+StandardOutput=journal
+StandardError=journal

@@ -1,0 +1,10 @@
+[Unit]
+Description=발헤임 유휴 감시 및 자동 종료
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/valheim/agent/idle-guard.sh
+StandardOutput=journal
+StandardError=journal
