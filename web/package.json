@@ -13,7 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@hugeicons/static": "^0.1.5",
+    "@hugeicons/static": "0.1.5",
     "astro": "^7.3.3"
   },
   "allowScripts": {

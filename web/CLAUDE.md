@@ -1,22 +1,26 @@
-## Development
+# 발헤임 모드 포털 - web/ 작업 지침
 
-When starting the dev server, use background mode:
+이 디렉터리에서 작업하는 모든 에이전트가 반드시 지킬 제약이다.
 
-```
-astro dev --background
-```
+- 이모지를 한 글자도 쓰지 않는다. 모든 아이콘은 `@hugeicons/static`의 SVG를 빌드 시 인라인한다.
+- em dash(-)와 en dash(-)를 쓰지 않는다. 코드, 주석, UI 문구, 커밋 메시지 전부 일반 하이픈(-)을 쓴다.
+- UI 문구와 주석은 한국어로 쓴다.
+- CSS 프레임워크를 쓰지 않는다. Tailwind를 포함해 어떤 프레임워크도 추가하지 않는다.
+- 색은 `src/styles/tokens.css`의 CSS 커스텀 속성으로만 쓴다. 컴포넌트에 색상값을 하드코딩하지 않는다.
+- 다크 모드만 만든다. 라이트 모드용 토큰을 추가하지 않는다.
+- 반응형 기준은 1024px 이상이다. 768px 미만은 최적화하지 않는다.
+- 작업 브랜치를 만들지 않는다. `main`에서 직접 작업하고 커밋한다.
 
-Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
+## 데이터
 
-## Documentation
+모드 정보의 정본은 저장소 루트의 `data/mods.json`이다. `astro.config.mjs`가 빌드/개발 서버 시작 전에 `src/lib/mods-schema.mjs`로 스키마를 검증하며, 실패하면 즉시 종료한다.
 
-Full documentation: https://docs.astro.build
+## 명령
 
-Consult these guides before working on related tasks:
+- `npm run dev` : 로컬 개발 서버
+- `npm run build` : 정적 사이트 빌드
+- `npm test` : 테스트 실행
 
-- [Adding pages, dynamic routes, or middleware](https://docs.astro.build/en/guides/routing/)
-- [Working with Astro components](https://docs.astro.build/en/basics/astro-components/)
-- [Using React, Vue, Svelte, or other framework components](https://docs.astro.build/en/guides/framework-components/)
-- [Adding or managing content](https://docs.astro.build/en/guides/content-collections/)
-- [Adding styles or using Tailwind](https://docs.astro.build/en/guides/styling/)
-- [Supporting multiple languages](https://docs.astro.build/en/guides/internationalization/)
+## 문서
+
+Astro 자체 문법과 라우팅은 공식 문서를 참고한다: https://docs.astro.build

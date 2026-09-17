@@ -1,43 +1,16 @@
-# Astro Starter Kit: Minimal
+# 발헤임 모드 포털
 
-```sh
-npm create astro@latest -- --template minimal
-```
+발헤임 서버의 모드 안내 정적 사이트다. Astro로 빌드한다.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## 명령
 
-## 🚀 Project Structure
+| 명령 | 동작 |
+| :--- | :--- |
+| `npm install` | 의존성 설치 |
+| `npm run dev` | 로컬 개발 서버 실행 (`localhost:4321`) |
+| `npm run build` | 정적 사이트를 `./dist/`에 빌드 |
+| `npm test` | 스키마 검증 등 테스트 실행 |
 
-Inside of your Astro project, you'll see the following folders and files:
+## 데이터
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
-
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+모드 정보의 정본은 저장소 루트의 `data/mods.json`이다. 빌드 시 `src/lib/mods-schema.mjs`의 스키마 검증을 통과해야 하며, 검증에 실패하면 빌드가 실패한다.
