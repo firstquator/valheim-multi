@@ -18,6 +18,7 @@ const TABS = [
 
 const tier1 = modsData.mods.filter((m) => m.tier === 1);
 const tier3 = modsData.mods.filter((m) => m.tier === 3);
+const modpackCode = modsData.modpack.r2modmanCode;
 ---
 
 <!doctype html>
@@ -101,8 +102,75 @@ const tier3 = modsData.mods.filter((m) => m.tier === 3);
             </section>
           )}
         </div>
-        <div slot="install"><h1>설치 가이드</h1></div>
-        <div slot="world"><h1>월드</h1></div>
+        <div slot="install">
+          <h1>설치 가이드</h1>
+          <p class="lead">
+            설치가 필요한 모드가 있을 때만 따라 하시면 됩니다.
+            지금은 서버에만 깔려 있어 아무것도 안 하셔도 접속됩니다.
+          </p>
+
+          <ol class="steps">
+            <li>
+              <h3>r2modman 설치</h3>
+              <p>
+                모드를 관리해 주는 프로그램입니다.
+                <a href="https://thunderstore.io/package/ebkr/r2modman/" target="_blank" rel="noreferrer">
+                  Thunderstore 에서 받기
+                </a>
+              </p>
+            </li>
+            <li>
+              <h3>게임 선택</h3>
+              <p>목록에서 Valheim 을 고르고 Steam 을 선택합니다.</p>
+            </li>
+            <li>
+              <h3>프로필 가져오기</h3>
+              <p>
+                Profiles 화면에서 Import / Update 를 누르고 아래 코드를 붙여넣습니다.
+                {modpackCode
+                  ? <span class="mono code">{modpackCode}</span>
+                  : <span class="pending">코드는 설치 필요 모드가 정해지면 여기에 올라옵니다</span>}
+              </p>
+            </li>
+            <li>
+              <h3>Start modded 로 실행</h3>
+              <p>
+                r2modman 의 Start modded 버튼으로 게임을 켭니다.
+                Steam 에서 직접 켜면 모드가 적용되지 않습니다.
+              </p>
+            </li>
+            <li>
+              <h3>서버 접속</h3>
+              <p>서버 탭의 주소와 비밀번호로 들어오시면 됩니다.</p>
+            </li>
+          </ol>
+        </div>
+        <div slot="world">
+          <h1>월드</h1>
+          <p class="lead">이 서버의 월드 설정입니다. 기본값과 다른 부분이 있습니다.</p>
+
+          <div class="card">
+            <div class="field"><span class="k">이름</span><span class="v mono">gaybar</span></div>
+            <div class="field"><span class="k">전투</span><span class="v">어렵게. 적 피해 150%, 적 속도와 크기 110%</span></div>
+            <div class="field"><span class="k">사망</span><span class="v">가볍게. 장비 유지, 스킬 손실 15%</span></div>
+            <div class="field"><span class="k">자원</span><span class="v">150%</span></div>
+            <div class="field"><span class="k">포탈</span><span class="v">모든 아이템 이동 가능. 금속도 옮길 수 있습니다</span></div>
+          </div>
+
+          <section class="group" style="margin-top:32px">
+            <h2>백업</h2>
+            <p class="lead">
+              월드는 시간마다 자동으로 백업됩니다.
+              혹시 사고가 나도 되돌릴 수 있습니다.
+            </p>
+            <div class="card">
+              <div class="field">
+                <span class="k">최근 백업</span>
+                <span class="v mono" id="backup-at">확인 중</span>
+              </div>
+            </div>
+          </section>
+        </div>
       </Tabs>
       <Sidebar tabs={TABS} />
     </div>
@@ -182,6 +250,21 @@ const tier3 = modsData.mods.filter((m) => m.tier === 3);
   }
   .hint { font-size: 12px; color: var(--text-faint); }
 
+  /* CopyField.astro 의 .field/.k/.v 는 그 컴포넌트에만 스코프된 스타일이라
+     여기서 직접 쓰는 필드 목록(월드 탭, 서버 탭의 게임 버전 줄)에는 적용되지
+     않는다. 같은 시각 언어를 쓰기 위해 동일한 규칙을 전역으로 둔다. */
+  .field {
+    display: grid;
+    grid-template-columns: 72px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .field:last-child { border-bottom: none; }
+  .k { color: var(--text-faint); font-size: 13px; }
+  .v { color: var(--text); font-size: 15px; word-break: break-all; }
+
   .players { margin-top: 32px; }
   .players h2 {
     display: flex;
@@ -209,4 +292,48 @@ const tier3 = modsData.mods.filter((m) => m.tier === 3);
   @media (max-width: 1024px) {
     .grid { grid-template-columns: 1fr; }
   }
+
+  .steps { margin: 0; padding-left: 0; list-style: none; counter-reset: s; }
+  .steps li {
+    position: relative;
+    padding: 0 0 28px 44px;
+    counter-increment: s;
+  }
+  .steps li::before {
+    content: counter(s);
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--accent);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+  }
+  .steps li:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 13px;
+    top: 32px;
+    bottom: 4px;
+    width: 1px;
+    background: var(--border);
+  }
+  .steps h3 { margin: 4px 0 6px; font-size: 16px; font-weight: 600; }
+  .steps p { margin: 0; font-size: 14px; color: var(--text-dim); }
+  .steps a { color: var(--accent); }
+  .code {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 2px 8px;
+    background: var(--surface-raised);
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .pending { color: var(--text-faint); font-size: 13px; }
 </style>

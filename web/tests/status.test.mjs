@@ -82,6 +82,41 @@ describe("judgeStatus", () => {
     expect(r.playerCount).toBe(0);
     expect(r.players).toEqual([]);
   });
+
+  it("백업 시각을 그대로 전달한다", () => {
+    const p = payload({ backup: { lastAt: "2026-09-18T03:05:00Z", count: 7 } });
+    expect(judgeStatus(p, NOW).backupAt).toBe("2026-09-18T03:05:00Z");
+  });
+
+  it("백업 정보가 없으면 null 이다", () => {
+    expect(judgeStatus(payload(), NOW).backupAt).toBe(null);
+  });
+
+  it("게임 버전을 그대로 전달한다", () => {
+    const p = payload({ server: { running: true, playerCount: 0, players: [], gameVersion: "1.0.14" } });
+    expect(judgeStatus(p, NOW).gameVersion).toBe("1.0.14");
+  });
+
+  it("게임 버전이 없으면 null 이다", () => {
+    expect(judgeStatus(payload(), NOW).gameVersion).toBe(null);
+  });
+
+  it("offline 판정에서도 백업 시각과 게임 버전을 전달한다", () => {
+    const p = payload({
+      server: { running: false, playerCount: 0, players: [], gameVersion: "1.0.14" },
+      backup: { lastAt: "2026-09-18T03:05:00Z", count: 7 },
+    });
+    const r = judgeStatus(p, NOW);
+    expect(r.state).toBe("offline");
+    expect(r.backupAt).toBe("2026-09-18T03:05:00Z");
+    expect(r.gameVersion).toBe("1.0.14");
+  });
+
+  it("unknown 판정에서는 백업 시각과 게임 버전이 null 이다", () => {
+    const r = judgeStatus(null, NOW);
+    expect(r.backupAt).toBe(null);
+    expect(r.gameVersion).toBe(null);
+  });
 });
 
 describe("formatAge", () => {

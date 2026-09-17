@@ -9,12 +9,28 @@ export const STALE_LIMIT_SEC = 180;
  */
 export function judgeStatus(payload, nowMs) {
   if (!payload || typeof payload !== "object" || !payload.server) {
-    return { state: "unknown", label: "상태 확인 불가", playerCount: 0, players: [], ageSec: null };
+    return {
+      state: "unknown",
+      label: "상태 확인 불가",
+      playerCount: 0,
+      players: [],
+      ageSec: null,
+      backupAt: null,
+      gameVersion: null,
+    };
   }
 
   const t = Date.parse(payload.updatedAt);
   if (Number.isNaN(t)) {
-    return { state: "unknown", label: "상태 확인 불가", playerCount: 0, players: [], ageSec: null };
+    return {
+      state: "unknown",
+      label: "상태 확인 불가",
+      playerCount: 0,
+      players: [],
+      ageSec: null,
+      backupAt: null,
+      gameVersion: null,
+    };
   }
 
   const ageSec = Math.max(0, Math.round((nowMs - t) / 1000));
@@ -24,7 +40,15 @@ export function judgeStatus(payload, nowMs) {
   // 낡은 데이터를 현재인 척하지 않는다.
   // 서버 PC 가 꺼지면 갱신이 멈추므로 자연히 여기로 수렴한다.
   if (ageSec > STALE_LIMIT_SEC || payload.server.running !== true) {
-    return { state: "offline", label: "서버 꺼짐", playerCount: 0, players: [], ageSec };
+    return {
+      state: "offline",
+      label: "서버 꺼짐",
+      playerCount: 0,
+      players: [],
+      ageSec,
+      backupAt: payload.backup?.lastAt ?? null,
+      gameVersion: payload.server?.gameVersion ?? null,
+    };
   }
 
   return {
@@ -33,6 +57,8 @@ export function judgeStatus(payload, nowMs) {
     playerCount,
     players,
     ageSec,
+    backupAt: payload.backup?.lastAt ?? null,
+    gameVersion: payload.server?.gameVersion ?? null,
   };
 }
 

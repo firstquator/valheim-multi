@@ -44,6 +44,13 @@ function render(judged) {
   }
   // 아무도 없으면 접속자 영역 자체를 숨긴다. 빈 제목만 남으면 어색하다.
   if (wrap) wrap.hidden = judged.players.length === 0;
+
+  const backup = document.getElementById("backup-at");
+  if (backup) {
+    const at = judged.backupAt;
+    const text = at ? new Date(at).toLocaleString("ko-KR") : "확인 불가";
+    if (backup.textContent !== text) backup.textContent = text;
+  }
 }
 
 async function tick() {
