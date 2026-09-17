@@ -4,11 +4,17 @@
 /**
  * status.json 의 keywords 에서 게임 버전과 네트워크 버전을 뽑는다.
  * 형식 예: "g=1.0.14,n=40,m=0\\=85\\,1\\=150..."
+ *
+ * m= 값 안에는 이스케이프된 콤마(\,)가 섞여 있어서 실제 필드 구분자인
+ * 콤마와 구분해야 한다. 역슬래시로 시작하지 않는 콤마만 필드 구분자로
+ * 인정하도록 부정 후방탐색((?<!\\))을 썼다. 이걸 빼면 m= 값 안에 우연히
+ * g= 나 n= 로 시작하는 키가 생겼을 때 엉뚱한 값을 게임/네트워크 버전으로
+ * 뽑게 된다.
  */
 function parseKeywords(keywords) {
   if (typeof keywords !== "string") return { gameVersion: null, networkVersion: null };
-  const g = keywords.match(/(?:^|,)g=([^,\\]+)/);
-  const n = keywords.match(/(?:^|,)n=(\d+)/);
+  const g = keywords.match(/(?:^|(?<!\\),)g=([^,\\]+)/);
+  const n = keywords.match(/(?:^|(?<!\\),)n=(\d+)/);
   return {
     gameVersion: g ? g[1] : null,
     networkVersion: n ? Number(n[1]) : null,
