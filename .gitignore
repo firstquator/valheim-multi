@@ -8,7 +8,11 @@ infra/.terraform.lock.hcl
 
 # 비밀값
 server/.env
+agent/.env
 .env
+
+# 상태 퍼블리셔 실행 로그
+agent/status-publisher.log
 
 # Node
 node_modules/
