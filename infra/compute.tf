@@ -49,8 +49,14 @@ resource "google_compute_instance" "server" {
     on_host_maintenance = "MIGRATE"
   }
 
-  # Terraform이 VM을 끄고 켜는 것과 idle-guard가 끄는 것을 구분하지 못하므로
-  # 인스턴스 상태 변화로 인한 불필요한 재생성을 막는다.
+  # metadata["startup-script"] 변경을 무시한다.
+  # 이 설정은 전원 상태(power state)나 인스턴스 재생성 여부와는 무관하다.
+  # metadata 변경은 원래 in-place로 반영되며 VM 재생성을 유발하지 않는다.
+  # 실제 효과는 하나뿐이다: startup.sh 파일을 고쳐도 Terraform이 기존
+  # VM의 startup-script 메타데이터를 갱신하지 않아 변경이 반영되지
+  # 않는다는 것이다. 스크립트를 수정했다면
+  # `apply -replace=google_compute_instance.server` 로 명시적으로
+  # 인스턴스를 교체해야 새 스크립트가 적용된다.
   lifecycle {
     ignore_changes = [metadata["startup-script"]]
   }
