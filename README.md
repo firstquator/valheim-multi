@@ -5,6 +5,19 @@
 - 설계: `docs/superpowers/specs/2026-09-17-valheim-dedicated-server-design.md`
 - 서브프로젝트 A 계획: `docs/superpowers/plans/2026-09-17-subproject-a-infrastructure.md`
 
+## 지금 현행: 집 PC 자가 호스팅
+
+서버는 **GCP VM 이 아니라 집 PC 의 Docker 컨테이너**로 돈다(`server/docker-compose.yml`).
+아래 `## 인프라`, `## 운영` 두 절은 이전에 검토했던 GCP 경로를 남겨둔 과거 기록이며
+지금은 쓰지 않는다. 처음 설정하거나 운영 중 문제를 해결하려면 아래 가이드를 순서대로
+본다.
+
+1. `docs/guides/router-setup.md` : 공유기 포트포워딩, PC 고정 IP
+2. `server/docker-compose.yml` : 서버 컨테이너 실행 (`cd server && docker compose up -d`)
+3. `docs/guides/world-migration.md` : 친구 월드를 서버로 옮기기
+4. `docs/guides/status-publisher-setup.md` : 상태 표시용 Gist 연동, PC 상시 실행 등록
+5. `docs/guides/github-pages-deploy.md` : 사이트 배포와 색인 차단 관련 주의사항
+
 ## 사이트
 
 `web/` 아래 Astro 정적 사이트가 있다. `main` 에 `web/` 이나 `data/` 변경이 푸시되면
@@ -27,14 +40,25 @@
 
 ## 테스트
 
-    ./scripts/test.sh
+이 저장소는 서로 다른 두 가지 테스트를 각자 돌려야 한다. 하나만 돌리면 다른 쪽이
+조용히 빠진다.
 
-## 인프라
+    npm test               # 루트: agent/lib/ 의 순수 함수 (vitest 2.x)
+    npm --prefix web test  # web: 모드 스키마 검증, 상태 판정, 복사 피드백 등 (vitest 5.x)
+
+`./scripts/test.sh` 는 위 두 vitest 스위트와 별개로, `tests/*.bats` 에 있는 도커
+컨테이너용 쉘 스크립트(백업 동기화, idle guard 판정 등)를 도커 안에서 검증한다.
+CI(`.github/workflows/pages.yml`)는 `npm test` 와 `npm --prefix web test` 만 돌린다.
+
+## 인프라 (과거 기록: GCP 경로, 사용 안 함)
+
+지금은 집 PC 자가 호스팅으로 운영한다. 아래는 검토 단계에서 다뤘던 GCP VM +
+Terraform 경로를 기록으로만 남긴 것이다.
 
     ./scripts/tf.sh plan
     ./scripts/tf.sh apply
 
-## 운영
+## 운영 (과거 기록: GCP 경로, 사용 안 함)
 
 ### 서버 켜기 / 끄기
 

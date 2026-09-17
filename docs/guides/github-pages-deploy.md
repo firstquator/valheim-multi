@@ -22,20 +22,38 @@
 
 `web/src/config.mjs` 의 `SERVER.address` 와 `SERVER.password` 는 빌드된 정적 HTML 안에 그대로 박힌다. 저장소는 비공개로 둘 수 있지만, **GitHub Pages 로 배포된 사이트 자체는 비공개로 만들 수 없다.** 공개 조직/개인 계정의 GitHub Pages 는 저장소 가시성과 무관하게 인터넷에 공개된다.
 
-이 워크플로는 코디네이터 요구에 따라 두 가지 색인 차단 조치를 넣었다.
+이 워크플로는 코디네이터 요구에 따라 색인 차단 조치를 넣었다. 실제로 효과가 있는
+것은 아래 중 **1번뿐**이다.
 
-1. 모든 페이지 `<head>` 에 `<meta name="robots" content="noindex, nofollow">`
-2. `web/public/robots.txt` 로 전체 크롤링 차단 (`Disallow: /`)
+1. 모든 페이지 `<head>` 에 `<meta name="robots" content="noindex, nofollow">` (유효함)
+2. `web/public/robots.txt` (`Disallow: /`) - **이 프로젝트에서는 효과가 없다.** 아래
+   "robots.txt 가 효과 없는 이유" 참고
+
+## robots.txt 가 효과 없는 이유
+
+이 저장소는 **Project Pages** 로 배포된다(`https://firstquator.github.io/valheim-multi/`).
+`web/public/robots.txt` 는 빌드되면 `/valheim-multi/robots.txt` 로 나가지만,
+크롤러는 **오리진 루트**(`https://firstquator.github.io/robots.txt`)의
+`robots.txt` 만 읽는다. 하위 경로에 놓인 `robots.txt` 는 규칙을 지키는 크롤러도
+찾지 않으므로 사실상 아무 효과가 없다.
+
+오리진 루트에 `robots.txt` 를 두려면 계정/조직 이름과 똑같은 별도 저장소
+(`firstquator.github.io`, User/Organization Pages)가 있어야 하고, 그 저장소의
+Pages 가 오리진 루트를 차지한다. 이 저장소만으로는 만들 수 없다.
+
+`web/public/robots.txt` 파일 자체는 지우지 않고 남겨둔다. 해롭지는 않고, 나중에
+User Pages 저장소로 옮기게 되면 그대로 쓸 수 있다. 다만 지금 상태에서는 실제
+검색엔진 색인을 막는 것은 `noindex` 메타 태그뿐이라는 점을 알고 있어야 한다.
 
 ## 색인 차단과 접근 차단의 차이
 
-| | 색인 차단 (noindex, robots.txt) | 접근 차단 |
+| | 색인 차단 (noindex 메타 태그) | 접근 차단 |
 |---|---|---|
 | 검색 결과 노출 | 막는다 | 원래도 안 됨 |
 | URL 을 아는 사람의 열람 | **못 막는다** | 막을 수 있음 |
-| 이 사이트의 적용 여부 | 적용됨 | 적용 안 됨(정적 사이트라 로그인 벽이 없음) |
+| 이 사이트의 적용 여부 | 적용됨(`robots.txt` 는 위에서 설명한 이유로 미적용) | 적용 안 됨(정적 사이트라 로그인 벽이 없음) |
 
-`noindex` 와 `robots.txt` 는 둘 다 규칙을 지키는 크롤러에게 보내는 요청일 뿐 접근 제어가 아니다. URL 을 이미 알고 있는 사람은 누구나 그대로 열람할 수 있고, 서버 접속 주소와 비밀번호를 그대로 읽을 수 있다. 저장소 이름에서 Pages 주소가 그대로 유도되므로(`https://<계정>.github.io/<저장소이름>/`), 저장소 이름을 아는 사람은 URL 을 추측할 수도 있다.
+`noindex` 는(위에서 설명했듯 이 저장소에서 `robots.txt` 는 애초에 크롤러에게 닿지도 않는다) 규칙을 지키는 크롤러에게 보내는 요청일 뿐 접근 제어가 아니다. URL 을 이미 알고 있는 사람은 누구나 그대로 열람할 수 있고, 서버 접속 주소와 비밀번호를 그대로 읽을 수 있다. 저장소 이름에서 Pages 주소가 그대로 유도되므로(`https://<계정>.github.io/<저장소이름>/`), 저장소 이름을 아는 사람은 URL 을 추측할 수도 있다.
 
 즉 이 조치는 **우발적 발견 경로를 줄이는 것**이지 **비밀번호를 비밀로 만드는 것**이 아니다.
 
@@ -90,8 +108,11 @@ git push
 - [ ] 페이지가 뜬다
 - [ ] 사이드바, 탭 전환, 서버 상태, 복사 버튼이 정상 동작한다
 - [ ] 브라우저 개발자 도구에서 콘솔 오류(CORS, 404)가 없다
-- [ ] 페이지 소스에 `noindex` 메타 태그가 들어 있다
-- [ ] `/robots.txt` 가 정상 응답한다
+- [ ] 페이지 소스(브라우저 "페이지 소스 보기")의 `<head>` 안에
+      `<meta name="robots" content="noindex, nofollow">` 가 들어 있다.
+      **실제로 색인을 막는 것은 이 태그뿐이다** (`/robots.txt` 는 이 저장소
+      구조에서 크롤러에게 닿지 않으므로 확인 대상이 아니다. 위
+      "robots.txt 가 효과 없는 이유" 참고)
 
 ---
 

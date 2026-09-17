@@ -1,6 +1,13 @@
-# 다음에 할 일 체크리스트
+# 다음에 할 일 체크리스트 (과거 기록: GCP 경로, 사용 안 함)
 
 작성일: 2026-09-18
+
+> **이 문서는 과거 기록이다.** 검토 단계에서는 GCP VM 으로 서버를 띄우는
+> 경로를 준비했지만, 실제로는 채택하지 않고 **집 PC Docker 자가 호스팅**
+> (`server/docker-compose.yml`)으로 운영한다. 지금 설정을 처음 하거나
+> 문제를 해결하려면 `docs/guides/router-setup.md`, `docs/guides/world-migration.md`,
+> `docs/guides/status-publisher-setup.md`, `docs/guides/github-pages-deploy.md` 를
+> 본다. 아래 내용은 GCP 경로를 검토했던 기록으로서의 가치만 있다.
 
 코드 작업은 인증 없이 갈 수 있는 데까지 끝났다. 여기서부터는 실제 GCP 계정이 필요하다.
 

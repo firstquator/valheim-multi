@@ -78,8 +78,8 @@ cp agent/env.example agent/.env
 `agent/.env` 를 열어 두 줄을 채운다.
 
 ```
-GIST_TOKEN=1단계에서_발급받은_토큰
-GIST_ID=2단계에서_확인한_gist_id
+GIST_TOKEN=2단계에서_발급받은_토큰
+GIST_ID=1단계에서_확인한_gist_id
 ```
 
 `agent/.env` 는 `.gitignore` 에 등록되어 있어 커밋되지 않는다. **절대 `git add` 로 강제로 올리지 않는다.**
