@@ -1,0 +1,28 @@
+---
+import { readIcon } from "../lib/icon.mjs";
+
+interface Props {
+  name: string;
+  size?: number;
+  class?: string;
+}
+
+const { name, size = 20, class: klass = "" } = Astro.props;
+const svg = readIcon(name);
+---
+
+<span class={`icon ${klass}`} style={`--icon-size:${size}px`} set:html={svg} />
+
+<style>
+  .icon {
+    display: inline-flex;
+    width: var(--icon-size);
+    height: var(--icon-size);
+    flex: none;
+  }
+  .icon :global(svg) {
+    width: 100%;
+    height: 100%;
+    stroke-width: 1.5;
+  }
+</style>
