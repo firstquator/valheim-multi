@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "modpack": {
+    "version": "v1",
+    "r2modmanCode": null
+  },
+  "mods": [
+    {
+      "id": "PlantEverything",
+      "owner": "Advize",
+      "version": "1.21.2",
+      "tier": 1,
+      "name": "재배 확장",
+      "summary": "베리, 버섯, 엉겅퀴, 민들레를 재배기로 심을 수 있습니다",
+      "usage": "재배기를 들고 평소처럼 심으면 됩니다. 추가로 할 일은 없습니다",
+      "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/Advize/PlantEverything/",
+      "warnings": []
+    },
+    {
+      "id": "ServersideQoL",
+      "owner": "ArgusMagnus",
+      "version": "2.0.13",
+      "tier": 1,
+      "name": "서버 편의 프레임워크",
+      "summary": "아래 자동 제련 공급 같은 기능 모듈이 동작하기 위한 토대입니다",
+      "usage": "직접 쓸 일은 없습니다",
+      "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/ArgusMagnus/ServersideQoL/",
+      "warnings": []
+    },
+    {
+      "id": "ServersideQoL_AutoProcess",
+      "owner": "ArgusMagnus",
+      "version": "2.0.11",
+      "tier": 1,
+      "name": "자동 제련 공급",
+      "summary": "제련소, 가마, 풍차에 근처 상자에서 재료와 연료를 자동으로 넣습니다",
+      "usage": "제련소 옆에 광석 상자를 두기만 하면 됩니다. 일일이 넣지 않아도 됩니다",
+      "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/ArgusMagnus/ServersideQoL_AutoProcess/",
+      "warnings": []
+    }
+  ]
+}
