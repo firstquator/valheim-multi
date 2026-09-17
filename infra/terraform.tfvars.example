@@ -1,0 +1,6 @@
+# 이 파일을 terraform.tfvars 로 복사한 뒤 값을 채운다.
+# terraform.tfvars 는 gitignore 대상이다.
+
+project_id  = "my-valheim-project"
+bucket_name = "my-valheim-data-20260917"
+zone        = "asia-northeast3-a"
