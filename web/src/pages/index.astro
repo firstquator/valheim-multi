@@ -1,5 +1,14 @@
 ---
 import "../styles/tokens.css";
+import Sidebar from "../components/Sidebar.astro";
+import Tabs from "../components/Tabs.astro";
+
+const TABS = [
+  { id: "server", label: "서버", icon: "home-01" },
+  { id: "mods", label: "모드", icon: "package-02" },
+  { id: "install", label: "설치 가이드", icon: "download-04" },
+  { id: "world", label: "월드", icon: "globe-02" },
+];
 ---
 
 <!doctype html>
@@ -19,9 +28,52 @@ import "../styles/tokens.css";
     />
   </head>
   <body>
-    <main>
-      <h1>gaybar</h1>
-      <p class="mono">토큰 확인용 페이지</p>
-    </main>
+    <div class="shell">
+      {TABS.map((t, i) => (
+        <input
+          type="radio"
+          name="tab"
+          id={`tab-${t.id}`}
+          class="tab-radio sr-only"
+          checked={i === 0}
+        />
+      ))}
+
+      <Tabs tabs={TABS}>
+        <div slot="server"><h1>서버</h1></div>
+        <div slot="mods"><h1>모드</h1></div>
+        <div slot="install"><h1>설치 가이드</h1></div>
+        <div slot="world"><h1>월드</h1></div>
+      </Tabs>
+      <Sidebar tabs={TABS} />
+    </div>
   </body>
 </html>
+
+<style is:global>
+  /* 화면에서만 가리고 키보드 포커스와 스크린리더 접근은 유지한다.
+     display:none 이나 hidden 속성을 쓰면 Tab 키로 도달할 수 없어진다. */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .shell {
+    padding-left: var(--sidebar-w-collapsed);
+  }
+  .panels {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 48px 32px;
+  }
+  @media (max-width: 1280px) {
+    .panels { max-width: none; }
+  }
+</style>

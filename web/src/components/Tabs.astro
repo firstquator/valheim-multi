@@ -1,0 +1,36 @@
+---
+interface Props {
+  tabs: { id: string; label: string }[];
+}
+const { tabs } = Astro.props;
+---
+
+<div class="tabs">
+  <div class="panels">
+    {tabs.map((t) => (
+      <section class="panel" data-tab={t.id}>
+        <slot name={t.id} />
+      </section>
+    ))}
+  </div>
+</div>
+
+<style>
+  /* 라디오 입력은 이 컴포넌트 안이 아니라 index.astro 최상단에 있다.
+     Tabs 와 Sidebar 둘 다 라디오의 형제여야 `~` 선택자가 양쪽에 닿는다. */
+  .panel { display: none; }
+  :global(#tab-server:checked) ~ .tabs .panel[data-tab="server"],
+  :global(#tab-mods:checked) ~ .tabs .panel[data-tab="mods"],
+  :global(#tab-install:checked) ~ .tabs .panel[data-tab="install"],
+  :global(#tab-world:checked) ~ .tabs .panel[data-tab="world"] {
+    display: block;
+    animation: fade 180ms ease;
+  }
+  @keyframes fade {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .panel { animation: none; }
+  }
+</style>

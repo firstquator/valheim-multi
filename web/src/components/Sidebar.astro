@@ -1,0 +1,134 @@
+---
+import Icon from "./Icon.astro";
+
+interface Props {
+  tabs: { id: string; label: string; icon: string }[];
+}
+const { tabs } = Astro.props;
+---
+
+<nav class="sidebar" aria-label="주 메뉴">
+  <ul>
+    {tabs.map((t) => (
+      <li>
+        <label for={`tab-${t.id}`} class="item">
+          <Icon name={t.icon} size={24} />
+          <span class="label">{t.label}</span>
+        </label>
+      </li>
+    ))}
+  </ul>
+</nav>
+
+<style>
+  /* 사이드바는 콘텐츠 위에 얹힌다. 콘텐츠를 밀면 레이아웃이 출렁인다. */
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: var(--sidebar-w-collapsed);
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+    z-index: 100;
+    transition: width var(--dur-sidebar) var(--ease-sidebar);
+  }
+  .sidebar:hover,
+  .sidebar:focus-within {
+    width: var(--sidebar-w-expanded);
+    box-shadow: 8px 0 32px rgb(0 0 0 / 0.35);
+  }
+
+  /* 라디오는 index.astro 최상단, 사이드바 앞자리에 있다.
+     키보드로 탭에 포커스가 가면 사이드바도 펼쳐서 라벨을 보여준다. */
+  :global(.tab-radio:focus-visible) ~ .sidebar {
+    width: var(--sidebar-w-expanded);
+    box-shadow: 8px 0 32px rgb(0 0 0 / 0.35);
+  }
+  :global(.tab-radio:focus-visible) ~ .sidebar .label {
+    opacity: 1;
+    transform: none;
+  }
+
+  ul { list-style: none; margin: 0; padding: 12px 0; }
+  li { position: relative; }
+
+  .item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    height: 48px;
+    padding: 0 20px;
+    color: var(--text-dim);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    position: relative;
+    transition: color 160ms ease, background 160ms ease;
+  }
+  .item:hover { color: var(--text); background: var(--surface-raised); }
+
+  /* 현재 선택된 탭 표시. 라디오는 index.astro 최상단에 있고
+     사이드바는 그 뒤 형제이므로 형제 선택자로 상태를 읽는다. */
+  :global(#tab-server:checked) ~ .sidebar .item[for="tab-server"],
+  :global(#tab-mods:checked) ~ .sidebar .item[for="tab-mods"],
+  :global(#tab-install:checked) ~ .sidebar .item[for="tab-install"],
+  :global(#tab-world:checked) ~ .sidebar .item[for="tab-world"] {
+    color: var(--accent);
+  }
+  :global(#tab-server:checked) ~ .sidebar .item[for="tab-server"]::before,
+  :global(#tab-mods:checked) ~ .sidebar .item[for="tab-mods"]::before,
+  :global(#tab-install:checked) ~ .sidebar .item[for="tab-install"]::before,
+  :global(#tab-world:checked) ~ .sidebar .item[for="tab-world"]::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 24px;
+    background: var(--accent);
+    border-radius: 0 2px 2px 0;
+  }
+
+  /* 키보드 포커스 표시. 라디오 자체는 화면에서만 가려 두었으므로
+     포커스 링은 대응하는 사이드바 항목에 대신 그린다. */
+  :global(#tab-server:focus-visible) ~ .sidebar .item[for="tab-server"],
+  :global(#tab-mods:focus-visible) ~ .sidebar .item[for="tab-mods"],
+  :global(#tab-install:focus-visible) ~ .sidebar .item[for="tab-install"],
+  :global(#tab-world:focus-visible) ~ .sidebar .item[for="tab-world"] {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* 라벨은 폭 전환보다 60ms 늦게 나타난다.
+     동시에 움직이면 글자가 찌그러져 보인다. */
+  .label {
+    opacity: 0;
+    transform: translateX(-4px);
+    transition:
+      opacity 160ms ease 60ms,
+      transform 160ms var(--ease-sidebar) 60ms;
+  }
+  .sidebar:hover .label,
+  .sidebar:focus-within .label {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* 태블릿 가로에서는 펼치지 않는다. 화면이 좁아 콘텐츠를 가린다. */
+  @media (max-width: 1024px) {
+    .sidebar:hover, .sidebar:focus-within { width: var(--sidebar-w-collapsed); }
+    .sidebar:hover .label, .sidebar:focus-within .label { opacity: 0; }
+    :global(.tab-radio:focus-visible) ~ .sidebar { width: var(--sidebar-w-collapsed); }
+    :global(.tab-radio:focus-visible) ~ .sidebar .label { opacity: 0; }
+  }
+
+  /* 동작 최소화 설정 사용자는 트랜지션을 없앤다. */
+  @media (prefers-reduced-motion: reduce) {
+    .sidebar,
+    .label {
+      transition: none;
+    }
+  }
+</style>
