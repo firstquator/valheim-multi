@@ -1,0 +1,68 @@
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - "data/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
+
+      - name: 루트 의존성 설치
+        run: npm ci
+
+      - name: web 의존성 설치
+        working-directory: web
+        run: npm ci
+
+      # 루트 vitest 설정에는 별도 스코프 제한이 없어 web/tests 까지
+      # 함께 수집한다. 그래서 이 한 번의 실행으로 루트(tests/)와
+      # web(web/tests/) 테스트를 모두 검증한다. 두 스크립트를 따로
+      # 돌리는 것은 같은 테스트를 중복 실행하는 것과 같다.
+      - name: 테스트 (루트 + web)
+        run: npm test
+
+      # mods.json 스키마는 astro.config.mjs 가 빌드 시작 전에 검증한다.
+      # 잘못된 모드 정보가 배포되면 친구들이 틀린 안내를 보게 된다.
+      - name: 빌드
+        working-directory: web
+        run: npm run build
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

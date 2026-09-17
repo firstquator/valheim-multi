@@ -5,6 +5,26 @@
 - 설계: `docs/superpowers/specs/2026-09-17-valheim-dedicated-server-design.md`
 - 서브프로젝트 A 계획: `docs/superpowers/plans/2026-09-17-subproject-a-infrastructure.md`
 
+## 사이트
+
+`web/` 아래 Astro 정적 사이트가 있다. `main` 에 `web/` 이나 `data/` 변경이 푸시되면
+`.github/workflows/pages.yml` 워크플로가 자동으로 빌드하고 GitHub Pages 로 배포한다.
+
+    https://firstquator.github.io/valheim-multi/
+
+배포를 처음 켜는 절차와, 사이트가 공개적으로 접근 가능하다는 점에서 오는 주의사항은
+`docs/guides/github-pages-deploy.md` 를 본다.
+
+### 구조
+
+    web/
+      src/pages/index.astro   단일 페이지. 서버/모드/설치 가이드/월드 탭
+      src/components/         Sidebar, Tabs, CopyField, ModCard 등
+      src/islands/            서버 상태를 30초마다 갱신하는 클라이언트 스크립트
+      src/lib/                모드 스키마 검증, 상태 판정 등 순수 함수
+      src/config.mjs          접속 주소/비밀번호, Gist 연동 설정
+      public/                 파비콘, robots.txt 등 빌드 시 그대로 복사되는 파일
+
 ## 테스트
 
     ./scripts/test.sh
