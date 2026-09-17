@@ -5,10 +5,11 @@ interface Props {
   name: string;
   size?: number;
   class?: string;
+  label?: string;
 }
 
-const { name, size = 20, class: klass = "" } = Astro.props;
-const svg = readIcon(name);
+const { name, size = 20, class: klass = "", label } = Astro.props;
+const svg = readIcon(name, { label });
 ---
 
 <span class={`icon ${klass}`} style={`--icon-size:${size}px`} set:html={svg} />
