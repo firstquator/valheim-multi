@@ -1,4 +1,6 @@
 ---
+import Icon from "./Icon.astro";
+
 interface Props {
   mod: {
     id: string; owner: string; version: string; tier: number;
@@ -13,8 +15,11 @@ const needsInstall = mod.tier === 3;
 <article class={`mod ${needsInstall ? "need" : "free"}`}>
   <header>
     <h3>{mod.name}</h3>
-    <span class="pkg mono">{mod.id} {mod.version}</span>
+    <span class="pkg mono">{mod.id}</span>
+    <span class={`ver mono ${needsInstall ? "pinned" : ""}`}>{mod.version}</span>
+    {needsInstall && <span class="pin-label">전원 동일 버전 필수</span>}
   </header>
+  <p class="owner">제작: {mod.owner}</p>
   <p class="summary">{mod.summary}</p>
   <p class="usage">{mod.usage}</p>
   {mod.warnings.length > 0 && (
@@ -22,6 +27,10 @@ const needsInstall = mod.tier === 3;
       {mod.warnings.map((w) => <li>{w}</li>)}
     </ul>
   )}
+  <a class="link" href={mod.thunderstoreUrl} target="_blank" rel="noopener noreferrer">
+    <Icon name="globe-02" size={14} />
+    Thunderstore 페이지 (새 탭에서 열림)
+  </a>
 </article>
 
 <style>
@@ -46,6 +55,24 @@ const needsInstall = mod.tier === 3;
   header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   h3 { margin: 0; font-size: 17px; font-weight: 600; }
   .pkg { font-size: 12px; color: var(--text-faint); }
+  .ver { font-size: 12px; color: var(--text-faint); }
+
+  /* 버전이 참고 정보가 아니라 반드시 맞춰야 하는 값임을 굵기와 테두리로 드러낸다.
+     색만으로 구분하면 색각 이상이 있는 사람은 못 알아본다. */
+  .ver.pinned {
+    padding: 1px 6px;
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .pin-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .owner { margin: 8px 0 0; font-size: 12px; color: var(--text-faint); }
   .summary { margin: 10px 0 0; font-size: 14px; color: var(--text-dim); }
   .usage {
     margin: 10px 0 0;
@@ -55,4 +82,16 @@ const needsInstall = mod.tier === 3;
     color: var(--text-faint);
   }
   .warns { margin: 12px 0 0; padding-left: 18px; font-size: 13px; color: var(--warning); }
+
+  .link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--text-dim);
+    text-decoration: none;
+  }
+  .link:hover { color: var(--accent); text-decoration: underline; }
+  .link :global(.icon) { color: currentColor; }
 </style>
