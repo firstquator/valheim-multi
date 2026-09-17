@@ -1,0 +1,57 @@
+/* 발헤임의 색감에서 가져오되 채도를 낮게 잡는다.
+   형광색을 쓰면 게임 분위기가 깨진다. */
+:root {
+  --bg: #16181C;
+  --surface: #1E2126;
+  --surface-raised: #262A30;
+  --border: #2E333A;
+
+  --accent: #C8955A;
+  --highlight: #D9A441;
+  --success: #7A9A6B;
+  --warning: #C4634A;
+
+  --text: #E8E6E3;
+  --text-dim: #9AA0A6;
+  --text-faint: #6B7176;
+
+  --sidebar-w-collapsed: 64px;
+  --sidebar-w-expanded: 240px;
+
+  --radius: 10px;
+  --gap: 16px;
+
+  --font-sans: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* 사이드바 전환. 라벨은 이보다 60ms 늦게 나타난다. */
+  --ease-sidebar: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-sidebar: 220ms;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 평평한 디지털 느낌을 덜기 위한 미세 노이즈.
+   텍스처 이미지를 쓰지 않고 SVG 필터로 만든다. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+code, .mono { font-family: var(--font-mono); }
