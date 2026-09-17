@@ -19,7 +19,7 @@ export function judgeStatus(payload, nowMs) {
 
   const ageSec = Math.max(0, Math.round((nowMs - t) / 1000));
   const players = Array.isArray(payload.server.players) ? payload.server.players : [];
-  const playerCount = Number(payload.server.playerCount) || 0;
+  const playerCount = Math.max(0, Number(payload.server.playerCount) || 0);
 
   // 낡은 데이터를 현재인 척하지 않는다.
   // 서버 PC 가 꺼지면 갱신이 멈추므로 자연히 여기로 수렴한다.

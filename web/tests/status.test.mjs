@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { judgeStatus, STALE_LIMIT_SEC } from "../src/lib/status.mjs";
+import { judgeStatus, formatAge, STALE_LIMIT_SEC } from "../src/lib/status.mjs";
 
 const NOW = Date.parse("2026-09-18T04:00:00Z");
 const payload = (overrides = {}) => ({
@@ -46,5 +46,66 @@ describe("judgeStatus", () => {
 
   it("신선도 한계는 180초다", () => {
     expect(STALE_LIMIT_SEC).toBe(180);
+  });
+
+  it("179초는 아직 신선하다 (경계 근접)", () => {
+    const r = judgeStatus(payload({ updatedAt: "2026-09-18T03:57:01Z" }), NOW);
+    expect(r.state).toBe("running");
+  });
+
+  it("181초는 이미 낡았다 (경계 근접)", () => {
+    const r = judgeStatus(payload({ updatedAt: "2026-09-18T03:56:59Z" }), NOW);
+    expect(r.state).toBe("offline");
+  });
+
+  it("updatedAt 이 미래여도 ageSec 는 음수가 아니라 0 이다", () => {
+    const future = payload({ updatedAt: "2026-09-18T04:05:00Z" });
+    const r = judgeStatus(future, NOW);
+    expect(r.ageSec).toBe(0);
+  });
+
+  it("playerCount 가 음수면 0 으로 깎는다", () => {
+    const r = judgeStatus(payload({ server: { running: true, playerCount: -1, players: [] } }), NOW);
+    expect(r.playerCount).toBe(0);
+    expect(r.label).toBe("접속 중 · 비어 있음");
+  });
+
+  it("players 가 배열이 아니면 빈 배열로 본다", () => {
+    const r = judgeStatus(payload({ server: { running: true, playerCount: 2, players: "누들낑" } }), NOW);
+    expect(r.state).toBe("running");
+    expect(r.players).toEqual([]);
+  });
+
+  it("payload 가 빈 객체면 unknown 이고 예외를 던지지 않는다", () => {
+    const r = judgeStatus({}, NOW);
+    expect(r.state).toBe("unknown");
+    expect(r.playerCount).toBe(0);
+    expect(r.players).toEqual([]);
+  });
+});
+
+describe("formatAge", () => {
+  it("0초는 0초 전 확인 이다", () => {
+    expect(formatAge(0)).toBe("0초 전 확인");
+  });
+
+  it("59초는 초 단위로 표시한다", () => {
+    expect(formatAge(59)).toBe("59초 전 확인");
+  });
+
+  it("60초는 분 단위로 넘어간다", () => {
+    expect(formatAge(60)).toBe("1분 전 확인");
+  });
+
+  it("59분은 아직 분 단위다", () => {
+    expect(formatAge(59 * 60)).toBe("59분 전 확인");
+  });
+
+  it("60분은 시간 단위로 넘어간다", () => {
+    expect(formatAge(60 * 60)).toBe("1시간 전 확인");
+  });
+
+  it("ageSec 가 null 이면 확인 시각 불명 이다", () => {
+    expect(formatAge(null)).toBe("확인 시각 불명");
   });
 });
