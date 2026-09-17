@@ -32,17 +32,17 @@ const { tabs } = Astro.props;
     z-index: 100;
     transition: width var(--dur-sidebar) var(--ease-sidebar);
   }
-  .sidebar:hover,
-  .sidebar:focus-within {
+  .sidebar:hover {
     width: var(--sidebar-w-expanded);
-    box-shadow: 8px 0 32px rgb(0 0 0 / 0.35);
+    box-shadow: var(--shadow-sidebar);
   }
 
   /* 라디오는 index.astro 최상단, 사이드바 앞자리에 있다.
-     키보드로 탭에 포커스가 가면 사이드바도 펼쳐서 라벨을 보여준다. */
+     키보드로 탭에 포커스가 가면 사이드바도 펼쳐서 라벨을 보여준다.
+     nav 안의 label 은 포커스를 받지 않으므로 focus-within 은 쓸 수 없다. */
   :global(.tab-radio:focus-visible) ~ .sidebar {
     width: var(--sidebar-w-expanded);
-    box-shadow: 8px 0 32px rgb(0 0 0 / 0.35);
+    box-shadow: var(--shadow-sidebar);
   }
   :global(.tab-radio:focus-visible) ~ .sidebar .label {
     opacity: 1;
@@ -110,16 +110,15 @@ const { tabs } = Astro.props;
       opacity 160ms ease 60ms,
       transform 160ms var(--ease-sidebar) 60ms;
   }
-  .sidebar:hover .label,
-  .sidebar:focus-within .label {
+  .sidebar:hover .label {
     opacity: 1;
     transform: none;
   }
 
   /* 태블릿 가로에서는 펼치지 않는다. 화면이 좁아 콘텐츠를 가린다. */
   @media (max-width: 1024px) {
-    .sidebar:hover, .sidebar:focus-within { width: var(--sidebar-w-collapsed); }
-    .sidebar:hover .label, .sidebar:focus-within .label { opacity: 0; }
+    .sidebar:hover { width: var(--sidebar-w-collapsed); }
+    .sidebar:hover .label { opacity: 0; }
     :global(.tab-radio:focus-visible) ~ .sidebar { width: var(--sidebar-w-collapsed); }
     :global(.tab-radio:focus-visible) ~ .sidebar .label { opacity: 0; }
   }

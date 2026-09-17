@@ -27,6 +27,9 @@
   /* 사이드바 전환. 라벨은 이보다 60ms 늦게 나타난다. */
   --ease-sidebar: cubic-bezier(0.32, 0.72, 0, 1);
   --dur-sidebar: 220ms;
+
+  /* 사이드바가 펼쳐질 때 콘텐츠 위에 얹히는 느낌을 주는 그림자. */
+  --shadow-sidebar: 8px 0 32px rgb(0 0 0 / 0.35);
 }
 
 * { box-sizing: border-box; }
