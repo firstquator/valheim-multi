@@ -2,7 +2,7 @@
 # 컨테이너가 만든 백업을 GCS 버킷으로 동기화한다.
 # 월드의 정본은 VM 디스크가 아니라 버킷이다.
 # 체험판 만료로 VM이 사라져도 버킷의 데이터는 회수할 수 있다.
-set -uo pipefail
+set -euo pipefail
 
 : "${BACKUP_DIR:=/srv/valheim/backups}"
 : "${GCLOUD_BIN:=gcloud}"

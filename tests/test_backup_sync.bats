@@ -47,3 +47,11 @@ teardown() {
   run bash /code/agent/backup-sync.sh
   [ "$status" -eq 1 ]
 }
+
+@test "원격 삭제 옵션을 쓰지 않는다" {
+  echo "world data" > "$BACKUP_DIR/world.zip"
+  run bash /code/agent/backup-sync.sh
+  [ "$status" -eq 0 ]
+  ! grep -q -- "--delete-unmatched-destination-objects" "$GCLOUD_LOG"
+  ! grep -q -- "--delete" "$GCLOUD_LOG"
+}
