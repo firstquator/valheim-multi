@@ -39,11 +39,18 @@ jobs:
         working-directory: web
         run: npm ci
 
-      # 루트 vitest 설정에는 별도 스코프 제한이 없어 web/tests 까지
-      # 함께 수집한다. 그래서 이 한 번의 실행으로 루트(tests/)와
-      # web(web/tests/) 테스트를 모두 검증한다. 두 스크립트를 따로
-      # 돌리는 것은 같은 테스트를 중복 실행하는 것과 같다.
-      - name: 테스트 (루트 + web)
+      # 루트와 web 은 각자 package.json 과 vitest 를 따로 가진 별도
+      # 프로젝트다(메이저 버전도 다르다: 루트 vitest 2.x, web vitest 5.x).
+      # 루트 vitest.config.mjs 가 tests/** 로 스코프를 명시해 두었으므로,
+      # 두 단계를 각각 실행해야 각 프로젝트가 자기 테스트를 자기 vitest
+      # 버전으로 검증한다. 하나로 합치면(예: 루트에서 npm test 한 번)
+      # 스코프 설정이 나중에 바뀔 때 web 테스트가 조용히 덜 돌게 되는
+      # 위험이 생긴다.
+      - name: 테스트 (루트)
+        run: npm test
+
+      - name: 테스트 (web)
+        working-directory: web
         run: npm test
 
       # mods.json 스키마는 astro.config.mjs 가 빌드 시작 전에 검증한다.
