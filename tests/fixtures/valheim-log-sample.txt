@@ -1,0 +1,6 @@
+Sep 18 02:43:55 supervisord: valheim-server 09/18/2026 02:43:55: Server: New peer connected,sending global keys
+Sep 18 02:44:09 supervisord: valheim-server 09/18/2026 02:44:09: Got connection SteamID 76561198116018222
+Sep 18 02:44:14 supervisord: valheim-server 09/18/2026 02:44:14: Got character ZDOID from 누들낑 : 671632419:1
+Sep 18 02:44:32 supervisord: valheim-server 09/18/2026 02:44:32: Got character ZDOID from 모카비비 : -4663678:1
+Sep 18 02:51:02 supervisord: valheim-server 09/18/2026 02:51:02: Got character ZDOID from 누들낑 : 0:0
+Sep 18 02:52:10 supervisord: valheim-server 09/18/2026 02:52:10: Got character ZDOID from 누들낑 : 671632419:2

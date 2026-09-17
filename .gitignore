@@ -10,6 +10,9 @@ infra/.terraform.lock.hcl
 server/.env
 .env
 
+# Node
+node_modules/
+
 # OS
 Thumbs.db
 .DS_Store
