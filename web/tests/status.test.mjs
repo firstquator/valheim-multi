@@ -117,6 +117,26 @@ describe("judgeStatus", () => {
     expect(r.backupAt).toBe(null);
     expect(r.gameVersion).toBe(null);
   });
+
+  it("주소를 그대로 전달한다", () => {
+    const p = payload({ server: { running: true, playerCount: 0, players: [], address: "1.2.3.4:2456" } });
+    expect(judgeStatus(p, NOW).address).toBe("1.2.3.4:2456");
+  });
+
+  it("주소가 없으면 null 이다", () => {
+    expect(judgeStatus(payload(), NOW).address).toBe(null);
+  });
+
+  it("offline 판정에서도 주소를 전달한다", () => {
+    const p = payload({
+      server: { running: false, playerCount: 0, players: [], address: "1.2.3.4:2456" },
+    });
+    expect(judgeStatus(p, NOW).address).toBe("1.2.3.4:2456");
+  });
+
+  it("unknown 판정에서는 주소가 null 이다", () => {
+    expect(judgeStatus(null, NOW).address).toBe(null);
+  });
 });
 
 describe("formatAge", () => {

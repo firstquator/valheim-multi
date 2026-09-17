@@ -17,6 +17,7 @@ export function judgeStatus(payload, nowMs) {
       ageSec: null,
       backupAt: null,
       gameVersion: null,
+      address: null,
     };
   }
 
@@ -30,6 +31,7 @@ export function judgeStatus(payload, nowMs) {
       ageSec: null,
       backupAt: null,
       gameVersion: null,
+      address: null,
     };
   }
 
@@ -48,6 +50,7 @@ export function judgeStatus(payload, nowMs) {
       ageSec,
       backupAt: payload.backup?.lastAt ?? null,
       gameVersion: payload.server?.gameVersion ?? null,
+      address: payload.server?.address ?? null,
     };
   }
 
@@ -59,6 +62,7 @@ export function judgeStatus(payload, nowMs) {
     ageSec,
     backupAt: payload.backup?.lastAt ?? null,
     gameVersion: payload.server?.gameVersion ?? null,
+    address: payload.server?.address ?? null,
   };
 }
 

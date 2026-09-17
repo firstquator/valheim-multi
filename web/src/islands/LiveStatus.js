@@ -51,6 +51,21 @@ function render(judged) {
     const text = at ? new Date(at).toLocaleString("ko-KR") : "확인 불가";
     if (backup.textContent !== text) backup.textContent = text;
   }
+
+  // 공인 IP 는 유동이라 빌드 시점에 config.mjs 에 박아둔 주소가 틀릴 수
+  // 있다. Gist 에서 최신 주소가 오면 화면과 복사 버튼을 함께 갱신한다.
+  // judged.address 가 없으면(Gist 미설정, 응답 실패, 필드 누락) 아무것도
+  // 하지 않아 정적으로 렌더된 config.mjs 의 주소가 폴백으로 남는다.
+  if (judged.address) {
+    const addrValue = document.getElementById("server-address-value");
+    const addrCopy = document.getElementById("server-address-copy");
+    if (addrValue && addrValue.textContent !== judged.address) {
+      addrValue.textContent = judged.address;
+    }
+    if (addrCopy && addrCopy.dataset.copy !== judged.address) {
+      addrCopy.dataset.copy = judged.address;
+    }
+  }
 }
 
 async function tick() {

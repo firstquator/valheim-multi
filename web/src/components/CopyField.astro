@@ -6,16 +6,29 @@ interface Props {
   value: string;
   mono?: boolean;
   masked?: boolean;
+  // 실행 중에 값을 갱신해야 하는 필드(예: 서버 주소)에만 넘긴다.
+  // LiveStatus.js 가 `${id}-value` 와 `${id}-copy` 로 이 필드를 찾는다.
+  id?: string;
 }
-const { label, value, mono = false, masked = false } = Astro.props;
+const { label, value, mono = false, masked = false, id } = Astro.props;
 ---
 
 <div class="field">
   <span class="k">{label}</span>
-  <span class={`v ${mono ? "mono" : ""}`} data-masked={masked ? "true" : "false"}>
+  <span
+    class={`v ${mono ? "mono" : ""}`}
+    data-masked={masked ? "true" : "false"}
+    id={id ? `${id}-value` : undefined}
+  >
     {masked ? "•".repeat(Math.min(value.length, 10)) : value}
   </span>
-  <button class="copy" type="button" data-copy={value} aria-label={`${label} 복사`}>
+  <button
+    class="copy"
+    type="button"
+    data-copy={value}
+    id={id ? `${id}-copy` : undefined}
+    aria-label={`${label} 복사`}
+  >
     <Icon name="copy-01" size={16} />
     <span class="copy-label" aria-live="polite">복사</span>
   </button>
