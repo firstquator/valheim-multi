@@ -13,3 +13,6 @@ server/.env
 # OS
 Thumbs.db
 .DS_Store
+
+# Playwright MCP 실물 확인 산출물
+.playwright-mcp/

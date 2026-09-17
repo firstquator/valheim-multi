@@ -1,0 +1,86 @@
+---
+import Icon from "./Icon.astro";
+
+interface Props {
+  label: string;
+  value: string;
+  mono?: boolean;
+  masked?: boolean;
+}
+const { label, value, mono = false, masked = false } = Astro.props;
+---
+
+<div class="field">
+  <span class="k">{label}</span>
+  <span class={`v ${mono ? "mono" : ""}`} data-masked={masked ? "true" : "false"}>
+    {masked ? "•".repeat(Math.min(value.length, 10)) : value}
+  </span>
+  <button class="copy" type="button" data-copy={value} aria-label={`${label} 복사`}>
+    <Icon name="copy-01" size={16} />
+    <span class="copy-label" aria-live="polite">복사</span>
+  </button>
+</div>
+
+<script>
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".copy");
+    if (!btn) return;
+    try {
+      await navigator.clipboard.writeText(btn.dataset.copy);
+      const span = btn.querySelector(".copy-label");
+      const prev = span.textContent;
+      span.textContent = "복사됨";
+      btn.classList.add("done");
+      setTimeout(() => {
+        span.textContent = prev;
+        btn.classList.remove("done");
+      }, 1400);
+    } catch {
+      // 클립보드 권한이 없으면 값을 선택 상태로 만들어 수동 복사를 돕는다.
+      const v = btn.parentElement.querySelector(".v");
+      const r = document.createRange();
+      r.selectNodeContents(v);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(r);
+
+      // 실패도 화면과 스크린리더 양쪽에 보여야 한다. 조용히 넘어가면 안 된다.
+      const span = btn.querySelector(".copy-label");
+      const prev = span.textContent;
+      span.textContent = "선택됨, 직접 복사하세요";
+      setTimeout(() => {
+        span.textContent = prev;
+      }, 2000);
+    }
+  });
+</script>
+
+<style>
+  .field {
+    display: grid;
+    grid-template-columns: 72px 1fr auto;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .field:last-child { border-bottom: none; }
+  .k { color: var(--text-faint); font-size: 13px; }
+  .v { color: var(--text); font-size: 15px; word-break: break-all; }
+  .copy {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font: inherit;
+    font-size: 13px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+  }
+  .copy:hover { color: var(--text); border-color: var(--accent); }
+  .copy.done { color: var(--success); border-color: var(--success); }
+</style>

@@ -30,6 +30,10 @@
 
   /* 사이드바가 펼쳐질 때 콘텐츠 위에 얹히는 느낌을 주는 그림자. */
   --shadow-sidebar: 8px 0 32px rgb(0 0 0 / 0.35);
+
+  /* 서버 상태 뱃지가 "접속 중" 일 때 퍼지는 펄스 효과. --success 와 같은 색이다. */
+  --shadow-pulse-start: 0 0 0 0 rgb(122 154 107 / 0.6);
+  --shadow-pulse-end: 0 0 0 10px rgb(122 154 107 / 0);
 }
 
 * { box-sizing: border-box; }

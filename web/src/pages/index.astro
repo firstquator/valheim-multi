@@ -2,6 +2,9 @@
 import "../styles/tokens.css";
 import Sidebar from "../components/Sidebar.astro";
 import Tabs from "../components/Tabs.astro";
+import CopyField from "../components/CopyField.astro";
+import Icon from "../components/Icon.astro";
+import { SERVER } from "../config.mjs";
 
 const TABS = [
   { id: "server", label: "서버", icon: "home-01" },
@@ -40,13 +43,38 @@ const TABS = [
       ))}
 
       <Tabs tabs={TABS}>
-        <div slot="server"><h1>서버</h1></div>
+        <div slot="server">
+          <header class="hero">
+            <h1>gaybar</h1>
+            <p class="badge" id="status-badge" data-state="unknown" aria-live="polite" aria-atomic="true">상태 확인 중</p>
+            <p class="age" id="status-age"></p>
+          </header>
+
+          <div class="card">
+            <CopyField label="주소" value={SERVER.address} mono />
+            <CopyField label="비밀번호" value={SERVER.password} masked />
+            <div class="field">
+              <span class="k">게임 버전</span>
+              <span class="v mono" id="game-version">확인 중</span>
+              <span class="hint">클라이언트도 같은 버전이어야 접속됩니다</span>
+            </div>
+          </div>
+
+          <section class="players" id="player-wrap">
+            <h2><Icon name="user-02" size={18} /> 접속 중</h2>
+            <p id="player-list" hidden></p>
+          </section>
+        </div>
         <div slot="mods"><h1>모드</h1></div>
         <div slot="install"><h1>설치 가이드</h1></div>
         <div slot="world"><h1>월드</h1></div>
       </Tabs>
       <Sidebar tabs={TABS} />
     </div>
+
+    <script>
+      import "../islands/LiveStatus.js";
+    </script>
   </body>
 </html>
 
@@ -75,5 +103,58 @@ const TABS = [
   }
   @media (max-width: 1280px) {
     .panels { max-width: none; }
+  }
+
+  .hero { margin-bottom: 32px; }
+  .hero h1 {
+    margin: 0 0 12px;
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 17px;
+    color: var(--text-dim);
+  }
+  .badge::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-faint);
+  }
+  .badge[data-state="running"] { color: var(--success); }
+  .badge[data-state="running"]::before {
+    background: var(--success);
+    box-shadow: var(--shadow-pulse-start);
+    animation: pulse 2.4s ease-out infinite;
+  }
+  .badge[data-state="offline"] { color: var(--text-faint); }
+  @keyframes pulse {
+    to { box-shadow: var(--shadow-pulse-end); }
+  }
+  .age { margin: 6px 0 0; font-size: 13px; color: var(--text-faint); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .hint { font-size: 12px; color: var(--text-faint); }
+
+  .players { margin-top: 32px; }
+  .players h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-faint);
   }
 </style>
