@@ -61,9 +61,32 @@ services:
       # 컨테이너 내부에서만 읽을 수 있다.
       STATUS_HTTP: "true"
 
-      # 모드는 바닐라 안정화 이후에 켠다.
-      # 모드 문제와 인프라 문제를 동시에 겪으면 원인을 구분할 수 없다.
-      BEPINEX: "false"
+      # 바닐라 안정화(친구 실접속 확인)를 마친 뒤 켰다.
+      # 모드 파일은 /config/bepinex/plugins 에 둔다.
+      BEPINEX: "true"
+
+      # BepInEx 패처 DLL 설치.
+      #
+      # 이미지는 /config/bepinex/plugins 만 BepInEx/plugins 로 동기화하고
+      # patchers 디렉터리는 다루지 않는다. 그런데 ServersideQoL 같은 모드는
+      # patchers 에 DLL 이 있어야 초기화된다. 없으면 플러그인은 로드되지만
+      # config 조차 생성하지 못하고 기능이 전부 죽는다.
+      #
+      # 이미지가 매 기동마다 /opt/valheim/bepinex 트리를 새로 만들고
+      # 헌 트리를 bepinex.old 로 밀어내며 교체한다. 그래서
+      #   - 그 안에 볼륨을 마운트하면 교체 시 고아가 된다 (device busy)
+      #   - POST_BEPINEX_CONFIG_HOOK 은 교체보다 먼저라 복사분이 지워진다
+      # 실측으로 확인한 사실이다. 서버 시작 직전에 도는 PRE_START_HOOK 에서
+      # 복사해야 살아남는다. 두 훅을 모두 걸어 어느 경로로 기동하든 덮는다.
+      POST_BEPINEX_CONFIG_HOOK: >-
+        mkdir -p /opt/valheim/bepinex/BepInEx/patchers;
+        cp -f /config/bepinex/patchers/*.dll /opt/valheim/bepinex/BepInEx/patchers/ 2>/dev/null || true
+
+      PRE_START_HOOK: >-
+        mkdir -p /opt/valheim/bepinex/BepInEx/patchers;
+        cp -f /config/bepinex/patchers/*.dll /opt/valheim/bepinex/BepInEx/patchers/ 2>/dev/null;
+        chown -R 1000:1000 /opt/valheim/bepinex/BepInEx/patchers 2>/dev/null;
+        echo "PATCHERS:"; ls -la /opt/valheim/bepinex/BepInEx/patchers/ || true
 
       PUID: "1000"
       PGID: "1000"
@@ -72,3 +95,5 @@ services:
 volumes:
   valheim-config:
     name: valheim-config
+  valheim-patchers:
+    name: valheim-patchers
