@@ -1,0 +1,58 @@
+---
+interface Props {
+  mod: {
+    id: string; owner: string; version: string; tier: number;
+    name: string; summary: string; usage: string;
+    thunderstoreUrl: string; warnings: string[];
+  };
+}
+const { mod } = Astro.props;
+const needsInstall = mod.tier === 3;
+---
+
+<article class={`mod ${needsInstall ? "need" : "free"}`}>
+  <header>
+    <h3>{mod.name}</h3>
+    <span class="pkg mono">{mod.id} {mod.version}</span>
+  </header>
+  <p class="summary">{mod.summary}</p>
+  <p class="usage">{mod.usage}</p>
+  {mod.warnings.length > 0 && (
+    <ul class="warns">
+      {mod.warnings.map((w) => <li>{w}</li>)}
+    </ul>
+  )}
+</article>
+
+<style>
+  .mod {
+    padding: 18px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color 160ms ease, transform 160ms ease;
+  }
+  .mod:hover { transform: translateY(-1px); }
+
+  /* 설치 불필요 그룹은 낮은 채도로 둔다. 넘어가도 된다는 인상을 준다. */
+  .free { opacity: 0.88; }
+  .free:hover { border-color: var(--border); }
+
+  /* 설치 필요 그룹은 악센트로 눈에 띄게 한다.
+     같은 스타일로 나열하면 친구들이 전부 설치하려 든다. */
+  .need { border-left: 3px solid var(--accent); }
+  .need:hover { border-color: var(--accent); }
+
+  header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  h3 { margin: 0; font-size: 17px; font-weight: 600; }
+  .pkg { font-size: 12px; color: var(--text-faint); }
+  .summary { margin: 10px 0 0; font-size: 14px; color: var(--text-dim); }
+  .usage {
+    margin: 10px 0 0;
+    padding-left: 12px;
+    border-left: 2px solid var(--border);
+    font-size: 13px;
+    color: var(--text-faint);
+  }
+  .warns { margin: 12px 0 0; padding-left: 18px; font-size: 13px; color: var(--warning); }
+</style>

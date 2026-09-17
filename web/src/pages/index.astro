@@ -4,7 +4,10 @@ import Sidebar from "../components/Sidebar.astro";
 import Tabs from "../components/Tabs.astro";
 import CopyField from "../components/CopyField.astro";
 import Icon from "../components/Icon.astro";
+import ModCard from "../components/ModCard.astro";
+import WarningBlock from "../components/WarningBlock.astro";
 import { SERVER } from "../config.mjs";
+import modsData from "../../../data/mods.json";
 
 const TABS = [
   { id: "server", label: "서버", icon: "home-01" },
@@ -12,6 +15,9 @@ const TABS = [
   { id: "install", label: "설치 가이드", icon: "download-04" },
   { id: "world", label: "월드", icon: "globe-02" },
 ];
+
+const tier1 = modsData.mods.filter((m) => m.tier === 1);
+const tier3 = modsData.mods.filter((m) => m.tier === 3);
 ---
 
 <!doctype html>
@@ -65,7 +71,31 @@ const TABS = [
             <p id="player-list" hidden></p>
           </section>
         </div>
-        <div slot="mods"><h1>모드</h1></div>
+        <div slot="mods">
+          <h1>모드</h1>
+
+          <section class="group">
+            <h2>설치할 것 없음</h2>
+            <p class="lead">서버에만 깔려 있습니다. 그냥 접속하시면 됩니다.</p>
+            <div class="grid">
+              {tier1.map((m) => <ModCard mod={m} />)}
+            </div>
+          </section>
+
+          {tier3.length > 0 && (
+            <section class="group">
+              <h2>설치 필요</h2>
+              <WarningBlock title="인벤토리 모드는 하나만 설치하세요">
+                ExtraSlots, EquipmentAndQuickSlots, AzuExtendedPlayerInventory 는
+                같은 코드를 건드립니다. 둘 이상 설치하면 슬롯이 늘어나는 것이 아니라
+                재접속할 때 아이템이 사라집니다.
+              </WarningBlock>
+              <div class="grid">
+                {tier3.map((m) => <ModCard mod={m} />)}
+              </div>
+            </section>
+          )}
+        </div>
         <div slot="install"><h1>설치 가이드</h1></div>
         <div slot="world"><h1>월드</h1></div>
       </Tabs>
@@ -156,5 +186,22 @@ const TABS = [
     font-size: 14px;
     font-weight: 600;
     color: var(--text-faint);
+  }
+
+  .group { margin-bottom: 48px; }
+  .group h2 {
+    margin: 0 0 4px;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .lead { margin: 0 0 18px; font-size: 14px; color: var(--text-faint); }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gap);
+  }
+  @media (max-width: 1024px) {
+    .grid { grid-template-columns: 1fr; }
   }
 </style>

@@ -1,0 +1,31 @@
+---
+import Icon from "./Icon.astro";
+interface Props { title: string; }
+const { title } = Astro.props;
+---
+
+<aside class="warn">
+  <Icon name="alert-01" size={22} />
+  <div>
+    <strong>{title}</strong>
+    <p><slot /></p>
+  </div>
+</aside>
+
+<style>
+  /* 아이템이 사라지는 문제를 다루므로 각주가 아니라 블록으로 놓는다.
+     작은 글씨로 적으면 아무도 읽지 않는다. */
+  .warn {
+    display: flex;
+    gap: 14px;
+    padding: 16px 18px;
+    margin-bottom: 24px;
+    background: color-mix(in srgb, var(--warning) 12%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--warning) 40%, transparent);
+    border-radius: var(--radius);
+    color: var(--text);
+  }
+  .warn :global(.icon) { color: var(--warning); margin-top: 2px; }
+  strong { display: block; margin-bottom: 4px; color: var(--warning); }
+  p { margin: 0; font-size: 14px; color: var(--text-dim); }
+</style>
