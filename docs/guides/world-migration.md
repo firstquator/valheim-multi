@@ -146,7 +146,7 @@ gcloud compute scp 받은파일.zip valheim-server:~/world.zip \
 
 ### 2-4. 압축을 풀고 배치한다
 
-> ⚠️ **Windows에서 만든 ZIP의 함정**
+> 주의: **Windows에서 만든 ZIP의 함정**
 >
 > 윈도우 탐색기의 "압축(ZIP) 폴더로 보내기"나 PowerShell의 `Compress-Archive`는
 > 경로 구분자를 역슬래시(`gaybar\_main.9.db2`)로 기록한다. ZIP 규격은 슬래시를
@@ -179,7 +179,7 @@ gcloud compute ssh valheim-server --zone=asia-northeast3-a --tunnel-through-iap 
 
 이 방법을 쓰면 2-5의 권한 설정으로 바로 넘어간다.
 
-> ⚠️ **폴더를 압축했는가, 내용물을 압축했는가**
+> 주의: **폴더를 압축했는가, 내용물을 압축했는가**
 >
 > 친구가 폴더 안에 들어가서 파일들을 전부 선택해 압축하면, ZIP 최상위에
 > 월드 이름 폴더가 없고 `.chunk` 와 `_main.9.*` 파일들이 바로 놓인다.

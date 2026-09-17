@@ -47,7 +47,7 @@
 | `ArgusMagnus/ServersideQoL_AutoProcess` | 2.0.11 | **제련소, 가마, 풍차 자동 공급** |
 | `ValheimModding/YamlDotNet` | 16.3.1 | ServersideQoL 의존성 |
 
-## ⚠️ ServersideQoL 은 프레임워크다
+## 주의: ServersideQoL 은 프레임워크다
 
 이름만 보면 QoL 기능이 다 들어있을 것 같지만 아니다. README 원문:
 
@@ -71,7 +71,7 @@
 
 프레임워크는 2.0.13, 모듈은 2.0.11 로 버전이 다르다. 도입 시 호환성을 확인한다.
 
-## ⚠️ 패처 DLL 문제 (해결됨)
+## 주의: 패처 DLL 문제 (해결됨)
 
 `ServersideQoL` 은 `patchers/` 디렉터리에 DLL 이 있어야 초기화된다. 없으면 플러그인은 로드되지만 **config 파일조차 생성하지 못하고 기능이 전부 죽는다.** 로그에는 이렇게 뜬다.
 
@@ -114,7 +114,7 @@
 | `MathiasDecrock/PlanBuild` | 0.18.5 | 건축 청사진 |
 | `MSchmoecker/MultiUserChest` | 0.6.2 | 여러 명이 같은 상자 동시 사용 |
 
-## 🚨 인벤토리 모드 충돌 경고
+## 경고: 인벤토리 모드 충돌
 
 **친구들에게 반드시 전달해야 할 내용이다.**
 
@@ -265,31 +265,31 @@ Thunderstore 전체 카탈로그(11,376개)와 대조한 결과다. 판정 기�
 
 | 표시 | 의미 |
 |---|---|
-| ✅ 안전 | **Deep North Update** 태그 보유. 제작자가 1.0 대응을 명시했다 |
-| ⚠️ 미확인 | 1.0 출시(2026-09-09) 이후 업데이트했으나 Deep North 태그는 없다 |
-| ❌ 위험 | 1.0 출시 전이 마지막 업데이트다 |
+| 안전 | **Deep North Update** 태그 보유. 제작자가 1.0 대응을 명시했다 |
+| 미확인 | 1.0 출시(2026-09-09) 이후 업데이트했으나 Deep North 태그는 없다 |
+| 위험 | 1.0 출시 전이 마지막 업데이트다 |
 
 ## 판정표
 
 | 모드 | 패키지 | 버전 | 최종 | 판정 |
 |---|---|---|---|---|
-| MassFarming | `MainStreetGaming/MassFarming` | 1.13.0 | 09-10 | ✅ 안전 |
-| Slope Combat Assistance | `Digitalroot/Digitalroots_Slope_Combat_Assistance` | 2.0.30 | 09-10 | ✅ 안전 |
-| FastTeleport | `GemHunter1/FastTeleport` | 1.1.1 | 09-09 | ✅ 안전 |
-| SkilledCarryWeight | `Searica/SkilledCarryWeight` | 1.5.0 | 09-15 | ✅ 안전, **도입 결정** |
-| MyLittleUI | `shudnal/MyLittleUI` | 1.2.19 | 09-15 | ✅ 안전 |
-| Gizmo | `ComfyMods/Gizmo` | 1.16.0 | 09-14 | ✅ 안전 |
-| BottleShips | `sighsorry/BottleShips` | 1.1.12 | 09-09 | ✅ 안전 |
-| WackyEpicMMOSystem | `WackyMole/WackyEpicMMOSystem` | 1.9.67 | 09-13 | ✅ 안전, **도입 결정** |
-| AzuClock | `Azumatt/AzuClock` | 1.1.0 | 09-14 | ⚠️ 미확인 |
-| TrueInstantLootDrop | `Azumatt/TrueInstantLootDrop` | 1.0.4 | 09-14 | ⚠️ 미확인 |
-| QuickStackStore | `Goldenrevolver/Quick_Stack_Store_Sort_Trash_Restock` | 1.4.15 | 09-12 | ⚠️ 미확인 |
-| AzuRepair | `Azumatt/AzuAreaRepair` (추정) | 1.1.7 | 09-14 | ⚠️ 이름 불일치 |
-| TargetPortal | `Smoothbrain/TargetPortal` | 1.2.3 | **2026-02-22** | ❌ 위험 |
-| Farming | `Smoothbrain/Farming` | 2.2.2 | **2026-02-05** | ❌ 위험 |
-| InteractWhileBuilding | `tonsit/InteractWhileBuilding` | 1.0.0 | **2021-03-01** | ❌ 5년 방치 |
-| ValheimGammaMod | `ColdSpirit/ValheimGammaMod` | 1.0.0 | **2022-01-18** | ❌ 4년 방치 |
-| CraftFromContainers | 여러 포크 | - | - | ❌ **1.0 대응판 없음** |
+| MassFarming | `MainStreetGaming/MassFarming` | 1.13.0 | 09-10 | 안전 |
+| Slope Combat Assistance | `Digitalroot/Digitalroots_Slope_Combat_Assistance` | 2.0.30 | 09-10 | 안전 |
+| FastTeleport | `GemHunter1/FastTeleport` | 1.1.1 | 09-09 | 안전 |
+| SkilledCarryWeight | `Searica/SkilledCarryWeight` | 1.5.0 | 09-15 | 안전, **도입 결정** |
+| MyLittleUI | `shudnal/MyLittleUI` | 1.2.19 | 09-15 | 안전 |
+| Gizmo | `ComfyMods/Gizmo` | 1.16.0 | 09-14 | 안전 |
+| BottleShips | `sighsorry/BottleShips` | 1.1.12 | 09-09 | 안전 |
+| WackyEpicMMOSystem | `WackyMole/WackyEpicMMOSystem` | 1.9.67 | 09-13 | 안전, **도입 결정** |
+| AzuClock | `Azumatt/AzuClock` | 1.1.0 | 09-14 | 미확인 |
+| TrueInstantLootDrop | `Azumatt/TrueInstantLootDrop` | 1.0.4 | 09-14 | 미확인 |
+| QuickStackStore | `Goldenrevolver/Quick_Stack_Store_Sort_Trash_Restock` | 1.4.15 | 09-12 | 미확인 |
+| AzuRepair | `Azumatt/AzuAreaRepair` (추정) | 1.1.7 | 09-14 | 미확인, 이름 불일치 |
+| TargetPortal | `Smoothbrain/TargetPortal` | 1.2.3 | **2026-02-22** | 위험 |
+| Farming | `Smoothbrain/Farming` | 2.2.2 | **2026-02-05** | 위험 |
+| InteractWhileBuilding | `tonsit/InteractWhileBuilding` | 1.0.0 | **2021-03-01** | 위험, 5년 방치 |
+| ValheimGammaMod | `ColdSpirit/ValheimGammaMod` | 1.0.0 | **2022-01-18** | 위험, 4년 방치 |
+| CraftFromContainers | 여러 포크 | - | - | 위험, **1.0 대응판 없음** |
 
 ## 개별 메모
 
@@ -301,7 +301,7 @@ Thunderstore 전체 카탈로그(11,376개)와 대조한 결과다. 판정 기�
 
 **`ValheimGammaMod` 는 대안이 있다**
 
-`ColdSpirit/ValheimGammaMod` 는 2022년 이후 방치다. 대신 `shudnal/GammaOfNightLights` 1.0.10 (2026-09-10, Deep North ✅) 이 같은 목적의 현행 모드다.
+`ColdSpirit/ValheimGammaMod` 는 2022년 이후 방치다. 대신 `shudnal/GammaOfNightLights` 1.0.10 (2026-09-10, Deep North 태그 보유) 이 같은 목적의 현행 모드다.
 
 **`Gizmo` 는 이전 조사의 상충이 해소되었다**
 
