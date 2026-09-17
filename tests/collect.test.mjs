@@ -66,6 +66,44 @@ describe("buildPayload", () => {
     expect(p.server.playerCount).toBe(0);
   });
 
+  it("players 배열은 playerCount 를 절대 넘지 않는다", () => {
+    const p = buildPayload({
+      statusRaw: read("status-players.json"), // player_count: 1
+      running: true,
+      players: ["오래된사람", "중간사람", "최근사람"],
+      backup: { lastAt: null, count: 0 },
+      address: "1.2.3.4:2456",
+      nowIso: NOW,
+    });
+    expect(p.server.players.length).toBeLessThanOrEqual(p.server.playerCount);
+    expect(p.server.players).toEqual(["최근사람"]);
+  });
+
+  it("playerCount 가 0 이면 로그에 이름이 잡혀도 빈 배열이다", () => {
+    const p = buildPayload({
+      statusRaw: read("status-0players.json"), // player_count: 0
+      running: true,
+      players: ["누들낑"],
+      backup: { lastAt: null, count: 0 },
+      address: "1.2.3.4:2456",
+      nowIso: NOW,
+    });
+    expect(p.server.playerCount).toBe(0);
+    expect(p.server.players).toEqual([]);
+  });
+
+  it("players 개수가 playerCount 이하면 자르지 않는다", () => {
+    const p = buildPayload({
+      statusRaw: read("status-players.json"), // player_count: 1
+      running: true,
+      players: ["누들낑"],
+      backup: { lastAt: null, count: 0 },
+      address: "1.2.3.4:2456",
+      nowIso: NOW,
+    });
+    expect(p.server.players).toEqual(["누들낑"]);
+  });
+
   it("비밀번호를 담지 않는다", () => {
     const p = buildPayload({
       statusRaw: read("status-0players.json"),

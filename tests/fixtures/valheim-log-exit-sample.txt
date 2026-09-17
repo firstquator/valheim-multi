@@ -1,0 +1,9 @@
+Sep 18 04:16:45 supervisord: valheim-server 09/18/2026 04:16:45: Got connection SteamID 76561198084385119
+Sep 18 04:17:14 supervisord: valheim-server 09/18/2026 04:17:14: Got character ZDOID from 누들낑 : 1661827661:1
+Sep 18 04:20:00 supervisord: valheim-server 09/18/2026 04:20:00: Got connection SteamID 76561198116018222
+Sep 18 04:20:30 supervisord: valheim-server 09/18/2026 04:20:30: Got character ZDOID from 모카비비 : 987654321:1
+Sep 18 04:43:18 supervisord: valheim-server 09/18/2026 04:43:18: RPC_Disconnect
+Sep 18 04:43:18 supervisord: valheim-server 09/18/2026 04:43:18: Destroying abandoned non persistent zdo 1661827661:1 owner 1661827661
+Sep 18 04:43:18 supervisord: valheim-server 09/18/2026 04:43:18: Destroying abandoned non persistent zdo 1661827661:4634 owner 1661827661
+Sep 18 04:43:18 supervisord: valheim-server 09/18/2026 04:43:18: Destroying abandoned non persistent zdo 1661827661:4633 owner 1661827661
+Sep 18 04:43:18 supervisord: valheim-server 09/18/2026 04:43:18: Closing socket 76561198084385119

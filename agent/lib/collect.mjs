@@ -35,14 +35,26 @@ export function buildPayload({ statusRaw, running, players, backup, address, now
 
   const ok = running === true && status !== null && status.error == null;
   const kw = parseKeywords(status?.keywords);
+  const playerCount = ok ? Number(status?.player_count) || 0 : 0;
+
+  // players 는 로그를 파싱해 얻은 값이라 status.json 의 player_count 와
+  // 어긋날 수 있다 (로그 형식이 바뀌었거나, 퇴장 패턴을 놓쳤거나 등).
+  // 이름이 틀리는 것보다 개수가 서로 모순되는 게 더 나쁘므로,
+  // player_count 를 넘지 않도록 항상 자른다. parsePlayers 는 오래된 순 →
+  // 최근 순으로 반환하므로 뒤에서부터(가장 최근 합류자부터) 남긴다.
+  const safePlayers = ok
+    ? (Array.isArray(players) ? players : []).slice(
+        Math.max(0, (Array.isArray(players) ? players.length : 0) - playerCount),
+      )
+    : [];
 
   return {
     updatedAt: nowIso,
     server: {
       running: ok,
       name: status?.server_name ?? null,
-      playerCount: ok ? Number(status?.player_count) || 0 : 0,
-      players: ok ? players : [],
+      playerCount,
+      players: safePlayers,
       gameVersion: kw.gameVersion,
       networkVersion: kw.networkVersion,
       address,
