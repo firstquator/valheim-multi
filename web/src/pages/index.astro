@@ -22,7 +22,11 @@ const TABS = [
   { id: "world", label: "월드", icon: "globe-02" },
 ];
 
+// 계층은 친구가 할 일로 나뉜다.
+//   3층 전원 필수 / 2층 원하면 설치 / 1층 서버 전용
+// 개수는 전부 data/mods.json 에서 세어 쓴다. 숫자를 손으로 적지 않는다.
 const tier1 = modsData.mods.filter((m) => m.tier === 1);
+const tier2 = modsData.mods.filter((m) => m.tier === 2);
 const tier3 = modsData.mods.filter((m) => m.tier === 3);
 const modpackCode = modsData.modpack.r2modmanCode;
 
@@ -171,7 +175,7 @@ const STEPS = [
             kicker="이 서버에 적용된 것"
             title="모드"
             icon="package-02"
-            desc="서버에만 깔리는 모드와 직접 설치해야 하는 모드를 나눠 두었습니다. 위쪽 구역만 보시면 됩니다."
+            desc="위에서부터 반드시 해야 하는 것, 하고 싶으면 하는 것, 신경 쓰지 않아도 되는 것 순서입니다."
           >
             <div class="count-pills" slot="aside">
               <span class="pill">
@@ -180,8 +184,14 @@ const STEPS = [
               </span>
               <span class={`pill ${needsAnyInstall ? "pill-hot" : "pill-ok"}`}>
                 <Icon name={needsAnyInstall ? "download-04" : "checkmark-circle-02"} size={14} />
-                직접 설치 {tier3.length}개
+                전원 필수 {tier3.length}개
               </span>
+              {tier2.length > 0 && (
+                <span class="pill pill-pick">
+                  <Icon name="puzzle" size={14} />
+                  원하면 설치 {tier2.length}개
+                </span>
+              )}
             </div>
           </PageHead>
 
@@ -190,10 +200,11 @@ const STEPS = [
               <div class="group-h">
                 <h2>
                   <Icon name="download-04" size={19} />
-                  직접 설치해야 하는 모드
+                  전원이 설치해야 하는 모드
                 </h2>
                 <p class="lead">
-                  {tier3.length}개입니다. 설치 가이드 탭의 순서대로 하면 한 번에 끝납니다.
+                  {tier3.length}개입니다. 하나라도 빠지면 접속할 수 없습니다.
+                  설치 가이드 탭의 순서대로 하면 한 번에 끝납니다.
                 </p>
               </div>
 
@@ -230,20 +241,41 @@ const STEPS = [
             </section>
           )}
 
-          <section class="group">
-            <div class="group-h">
-              <h2>
-                <Icon name="server-stack-01" size={19} />
-                서버에만 깔린 모드
-              </h2>
-              <p class="lead">
-                {tier1.length}개입니다. 접속하면 저절로 적용되니 읽고 넘기셔도 됩니다.
-              </p>
-            </div>
-            <div class="grid">
-              {tier1.map((m) => <ModCard mod={m} />)}
-            </div>
-          </section>
+          {tier2.length > 0 && (
+            <section class="group">
+              <div class="group-h group-h-pick">
+                <h2>
+                  <Icon name="puzzle" size={19} />
+                  원하는 사람만 설치하는 모드
+                </h2>
+                <p class="lead">
+                  {tier2.length}개입니다. <strong>안 깔아도 접속에는 지장이 없습니다.</strong>{" "}
+                  쓰고 싶은 것만 골라서 각자 받으면 되고, 사람마다 달라도 괜찮습니다.
+                  버전을 서로 맞출 필요도 없습니다.
+                </p>
+              </div>
+              <div class="grid">
+                {tier2.map((m) => <ModCard mod={m} />)}
+              </div>
+            </section>
+          )}
+
+          {tier1.length > 0 && (
+            <section class="group">
+              <div class="group-h group-h-ok">
+                <h2>
+                  <Icon name="server-stack-01" size={19} />
+                  서버에만 깔린 모드
+                </h2>
+                <p class="lead">
+                  {tier1.length}개입니다. 접속하면 저절로 적용되니 읽고 넘기셔도 됩니다.
+                </p>
+              </div>
+              <div class="grid">
+                {tier1.map((m) => <ModCard mod={m} />)}
+              </div>
+            </section>
+          )}
         </div>
 
         <div slot="install">
@@ -258,7 +290,7 @@ const STEPS = [
           />
 
           {needsAnyInstall ? (
-            <Callout title={`직접 설치해야 하는 모드가 ${tier3.length}개 있습니다`}>
+            <Callout title={`전원이 설치해야 하는 모드가 ${tier3.length}개 있습니다`}>
               설치하지 않으면 서버에 접속할 수 없습니다. 어떤 모드인지는 모드 탭에
               적혀 있고, 3단계의 프로필 코드 하나로 한꺼번에 설치됩니다.
             </Callout>
@@ -451,6 +483,15 @@ const STEPS = [
                     <DiagramImportCode />
                     <figcaption>코드를 붙여넣는 자리와 순서입니다.</figcaption>
                   </figure>
+
+                  {tier2.length > 0 && (
+                    <Callout title="원하면 설치하는 모드는 코드에 들어 있지 않습니다" tone="info">
+                      이 코드에는 전원 필수 모드만 담겨 있습니다. 모드 탭의
+                      "원하는 사람만 설치하는 모드" 를 쓰고 싶다면 r2modman 의
+                      Online 화면에서 그 이름으로 검색해 따로 받으시면 됩니다.
+                      안 받아도 접속에는 지장이 없습니다.
+                    </Callout>
+                  )}
                 </div>
                 <footer class="wiz-foot">
                   <label class="wbtn wbtn-back" for="step-2">
@@ -889,6 +930,11 @@ const STEPS = [
     border-color: color-mix(in srgb, var(--success) 45%, transparent);
     background: color-mix(in srgb, var(--success) 10%, var(--surface));
   }
+  .pill-pick {
+    color: var(--info-bright);
+    border-color: color-mix(in srgb, var(--info) 45%, transparent);
+    background: color-mix(in srgb, var(--info) 10%, var(--surface));
+  }
 
   .group { margin-bottom: 52px; }
   .group:last-child { margin-bottom: 0; }
@@ -904,6 +950,9 @@ const STEPS = [
   }
   .group-h h2 .icon { color: var(--accent); }
   .group-h-ok h2 .icon { color: var(--success); }
+  .group-h-pick h2 .icon { color: var(--info-bright); }
+  /* 안 해도 된다는 사실이 흘려 읽히면 친구가 전부 설치해야 하는 줄 안다. */
+  .lead strong { color: var(--text); font-weight: 700; }
   .lead {
     max-width: var(--measure);
     margin: 6px 0 0;

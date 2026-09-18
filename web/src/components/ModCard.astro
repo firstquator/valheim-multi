@@ -11,12 +11,28 @@ interface Props {
 }
 const { mod } = Astro.props;
 
-// 3층은 친구가 직접 설치해야 하는 모드다. 1층은 서버에만 깔린다.
-const needsInstall = mod.tier === 3;
+// 계층마다 친구가 할 일이 다르다. 카드가 그 일을 먼저 말해야 한다.
+//
+//   3층  전원 필수     프로필 코드로 설치한다. 안 하면 접속이 막힌다
+//   2층  원하면 설치   각자 고른다. 안 깔아도 접속에는 지장이 없다
+//   1층  설치 불필요   서버에만 깔린다. 아무것도 안 해도 된다
+//
+// 배지는 색과 글자를 함께 쓴다. 색만으로 구분하면 색각 이상이 있는
+// 사람은 못 알아본다.
+const TIERS = {
+  3: { cls: "need", label: "전원 필수", icon: "download-04" },
+  2: { cls: "pick", label: "원하면 설치", icon: "puzzle" },
+  1: { cls: "free", label: "설치 불필요", icon: "checkmark-circle-02" },
+};
+const tier = TIERS[mod.tier] ?? TIERS[1];
+
+// 버전 고정은 3층에만 붙인다. 2층은 개인 선택이라 서로 버전을 맞출
+// 필요가 없다. 여기에 "전원 동일" 을 붙이면 친구가 괜히 버전을 맞추려 든다.
+const pinVersion = mod.tier === 3;
 const modIcon = pickModIcon(mod);
 ---
 
-<article class={`mod ${needsInstall ? "need" : "free"}`}>
+<article class={`mod ${tier.cls}`}>
   <header>
     <span class="ico" aria-hidden="true"><Icon name={modIcon} size={22} /></span>
     <div class="ident">
@@ -24,8 +40,8 @@ const modIcon = pickModIcon(mod);
       <p class="pkg mono">{mod.id}</p>
     </div>
     <span class="tier">
-      <Icon name={needsInstall ? "download-04" : "checkmark-circle-02"} size={14} />
-      {needsInstall ? "직접 설치" : "설치 불필요"}
+      <Icon name={tier.icon} size={14} />
+      {tier.label}
     </span>
   </header>
 
@@ -50,7 +66,7 @@ const modIcon = pickModIcon(mod);
   </div>
 
   <footer>
-    {needsInstall ? (
+    {pinVersion ? (
       <span class="ver pinned mono">
         <Icon name="password-validation" size={13} />
         {mod.version}
@@ -259,9 +275,33 @@ const modIcon = pickModIcon(mod);
   }
   .free:hover .ico { color: var(--success-bright); border-color: var(--border-strong); }
 
-  /* 설치 필요 그룹. 이 화면에서 친구가 얻어야 할 답이 "내가 뭘 설치해야
-     하나" 이므로 1층과 확실히 달라 보여야 한다. 배경, 테두리, 상단 띠를
-     모두 다르게 준다. */
+  /* 원하면 설치하는 그룹. 의무는 아니지만 고를 거리는 된다.
+     필수(청동)와도 불필요(초록)와도 다른 청록으로 두어 세 계층이
+     한눈에 갈린다. 무게는 둘 사이 중간이다. */
+  .pick .tier {
+    color: var(--info-bright);
+    background: color-mix(in srgb, var(--info) 16%, transparent);
+    border: 1px solid color-mix(in srgb, var(--info) 45%, transparent);
+  }
+  .pick {
+    border-color: color-mix(in srgb, var(--info) 30%, var(--border));
+  }
+  .pick .ico {
+    color: var(--info-bright);
+    background: color-mix(in srgb, var(--info) 12%, var(--surface-raised));
+    border-color: color-mix(in srgb, var(--info) 30%, var(--border));
+  }
+  .pick:hover {
+    border-color: color-mix(in srgb, var(--info) 65%, var(--border));
+    background: var(--surface-raised);
+  }
+  .pick:hover .ico {
+    background: color-mix(in srgb, var(--info) 22%, var(--surface-raised));
+  }
+
+  /* 전원 필수 그룹. 이 화면에서 친구가 얻어야 할 답이 "내가 뭘 설치해야
+     하나" 이므로 나머지 두 계층과 확실히 달라 보여야 한다. 배경, 테두리,
+     배지를 모두 다르게 준다. */
   .need {
     background: linear-gradient(
       165deg,
