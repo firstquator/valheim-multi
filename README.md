@@ -17,6 +17,19 @@
 3. `docs/guides/world-migration.md` : 친구 월드를 서버로 옮기기
 4. `docs/guides/status-publisher-setup.md` : 상태 표시용 Gist 연동, PC 상시 실행 등록
 5. `docs/guides/github-pages-deploy.md` : 사이트 배포와 색인 차단 관련 주의사항
+6. `docs/guides/admin-panel.md` : 방장용 관리 패널 (서버 제어, 드리프트 감지, 로그, 백업)
+
+## 관리 패널
+
+`admin/` 아래에 방장이 서버 PC 에서 여는 로컬 패널이 있다. 배포물이 아니다.
+
+    node admin/server.mjs        열기: http://127.0.0.1:4330
+
+**`127.0.0.1` 에만 붙는다. 절대 외부에 열지 않는다.** 인증이 없고 도커를 조작할 수 있어서,
+외부에 열리면 누구나 서버를 끌 수 있다. 자세한 것은 `docs/guides/admin-panel.md` 를 본다.
+
+핵심 기능은 **드리프트 감지**다. `data/mods.json` 이 선언한 것과 서버에 실제로 깔린 것을
+대조해, 로그에는 `Loading` 으로 뜨지만 실제로는 초기화에 실패해 죽어 있는 모드를 잡아낸다.
 
 ## 사이트
 
