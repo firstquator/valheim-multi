@@ -1,0 +1,75 @@
+---
+// 설치 가이드 맨 위에 두는 전체 흐름 도식이다.
+// 다섯 단계를 한눈에 보여줘서 "얼마나 걸릴 일인지" 부터 가늠하게 한다.
+---
+
+<svg
+  class="dg"
+  viewBox="0 0 900 132"
+  role="img"
+  aria-labelledby="dg-flow-title dg-flow-desc"
+>
+  <title id="dg-flow-title">설치 전체 흐름</title>
+  <desc id="dg-flow-desc">
+    r2modman 설치, 발헤임 선택, 프로필 코드 가져오기, Start modded 로 실행,
+    서버 접속 순서로 다섯 단계입니다.
+  </desc>
+
+  <g>
+    <rect x="8" y="26" width="152" height="72" rx="12" fill="var(--surface)" stroke="var(--border)" />
+    <circle cx="34" cy="50" r="11" fill="var(--accent)" />
+    <text class="t-num" x="34" y="55">1</text>
+    <text class="t-step" x="26" y="82">r2modman 설치</text>
+  </g>
+  <line x1="168" y1="62" x2="186" y2="62" stroke="var(--border-strong)" stroke-width="2" />
+  <path d="M198 62l-12-6v12z" fill="var(--border-strong)" />
+
+  <g>
+    <rect x="206" y="26" width="152" height="72" rx="12" fill="var(--surface)" stroke="var(--border)" />
+    <circle cx="232" cy="50" r="11" fill="var(--accent)" />
+    <text class="t-num" x="232" y="55">2</text>
+    <text class="t-step" x="224" y="82">발헤임 고르기</text>
+  </g>
+  <line x1="366" y1="62" x2="384" y2="62" stroke="var(--border-strong)" stroke-width="2" />
+  <path d="M396 62l-12-6v12z" fill="var(--border-strong)" />
+
+  <g>
+    <rect x="404" y="26" width="152" height="72" rx="12" fill="var(--surface)" stroke="var(--border)" />
+    <circle cx="430" cy="50" r="11" fill="var(--accent)" />
+    <text class="t-num" x="430" y="55">3</text>
+    <text class="t-step" x="422" y="82">프로필 가져오기</text>
+  </g>
+  <line x1="564" y1="62" x2="582" y2="62" stroke="var(--border-strong)" stroke-width="2" />
+  <path d="M594 62l-12-6v12z" fill="var(--border-strong)" />
+
+  <g>
+    <rect x="602" y="26" width="152" height="72" rx="12"
+          fill="var(--surface)" stroke="var(--accent)" />
+    <circle cx="628" cy="50" r="11" fill="var(--accent)" />
+    <text class="t-num" x="628" y="55">4</text>
+    <text class="t-step t-on" x="620" y="82">Start modded</text>
+  </g>
+  <line x1="762" y1="62" x2="780" y2="62" stroke="var(--border-strong)" stroke-width="2" />
+  <path d="M792 62l-12-6v12z" fill="var(--border-strong)" />
+
+  <g>
+    <rect x="800" y="26" width="92" height="72" rx="12"
+          fill="var(--surface)" stroke="var(--success)" stroke-opacity="0.6" />
+    <circle cx="826" cy="50" r="11" fill="var(--success)" />
+    <text class="t-num" x="826" y="55">5</text>
+    <text class="t-step t-fin" x="818" y="82">서버 접속</text>
+  </g>
+</svg>
+
+<style>
+  .dg {
+    display: block;
+    width: 100%;
+    height: auto;
+    font-family: var(--font-sans);
+  }
+  .t-num { font-size: 12px; font-weight: 700; fill: var(--bg); text-anchor: middle; }
+  .t-step { font-size: 14px; font-weight: 600; fill: var(--text); }
+  .t-on { fill: var(--accent-bright); }
+  .t-fin { fill: var(--success-bright); }
+</style>

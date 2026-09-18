@@ -1,0 +1,100 @@
+---
+// 게임을 어떻게 켜느냐에 따라 모드가 적용되기도 하고 안 되기도 한다.
+// 가장 자주 나오는 실수라 두 경로를 나란히 놓고 결과까지 그린다.
+---
+
+<svg
+  class="dg"
+  viewBox="0 0 900 300"
+  role="img"
+  aria-labelledby="dg-run-title dg-run-desc"
+>
+  <title id="dg-run-title">게임을 켜는 두 가지 방법과 그 결과</title>
+  <desc id="dg-run-desc">
+    Steam 에서 바로 실행하면 모드가 적용되지 않아 서버 접속이 거부됩니다.
+    r2modman 의 Start modded 버튼으로 켜야 모드가 적용되어 접속됩니다.
+  </desc>
+
+  <!-- 위쪽: 잘못된 경로 -->
+  <g>
+    <rect x="16" y="24" width="868" height="112" rx="12"
+          fill="var(--surface)" stroke="var(--warning)" stroke-opacity="0.45" />
+
+    <rect x="40" y="52" width="150" height="56" rx="10"
+          fill="var(--surface-raised)" stroke="var(--border)" />
+    <text class="t-box" x="115" y="78">Steam</text>
+    <text class="t-boxsub" x="115" y="96">라이브러리에서</text>
+
+    <line x1="198" y1="80" x2="248" y2="80" stroke="var(--text-faint)" stroke-width="2" />
+    <path d="M262 80l-14-7v14z" fill="var(--text-faint)" />
+
+    <rect x="274" y="52" width="150" height="56" rx="10"
+          fill="var(--surface-raised)" stroke="var(--border)" />
+    <text class="t-box" x="349" y="78">플레이</text>
+    <text class="t-boxsub" x="349" y="96">바로 실행</text>
+
+    <line x1="432" y1="80" x2="482" y2="80" stroke="var(--text-faint)" stroke-width="2" />
+    <path d="M496 80l-14-7v14z" fill="var(--text-faint)" />
+
+    <rect x="508" y="52" width="164" height="56" rx="10"
+          fill="var(--surface-sunken)" stroke="var(--border)" />
+    <text class="t-box" x="590" y="86">모드 없는 바닐라</text>
+
+    <line x1="680" y1="80" x2="712" y2="80" stroke="var(--warning)" stroke-width="2" />
+    <path d="M726 80l-14-7v14z" fill="var(--warning)" />
+
+    <circle cx="756" cy="80" r="16" fill="none" stroke="var(--warning)" stroke-width="2" />
+    <path d="M750 74l12 12M762 74l-12 12" stroke="var(--warning)" stroke-width="2" stroke-linecap="round" />
+    <text class="t-bad" x="782" y="77">접속 거부</text>
+    <text class="t-boxsub2" x="782" y="94">모드 목록이 서버와 다릅니다</text>
+  </g>
+
+  <!-- 아래쪽: 올바른 경로 -->
+  <g>
+    <rect x="16" y="160" width="868" height="112" rx="12"
+          fill="var(--surface)" stroke="var(--success)" stroke-opacity="0.5" />
+
+    <rect x="40" y="188" width="150" height="56" rx="10"
+          fill="var(--surface-raised)" stroke="var(--border)" />
+    <text class="t-box" x="115" y="214">r2modman</text>
+    <text class="t-boxsub" x="115" y="232">프로필을 고르고</text>
+
+    <line x1="198" y1="216" x2="248" y2="216" stroke="var(--text-faint)" stroke-width="2" />
+    <path d="M262 216l-14-7v14z" fill="var(--text-faint)" />
+
+    <rect x="274" y="188" width="150" height="56" rx="10" fill="var(--accent)" />
+    <path d="M306 216l-9-6v12z" fill="var(--bg)" />
+    <text class="t-boxon" x="359" y="221">Start modded</text>
+
+    <line x1="432" y1="216" x2="482" y2="216" stroke="var(--text-faint)" stroke-width="2" />
+    <path d="M496 216l-14-7v14z" fill="var(--text-faint)" />
+
+    <rect x="508" y="188" width="164" height="56" rx="10"
+          fill="var(--surface-sunken)" stroke="var(--accent)" stroke-opacity="0.5" />
+    <text class="t-box" x="590" y="222">모드 적용된 게임</text>
+
+    <line x1="680" y1="216" x2="712" y2="216" stroke="var(--success)" stroke-width="2" />
+    <path d="M726 216l-14-7v14z" fill="var(--success)" />
+
+    <circle cx="756" cy="216" r="16" fill="none" stroke="var(--success)" stroke-width="2" />
+    <path d="M749 216l5 6 10-12" fill="none" stroke="var(--success)" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" />
+    <text class="t-good" x="782" y="213">접속 성공</text>
+    <text class="t-boxsub2" x="782" y="230">서버와 모드가 맞습니다</text>
+  </g>
+</svg>
+
+<style>
+  .dg {
+    display: block;
+    width: 100%;
+    height: auto;
+    font-family: var(--font-sans);
+  }
+  .t-box { font-size: 14.5px; font-weight: 600; fill: var(--text); text-anchor: middle; }
+  .t-boxon { font-size: 14.5px; font-weight: 700; fill: var(--bg); text-anchor: middle; }
+  .t-boxsub { font-size: 12px; fill: var(--text-faint); text-anchor: middle; }
+  .t-boxsub2 { font-size: 12.5px; fill: var(--text-dim); }
+  .t-bad { font-size: 15px; font-weight: 700; fill: var(--warning-bright); }
+  .t-good { font-size: 15px; font-weight: 700; fill: var(--success-bright); }
+</style>
