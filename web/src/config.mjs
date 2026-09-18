@@ -1,11 +1,11 @@
-// GIST_ID 는 사용자가 직접 채운다. 자동화 에이전트가 대신 채우지 않는다.
+// 상태를 올려둘 시크릿 Gist 의 id 다. 이미 만들어 채워 두었다.
+// 파일 이름은 valheim-status.json 이고 초기 내용은 빈 객체다.
 //
-// 1. https://gist.github.com 에서 시크릿 Gist 를 만든다
-//    (파일 이름 valheim-status.json, 내용 {})
-// 2. 만든 Gist 페이지 URL 의 마지막 32자리가 Gist ID 다
-// 3. 아래 빈 문자열 자리에 그 값을 채운다
+// 다른 Gist 로 바꾸려면 https://gist.github.com 에서 새로 만든 뒤
+// 그 페이지 URL 의 마지막 32자리를 여기에 넣고 GIST_OWNER 도 맞춘다.
 //
-// 절차 전체와 퍼블리셔(agent/status-publisher.mjs) 상시 실행 방법은
+// 퍼블리셔(agent/status-publisher.mjs)가 이 Gist 를 갱신하려면
+// 토큰이 따로 필요하다. 토큰 발급과 상시 실행 방법은
 // docs/guides/status-publisher-setup.md 를 본다.
 //
 // 이 값은 공개되어도 된다. Gist 는 읽기 전용으로만 노출되고,
@@ -14,7 +14,7 @@
 // 빈 값이면 LiveStatus 가 조회를 건너뛰고 "상태 확인 불가" 로 조용히
 // 수렴한다. 값을 채우기 전까지 사이트가 깨지면 안 되므로 이 동작을
 // 그대로 둔다.
-export const GIST_ID = "";
+export const GIST_ID = "99ad1fdb3291cb2d354f1b8cd37e8732";
 export const GIST_FILE = "valheim-status.json";
 
 // Gist 를 소유한 GitHub 사용자명. 조회 URL 경로에 들어간다.
