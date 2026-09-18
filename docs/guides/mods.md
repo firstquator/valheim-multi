@@ -208,7 +208,11 @@ Thunderstore 카테고리에 `Bog Witch Update` 만 있고 `Deep North Update` �
 
 **프로필 파일을 만들어 사이트에 올려 두었다. 방장이 GUI 로 할 일은 없다.**
 
-친구는 사이트의 설치 가이드에서 파일을 내려받아 r2modman 의 **파일로 가져오기**로 불러오면 된다. 목록과 버전이 그대로 맞춰진다.
+친구는 사이트의 설치 가이드에서 파일을 내려받아 r2modman 의 `From file` 로 불러오면 된다. 목록과 버전이 그대로 맞춰진다.
+
+**프로필에는 3층(전원 필수)과 2층(개인 선택)을 모두 담는다.** 1층은 서버에만 깔리므로 넣지 않는다.
+
+2층을 담아도 강제가 되지 않는다. 서버가 검사하는 것은 3층뿐이라 2층이 없어도 튕기지 않는다. 원하지 않는 사람은 r2modman 에서 그 모드만 꺼 두면 된다. 빼면 2층을 쓰고 싶은 사람이 이름을 하나씩 검색해 따로 받아야 하고, 그 과정에서 틀린 모드를 받거나 인벤토리 충돌 같은 사고가 생긴다.
 
 | 항목 | 값 |
 |---|---|
@@ -216,6 +220,16 @@ Thunderstore 카테고리에 `Bog Witch Update` 만 있고 `Deep North Update` �
 | 배포 경로 | `https://firstquator.github.io/valheim-multi/gaybar-modpack.r2z` |
 | 만드는 곳 | `scripts/build-modpack.mjs` |
 | 다시 만들기 | `npm run modpack` |
+
+### 패키지 이름이 실재하는지 확인한다
+
+```bash
+npm run modpack:verify
+```
+
+프로필의 모든 패키지가 Thunderstore 에 그 버전으로 있는지 확인한다. 이름이 하나라도 틀리면 가져오기가 통째로 실패한다. 실제로 `SlopeCombatAssistance` 와 `QuickStackStore` 두 건이 축약된 이름으로 적혀 있어 **존재하지 않는 패키지를 가리키고 있었다.** 둘 다 이 검사로 찾았다.
+
+네트워크를 타므로 일반 테스트에는 넣지 않았다. 모드를 바꾼 뒤 직접 돌린다.
 
 ### 모드를 바꾸면 반드시 다시 만든다
 

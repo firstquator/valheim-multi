@@ -23,11 +23,24 @@ describe("모드팩 프로필", () => {
     }
   });
 
-  it("2층 모드는 프로필에 들어가지 않는다. 개인 선택이라 강제하면 안 된다", () => {
+  it("2층 모드도 전부 들어간다. 서버가 검사하지 않으므로 담아도 강제가 아니다", () => {
     const names = collectPackages(data).map((p) => p.name);
-    for (const m of data.mods.filter((x) => x.tier === 2)) {
-      expect(names).not.toContain(`${m.owner}-${m.id}`);
+    const tier2 = data.mods.filter((x) => x.tier === 2);
+    expect(tier2.length).toBeGreaterThan(0);
+    for (const m of tier2) {
+      expect(names).toContain(`${m.owner}-${m.id}`);
     }
+  });
+
+  it("필수 모드가 선택 모드보다 앞에 온다. 설치 목록에서 중요한 것이 위에 보여야 한다", () => {
+    const names = collectPackages(data).map((p) => p.name);
+    const lastTier3 = Math.max(
+      ...data.mods.filter((m) => m.tier === 3).map((m) => names.indexOf(`${m.owner}-${m.id}`)),
+    );
+    const firstTier2 = Math.min(
+      ...data.mods.filter((m) => m.tier === 2).map((m) => names.indexOf(`${m.owner}-${m.id}`)),
+    );
+    expect(lastTier3).toBeLessThan(firstTier2);
   });
 
   it("1층 모드도 들어가지 않는다. 서버에만 깔리므로 친구가 받을 필요가 없다", () => {

@@ -39,15 +39,28 @@ export const OUTPUT_PATH = resolve(root, "web/public/gaybar-modpack.r2z");
 
 /**
  * 프로필에 들어갈 패키지 목록을 만든다.
- * 3층 모드와 그것들이 요구하는 의존성을 합친다.
- * 2층은 개인 선택이라 넣지 않는다. 넣으면 전원 강제가 된다.
+ * 의존성 + 3층(전원 필수) + 2층(개인 선택)을 모두 담는다.
+ *
+ * 2층을 왜 넣는가.
+ * 처음에는 "개인 선택이라 넣으면 전원 강제가 된다" 고 보고 뺐다. 그런데
+ * 강제되는 것은 서버가 검사하는 3층뿐이다. 2층은 서버에 깔려 있지 않아
+ * 없어도 튕기지 않는다. 그래서 프로필에 담아도 강제가 되지 않는다.
+ * 원하지 않는 사람은 r2modman 에서 그 모드만 꺼 두면 된다.
+ *
+ * 담는 편이 낫다고 판단한 이유는, 빼면 2층을 쓰고 싶은 사람이 이름을
+ * 하나씩 검색해 따로 받아야 하기 때문이다. 그 과정에서 틀린 모드를 받거나
+ * 인벤토리 충돌 같은 사고가 생긴다.
+ *
+ * 1층은 넣지 않는다. 서버에만 깔리므로 친구가 받을 이유가 없다.
  */
 export function collectPackages(data) {
   const tier3 = data.mods.filter((m) => m.tier === 3);
+  const tier2 = data.mods.filter((m) => m.tier === 2);
   const deps = data.modpack?.dependencies ?? [];
 
-  // 의존성을 앞에 둔다. 로더가 먼저 오는 편이 사람이 읽기 좋다.
-  const all = [...deps, ...tier3];
+  // 의존성, 필수, 선택 순으로 둔다. r2modman 의 설치 목록이 이 순서로
+  // 보이므로 중요한 것이 위에 오는 편이 사람이 읽기 좋다.
+  const all = [...deps, ...tier3, ...tier2];
 
   const seen = new Set();
   return all.map((m) => {
@@ -155,4 +168,51 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import
   writeFileSync(OUTPUT_PATH, zip);
   console.log(`${OUTPUT_PATH} 생성 (패키지 ${packages.length}개, ${zip.length} 바이트)`);
   for (const p of packages) console.log(`  ${p.name}-${p.major}.${p.minor}.${p.patch}`);
+
+  // --verify 를 주면 Thunderstore 에 실재하는지까지 확인한다.
+  if (process.argv.includes("--verify")) {
+    console.log("Thunderstore 실재 확인 중...");
+    const bad = await verifyPackages(packages);
+    if (bad.length) {
+      for (const b of bad) console.error(`  실패 ${b.name}-${b.version}: ${b.why}`);
+      process.exit(1);
+    }
+    console.log(`  ${packages.length}개 전부 확인됨`);
+  }
+}
+
+/**
+ * 프로필의 모든 패키지가 Thunderstore 에 그 버전으로 실재하는지 확인한다.
+ *
+ * 이 파일은 친구 전원에게 나간다. 이름이나 버전이 하나라도 틀리면 가져오기가
+ * 통째로 실패한다. 실제로 SlopeCombatAssistance 와 QuickStackStore 두 건이
+ * 축약된 이름으로 적혀 있어 존재하지 않는 패키지를 가리키고 있었다.
+ *
+ * 네트워크를 타므로 일반 테스트에는 넣지 않는다. 모드를 바꾼 뒤
+ * `npm run modpack:verify` 로 직접 돌린다.
+ */
+export async function verifyPackages(packages) {
+  const bad = [];
+  for (const p of packages) {
+    const version = `${p.major}.${p.minor}.${p.patch}`;
+    const [owner, ...rest] = p.name.split("-");
+    const pkg = rest.join("-");
+    const url = `https://thunderstore.io/api/experimental/package/${owner}/${pkg}/${version}/`;
+    let res;
+    try {
+      res = await fetch(url);
+    } catch {
+      bad.push({ name: p.name, version, why: "네트워크 오류" });
+      continue;
+    }
+    if (!res.ok) {
+      bad.push({ name: p.name, version, why: `HTTP ${res.status}` });
+      continue;
+    }
+    const json = await res.json();
+    if (json.full_name !== `${p.name}-${version}`) {
+      bad.push({ name: p.name, version, why: `이름 불일치 (${json.full_name})` });
+    }
+  }
+  return bad;
 }
