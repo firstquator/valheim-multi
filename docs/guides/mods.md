@@ -107,16 +107,48 @@
 
 # 3층: 모드팩 (친구들도 설치)
 
-**아직 도입 전이다.** 1층이 안정화된 뒤에 진행한다.
+**서버 쪽 설치는 완료했다 (2026-09-18).** 친구들이 r2modman 프로필 코드를 받아 설치해야 실제로 접속이 된다. 자세한 내용은 아래 "서버 쪽 설치 결과" 참고.
 
-## 도입 예정
+## 구성
 
 | 모드 | 버전 | 역할 |
 |---|---|---|
 | `denikson/BepInExPack_Valheim` | 5.4.2350 | 모드 로더 |
-| `shudnal/ExtraSlots` | 1.2.9 | **장비 슬롯 창**, 음식/탄약/유틸 전용 슬롯 |
-| `MathiasDecrock/PlanBuild` | 0.18.5 | 건축 청사진 |
+| `shudnal/ExtraSlots` | 1.2.10 | **장비 슬롯 창**, 음식/탄약/유틸 전용 슬롯 |
+| `shudnal/ConditionalConfigSync` | 1.0.8 | `ExtraSlots` 의존성. 서버 설정값을 클라이언트에 강제 동기화 |
+| `MathiasDecrock/PlanBuild` | 0.19.0 | 건축 청사진 |
 | `MSchmoecker/MultiUserChest` | 0.6.2 | 여러 명이 같은 상자 동시 사용 |
+| `ValheimModding/Jotunn` | 2.30.1 | `PlanBuild`, `MultiUserChest` 공통 의존성 (모딩 라이브러리) |
+
+버전은 문서에 적어 둔 값을 믿지 말고 항상 Thunderstore API 로 다시 확인한다. `PlanBuild` 는 문서에 0.18.5 로 적혀 있었지만 실제 확인 시점(2026-09-18)의 최신은 0.19.0 이었다. `manifest.json` 을 열어보고서야 `ExtraSlots` 가 `ConditionalConfigSync`, `PlanBuild`/`MultiUserChest` 가 `Jotunn` 을 요구한다는 것을 알았다. Thunderstore 페이지 설명에는 이 의존성이 나오지 않는다.
+
+## 서버 쪽 설치 결과 (2026-09-18)
+
+### 바닐라 클라이언트는 접속할 수 없다
+
+세 모드의 성격이 다르다.
+
+- **`ExtraSlots`**: README 에 "does not require every connecting player to have the mod at the synchronization protocol level" 이라고 명시되어 있다. 바닐라 클라이언트도 접속은 된다. 다만 확장 슬롯 UI 는 보이지 않는다
+- **`PlanBuild`, `MultiUserChest`**: 둘 다 `Jotunn` 을 쓰고, DLL 안에 `NetworkCompatibilityAttribute` 가 박혀 있다. `Jotunn` 을 쓰는 모드는 별도로 완화하지 않는 한 기본값이 "전원이 모드를 가지고 있어야 함" 이다. 즉 **이 두 모드가 서버에 있으면 모드 없는 바닐라 클라이언트는 접속하지 못하거나 버전 불일치로 튕긴다.**
+
+실제 접속 테스트(모드 없는 클라이언트로 접속 시도)는 하지 않았다. 위 판단은 README 문구와 DLL 안의 속성 확인으로 내린 것이다. 결론적으로 **이 서버는 이제 3층 모드팩을 설치한 사람만 정상 접속할 수 있다.** 친구들에게 r2modman 프로필 코드 배포가 끝나기 전까지는 접속에 지장이 있을 수 있다는 뜻이다.
+
+### ExtraSlots 인벤토리 옵션은 서버가 강제한다
+
+`shudnal.ExtraSlots.cfg` 를 열어 보면 인벤토리 관련 설정 대부분이 `[Synced with Server]` 로 표시되어 있고, `[General] Lock Configuration` 기본값이 `true` 다. 이 경우 클라이언트는 서버가 정한 값을 바꿀 수 없다.
+
+기본값이 이미 원하는 정책과 정확히 같아서 **설정을 따로 건드리지 않았다.**
+
+- `Amount of extra inventory rows = 0` (인벤토리 줄 추가 없음, 기본값 그대로 끔)
+- `Enable ammo slots / Enable food slots / Enable misc slots = true` (탄약/음식/기타 슬롯 켬)
+- `Amount of extra utility slots = 2` (유틸리티 슬롯 켬)
+- 장비 슬롯은 `[Progression - Discovery] Equipment slots = true` 로 기본 활성
+
+친구들 클라이언트에서 이 값들을 바꿔도 서버 접속 시 서버 값으로 강제 동기화된다.
+
+### `MultiUserChest` 는 Deep North 태그가 없다
+
+Thunderstore 카테고리에 `Bog Witch Update` 만 있고 `Deep North Update` 는 없다. 최종 업데이트(2026-09-12)가 1.0 출시(2026-09-09) 이후이긴 하지만, 제작자가 1.0 대응을 명시적으로 확인한 표시는 아니다. 서버 로그 상으로는 로드 시 오류 없이 정상 동작했지만, 상자 동시 사용 자체는 실제 플레이 중에만 검증되는 기능이라 지켜볼 필요가 있다.
 
 ## 경고: 인벤토리 모드 충돌
 
@@ -142,16 +174,32 @@
 
 설정으로 각 슬롯 그룹을 켜고 끌 수 있다. 인벤토리 줄 자체를 늘리는 옵션은 난이도 저하로 보고 끈다. 장비, 음식, 탄약 슬롯만 켠다.
 
-## 배포 방법
+**이 정책은 서버 설정으로 강제되어 있다.** 위 "서버 쪽 설치 결과" 절 참고. 친구들 클라이언트 설정과 무관하게 서버 값이 적용된다.
+
+## 배포 방법 (r2modman 프로필 코드)
+
+**프로필 코드 발급은 r2modman GUI 에서 방장이 직접 해야 하는 작업이다.** 자동화할 수 없다.
 
 ```
-방장: r2modman 또는 Thunderstore Mod Manager 에서 프로필 구성
-      -> "프로필 공유" -> 코드 발급
+방장:
+1. r2modman (또는 Thunderstore Mod Manager) 설치
+2. Valheim 프로필 새로 생성
+3. 아래 목록의 모드를 정확히 같은 버전으로 설치
+4. "프로필 공유" -> 코드 발급
+5. 발급된 코드를 data/mods.json 의 modpack.r2modmanCode 에 채워 넣는다
 
 친구: r2modman 설치 -> 코드 붙여넣기 -> 동일 모드셋 자동 구성
 ```
 
-친구가 할 일은 코드 하나를 붙여넣는 것뿐이다. 코드는 한곳에서만 관리한다. 메신저로 뿌리면 옛 코드를 쓰는 사람이 반드시 생긴다.
+프로필에 넣을 모드 목록 (버전은 이 문서의 "구성" 표와 항상 같아야 한다):
+
+- `shudnal-ExtraSlots-1.2.10`
+- `shudnal-ConditionalConfigSync-1.0.8`
+- `MathiasDecrock-PlanBuild-0.19.0`
+- `ValheimModding-Jotunn-2.30.1`
+- `MSchmoecker-MultiUserChest-0.6.2`
+
+친구가 할 일은 코드 하나를 붙여넣는 것뿐이다. 코드는 한곳에서만 관리한다. 메신저로 뿌리면 옛 코드를 쓰는 사람이 반드시 생긴다. `data/mods.json` 의 `r2modmanCode` 가 코드를 담아 사이트에 표시하는 자리이므로, 코드가 나오면 그 자리를 채우고 다시 배포한다.
 
 ---
 
@@ -370,4 +418,9 @@ RPG 레벨업과 스탯 분배를 얹는 시스템이다. 편의 모드가 아�
 | ServersideQoL_AutoMapTables | 2.0.11 동작 확인 (config 생성됨) |
 | ServersideQoL_AutoDoors | 2.0.11 동작 확인 (config 생성됨) |
 | ServersideQoL_TameAssist | 2.0.11 동작 확인 (config 생성됨) |
-| 3층 모드팩 | 미도입 |
+| Jotunn | 2.30.1 로드 확인 |
+| ConditionalConfigSync | 1.0.8 로드 확인 (config 없음, 다른 모드가 값을 등록해야 생김) |
+| ExtraSlots | 1.2.10 동작 확인 (config 생성됨, 서버 강제 정책 기본값 그대로) |
+| PlanBuild | 0.19.0 동작 확인 (config 생성됨) |
+| MultiUserChest | 0.6.2 로드 확인 (config 없음 - 이 모드는 설정 항목 자체가 없음, DLL 에 BepInEx.Configuration 참조 없음으로 확인) |
+| 3층 모드팩 | 서버 쪽 설치 완료 (2026-09-18). r2modman 프로필 코드 미발급 - 친구 배포 전 단계 |

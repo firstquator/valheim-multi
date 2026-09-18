@@ -81,6 +81,41 @@
       "usage": "따로 설정할 것은 없습니다. 동물을 데리고 다니면 자동으로 적용됩니다",
       "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/ArgusMagnus/ServersideQoL_TameAssist/",
       "warnings": []
+    },
+    {
+      "id": "ExtraSlots",
+      "owner": "shudnal",
+      "version": "1.2.10",
+      "tier": 3,
+      "name": "장비/음식/탄약 확장 슬롯",
+      "summary": "장비, 음식, 탄약, 유틸리티 전용 슬롯이 인벤토리 옆에 따로 생깁니다",
+      "usage": "r2modman 프로필 코드로 설치하면 자동으로 켜집니다. 인벤토리 칸 자체를 늘리는 옵션은 서버에서 꺼 두었고 바꿀 수 없습니다. 슬롯은 보스를 잡을 때마다 하나씩 열립니다",
+      "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/shudnal/ExtraSlots/",
+      "warnings": [
+        "EquipmentAndQuickSlots, AzuExtendedPlayerInventory 같은 다른 인벤토리 확장 모드와 함께 설치하지 마세요. 같은 인벤토리 코드를 건드려서 슬롯이 손상되고 재접속 시 아이템을 잃습니다. 이 서버는 ExtraSlots 하나만 씁니다"
+      ]
+    },
+    {
+      "id": "PlanBuild",
+      "owner": "MathiasDecrock",
+      "version": "0.19.0",
+      "tier": 3,
+      "name": "건축 청사진",
+      "summary": "지은 건물을 청사진으로 저장했다가 다른 자리에 그대로 다시 세울 수 있습니다",
+      "usage": "망치 들고 청사진 룬을 만들어 쓰면 됩니다. 저장한 청사진을 놓으면 유령 모양으로 미리보기가 뜨고, 자재를 채우면 실제 건물이 됩니다",
+      "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/MathiasDecrock/PlanBuild/",
+      "warnings": []
+    },
+    {
+      "id": "MultiUserChest",
+      "owner": "MSchmoecker",
+      "version": "0.6.2",
+      "tier": 3,
+      "name": "상자 동시 사용",
+      "summary": "같은 상자를 여러 명이 동시에 열어서 쓸 수 있습니다",
+      "usage": "평소처럼 상자를 열면 됩니다. 누가 먼저 열어도 다른 사람이 이어서 열 수 있습니다",
+      "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/MSchmoecker/MultiUserChest/",
+      "warnings": []
     }
   ]
 }
