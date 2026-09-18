@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>발헤임 관리 패널</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>발헤임 관리 패널</h1>
+      <span class="sub" id="brandSub">불러오는 중</span>
+      <span class="bind-note">127.0.0.1 전용 · 외부 공개 금지</span>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" data-tab="server" aria-selected="true">서버</button>
+      <button role="tab" data-tab="drift" aria-selected="false">모드 대조</button>
+      <button role="tab" data-tab="logs" aria-selected="false">로그</button>
+      <button role="tab" data-tab="backups" aria-selected="false">백업</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section id="tab-server">
+    <div class="row">
+      <div class="card">
+        <h2>현재 상태</h2>
+        <dl class="kv" id="statusKv"><dt>확인 중</dt><dd>...</dd></dl>
+      </div>
+      <div class="card">
+        <h2>제어</h2>
+        <p class="note info">중지와 재시작은 접속자가 있으면 한 번 더 묻는다. 재시작은 월드 저장 유예 때문에 최대 2분 걸리고, 그 뒤 서버가 접속을 받을 때까지 더 기다린다.</p>
+        <div class="actions">
+          <button class="act" id="btnStart">시작</button>
+          <button class="act danger" id="btnStop">중지</button>
+          <button class="act danger" id="btnRestart">재시작</button>
+        </div>
+        <div id="jobBox"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-drift" hidden>
+    <h2>선언과 실제의 대조<span class="hint">data/mods.json 이 선언한 것과 서버에 실제로 깔린 것을 비교한다</span></h2>
+    <div class="summary-strip" id="driftSummary"></div>
+    <div class="card">
+      <div class="controls">
+        <button class="act small" id="btnDriftReload">다시 검사</button>
+        <span class="mono" id="driftMeta"></span>
+      </div>
+      <div id="driftTable"><p class="empty">검사하는 중</p></div>
+    </div>
+    <p class="note">판정 근거: plugins 디렉터리의 파일 목록, 최근 기동 로그의 Loading 기록, /config/bepinex 의 cfg 파일 존재 여부. 셋 중 하나라도 어긋나면 표시한다.</p>
+  </section>
+
+  <section id="tab-logs" hidden>
+    <h2>컨테이너 로그<span class="hint">전체를 쏟지 않는다. 최근 것만 필터링해서 본다</span></h2>
+    <div class="card">
+      <div class="controls">
+        <label for="logFilter" class="mono">필터</label>
+        <select id="logFilter">
+          <option value="error">오류와 경고</option>
+          <option value="mods">모드 로딩</option>
+          <option value="players">접속과 퇴장</option>
+          <option value="all">전체</option>
+        </select>
+        <label for="logLimit" class="mono">줄 수</label>
+        <select id="logLimit">
+          <option>100</option>
+          <option selected>200</option>
+          <option>500</option>
+        </select>
+        <input type="search" id="logSearch" placeholder="문자열 검색">
+        <button class="act small" id="btnLogReload">새로 읽기</button>
+        <span class="mono" id="logMeta"></span>
+      </div>
+      <pre class="log" id="logBox">불러오는 중</pre>
+    </div>
+    <p class="note">비밀번호와 토큰은 서버 쪽에서 가린 뒤 보낸다. 값이 화면에 오지 않는다.</p>
+  </section>
+
+  <section id="tab-backups" hidden>
+    <h2>백업<span class="hint">읽기만 한다. 이 패널은 백업을 지우거나 복원하지 않는다</span></h2>
+    <div class="card" id="backupMeta"></div>
+    <div class="card" id="backupList"><p class="empty">불러오는 중</p></div>
+  </section>
+
+</main>
+
+<dialog id="confirmDialog">
+  <h3 id="confirmTitle">확인</h3>
+  <p id="confirmBody"></p>
+  <div class="actions">
+    <button class="act" value="cancel" id="confirmCancel">취소</button>
+    <button class="act danger" value="ok" id="confirmOk">실행</button>
+  </div>
+</dialog>
+
+<script type="module" src="/app.js"></script>
+</body>
+</html>
