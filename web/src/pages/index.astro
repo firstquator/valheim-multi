@@ -31,6 +31,18 @@ const modpackCode = modsData.modpack.r2modmanCode;
 // 없으면 "지금은 없다" 로 읽힌다. 모드가 추가될 때 이 파일을 다시
 // 고칠 필요가 없어야 한다.
 const needsAnyInstall = tier3.length > 0;
+
+// 설치 가이드는 한 화면에 한 단계씩 보여준다.
+// 여기 순서가 진행 표시와 화면 순서를 함께 정한다.
+// 마지막 칸은 단계가 아니라 끝났다는 것을 알리는 화면이다.
+const STEPS = [
+  { n: 1, label: "r2modman 설치" },
+  { n: 2, label: "발헤임 고르기" },
+  { n: 3, label: "프로필 가져오기" },
+  { n: 4, label: "Start modded" },
+  { n: 5, label: "서버 접속" },
+  { n: 6, label: "완료" },
+];
 ---
 
 <!doctype html>
@@ -136,7 +148,7 @@ const needsAnyInstall = tier3.length > 0;
                 </div>
                 <div class="side-row">
                   <span class="side-k">게임 버전</span>
-                  <span class="side-v mono" id="game-version">확인 중</span>
+                  <span class="side-v num" id="game-version">확인 중</span>
                   <span class="side-note">클라이언트도 같은 버전이어야 접속됩니다</span>
                 </div>
                 <div class="side-row">
@@ -236,19 +248,19 @@ const needsAnyInstall = tier3.length > 0;
 
         <div slot="install">
           <PageHead
-            kicker="처음 한 번만 하면 됩니다"
+            kicker="한 화면에 한 단계씩"
             title="설치 가이드"
             icon="download-04"
             tone={needsAnyInstall ? "accent" : "success"}
             desc={needsAnyInstall
-              ? "아래 순서를 위에서부터 그대로 따라 하시면 됩니다. 처음이라면 10분 정도 걸립니다."
+              ? "아래 순서대로 한 단계씩 넘기며 따라 하시면 됩니다. 처음이라면 10분 정도 걸립니다."
               : "지금은 따라 할 필요가 없습니다. 앞으로 설치가 필요한 모드가 생겼을 때를 위해 적어 둡니다."}
           />
 
           {needsAnyInstall ? (
             <Callout title={`직접 설치해야 하는 모드가 ${tier3.length}개 있습니다`}>
               설치하지 않으면 서버에 접속할 수 없습니다. 어떤 모드인지는 모드 탭에
-              적혀 있고, 아래 3단계의 프로필 코드 하나로 한꺼번에 설치됩니다.
+              적혀 있고, 3단계의 프로필 코드 하나로 한꺼번에 설치됩니다.
             </Callout>
           ) : (
             <Callout title="지금 친구들은 아무것도 설치하지 않아도 접속됩니다" tone="success">
@@ -258,266 +270,375 @@ const needsAnyInstall = tier3.length > 0;
             </Callout>
           )}
 
-          <figure class="figure figure-flat">
-            <DiagramFlow />
-            <figcaption>전체 흐름. 4단계만 틀리지 않으면 나머지는 쉽습니다.</figcaption>
-          </figure>
+          {/*
+            단계 전환용 라디오다. 탭 전환과 같은 방식으로 CSS 형제 선택자만
+            쓴다. JavaScript 를 쓰지 않는다.
 
-          <ol class="steps">
-            <li>
-              <div class="step-h">
-                <span class="step-n">1</span>
-                <h3>r2modman 을 내려받습니다</h3>
-              </div>
-              <div class="step-body">
-                <p>
-                  모드를 프로필 단위로 관리해 주는 프로그램입니다. 게임 폴더를
-                  직접 건드리지 않으므로 바닐라로 되돌리기도 쉽습니다.
-                </p>
-                <ul class="ticks">
-                  <li>
-                    <Icon name="arrow-right-02" size={15} />
-                    <span>
-                      <a href="https://thunderstore.io/package/ebkr/r2modman/" target="_blank" rel="noopener noreferrer">
-                        Thunderstore 의 r2modman 페이지
-                        <Icon name="arrow-up-right-01" size={13} />
-                        <span class="sr-only">새 탭에서 열림</span>
-                      </a>
-                      에서 Manual Download 를 누릅니다
-                    </span>
-                  </li>
-                  <li>
-                    <Icon name="arrow-right-02" size={15} />
-                    <span>받은 압축 파일을 풀고 안에 있는 설치 파일을 실행합니다</span>
-                  </li>
-                  <li>
-                    <Icon name="arrow-right-02" size={15} />
-                    <span>
-                      윈도우가 알 수 없는 앱이라고 막으면 추가 정보를 누르고
-                      실행을 고릅니다
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            </li>
+            name 은 탭 라디오의 "tab" 과 반드시 달라야 한다. 겹치면 단계를
+            고를 때 탭 라디오가 풀려 화면이 통째로 사라진다.
 
-            <li>
-              <div class="step-h">
-                <span class="step-n">2</span>
-                <h3>발헤임과 Steam 을 고릅니다</h3>
-              </div>
-              <div class="step-body">
-                <p>
-                  r2modman 을 처음 켜면 게임 목록이 나옵니다. 여기서 한 번만
-                  고르면 다음부터는 묻지 않습니다.
-                </p>
-                <ul class="ticks">
-                  <li>
-                    <Icon name="arrow-right-02" size={15} />
-                    <span>검색창에 Valheim 을 치고 목록에서 고른 뒤 Select game 을 누릅니다</span>
-                  </li>
-                  <li>
-                    <Icon name="arrow-right-02" size={15} />
-                    <span>플랫폼을 묻는 화면에서 Steam 을 고릅니다</span>
-                  </li>
-                  <li>
-                    <Icon name="arrow-right-02" size={15} />
-                    <span>
-                      게임 폴더를 못 찾는다고 하면 Settings 의 Locations 에서
-                      발헤임 설치 폴더를 직접 지정합니다
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            </li>
+            화면에서만 가리고 키보드 포커스는 남긴다. display:none 을 쓰면
+            Tab 으로 도달할 수 없고 화살표로 단계를 넘길 수도 없어진다.
+          */}
+          {STEPS.map((s, i) => (
+            <input
+              type="radio"
+              name="step"
+              id={`step-${s.n}`}
+              class="step-radio sr-only"
+              checked={i === 0}
+            />
+          ))}
 
-            <li>
-              <div class="step-h">
-                <span class="step-n">3</span>
-                <h3>프로필 코드를 가져옵니다</h3>
-              </div>
-              <div class="step-body">
-                <p>
-                  모드를 하나씩 찾아서 받을 필요가 없습니다. 코드 한 줄이면
-                  목록과 버전이 통째로 맞춰집니다.
-                </p>
-
-                <figure class="figure">
-                  <DiagramR2modman />
-                  <figcaption>
-                    r2modman 창의 구조입니다. 왼쪽이 프로필, 오른쪽 위가
-                    Import / Update, 왼쪽 아래가 실행 버튼입니다.
-                  </figcaption>
-                </figure>
-
-                <ul class="ticks">
+          <div class="wizard">
+            <nav class="wiz-nav" aria-label="설치 단계">
+              <ol>
+                {STEPS.map((s) => (
                   <li>
-                    <Icon name="arrow-right-02" size={15} />
-                    <span>프로필 화면에서 Import / Update 를 누릅니다</span>
+                    <label for={`step-${s.n}`}>
+                      <span class="wiz-dot">{s.n}</span>
+                      <span class="wiz-dot-label">{s.label}</span>
+                    </label>
                   </li>
-                  <li>
-                    <Icon name="arrow-right-02" size={15} />
-                    <span>코드로 가져오기를 고르고 아래 코드를 붙여넣습니다</span>
-                  </li>
-                  <li>
-                    <Icon name="arrow-right-02" size={15} />
-                    <span>
-                      프로필 이름을 정하고 확인을 누르면 모드가 자동으로
-                      내려받아집니다. 끝날 때까지 기다립니다
-                    </span>
-                  </li>
-                </ul>
+                ))}
+              </ol>
+              <div class="wiz-bar"><span class="wiz-bar-fill"></span></div>
+            </nav>
 
-                {modpackCode ? (
+            <div class="wiz-screens">
+              <section class="wiz-screen" data-step="1">
+                <div class="wiz-body">
+                  <p class="wiz-kicker">1 / {STEPS.length} 단계</p>
+                  <h3 class="wiz-title">r2modman 을 내려받습니다</h3>
+                  <p class="wiz-lead">
+                    모드를 프로필 단위로 관리해 주는 프로그램입니다. 게임 폴더를
+                    직접 건드리지 않으므로 바닐라로 되돌리기도 쉽습니다.
+                  </p>
+
+                  <figure class="wiz-fig">
+                    <DiagramFlow />
+                    <figcaption>앞으로 이런 순서로 갑니다. 4단계만 틀리지 않으면 나머지는 쉽습니다.</figcaption>
+                  </figure>
+
+                  <ul class="ticks">
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>
+                        <a href="https://thunderstore.io/package/ebkr/r2modman/" target="_blank" rel="noopener noreferrer">
+                          Thunderstore 의 r2modman 페이지
+                          <Icon name="arrow-up-right-01" size={14} />
+                          <span class="sr-only">새 탭에서 열림</span>
+                        </a>
+                        에서 Manual Download 를 누릅니다
+                      </span>
+                    </li>
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>받은 압축 파일을 풀고 안에 있는 설치 파일을 실행합니다</span>
+                    </li>
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>
+                        윈도우가 알 수 없는 앱이라고 막으면 추가 정보를 누르고
+                        실행을 고릅니다
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+                <footer class="wiz-foot">
+                  <span class="wiz-hint">화살표 키로도 단계를 넘길 수 있습니다</span>
+                  <label class="wbtn wbtn-go" for="step-2">
+                    다음
+                    <Icon name="arrow-right-02" size={17} />
+                  </label>
+                </footer>
+              </section>
+
+              <section class="wiz-screen" data-step="2">
+                <div class="wiz-body">
+                  <p class="wiz-kicker">2 / {STEPS.length} 단계</p>
+                  <h3 class="wiz-title">발헤임과 Steam 을 고릅니다</h3>
+                  <p class="wiz-lead">
+                    r2modman 을 처음 켜면 게임 목록이 나옵니다. 여기서 한 번만
+                    고르면 다음부터는 묻지 않습니다.
+                  </p>
+
+                  <ul class="ticks ticks-big">
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>검색창에 Valheim 을 치고 목록에서 고른 뒤 Select game 을 누릅니다</span>
+                    </li>
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>플랫폼을 묻는 화면에서 Steam 을 고릅니다</span>
+                    </li>
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>
+                        게임 폴더를 못 찾는다고 하면 Settings 의 Locations 에서
+                        발헤임 설치 폴더를 직접 지정합니다
+                      </span>
+                    </li>
+                  </ul>
+
+                  <Callout title="한 번 고르면 바꿀 일이 거의 없습니다" tone="info">
+                    다른 게임에도 r2modman 을 쓰고 있다면 왼쪽 위에서 게임을
+                    바꿀 수 있습니다. 발헤임만 쓴다면 신경 쓰지 않아도 됩니다.
+                  </Callout>
+                </div>
+                <footer class="wiz-foot">
+                  <label class="wbtn wbtn-back" for="step-1">
+                    <Icon name="arrow-left-02" size={17} />
+                    이전
+                  </label>
+                  <label class="wbtn wbtn-go" for="step-3">
+                    다음
+                    <Icon name="arrow-right-02" size={17} />
+                  </label>
+                </footer>
+              </section>
+
+              <section class="wiz-screen" data-step="3">
+                <div class="wiz-body">
+                  <p class="wiz-kicker">3 / {STEPS.length} 단계</p>
+                  <h3 class="wiz-title">프로필 코드를 가져옵니다</h3>
+                  <p class="wiz-lead">
+                    모드를 하나씩 찾아서 받을 필요가 없습니다. 코드 한 줄이면
+                    목록과 버전이 통째로 맞춰집니다.
+                  </p>
+
+                  <figure class="wiz-fig">
+                    <DiagramR2modman />
+                    <figcaption>
+                      r2modman 창의 구조입니다. 왼쪽이 프로필, 오른쪽 위가
+                      Import / Update, 왼쪽 아래가 실행 버튼입니다.
+                    </figcaption>
+                  </figure>
+
+                  <ul class="ticks ticks-big">
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>프로필 화면에서 Import / Update 를 누릅니다</span>
+                    </li>
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>코드로 가져오기를 고르고 아래 코드를 붙여넣습니다</span>
+                    </li>
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>
+                        프로필 이름을 정하고 확인을 누르면 모드가 자동으로
+                        내려받아집니다. 끝날 때까지 기다립니다
+                      </span>
+                    </li>
+                  </ul>
+
+                  {modpackCode ? (
+                    <div class="card code-card">
+                      <CopyField label="프로필 코드" value={modpackCode} mono />
+                    </div>
+                  ) : (
+                    <div class="pending-box">
+                      <Icon name="clock-01" size={17} />
+                      <span>
+                        프로필 코드는 직접 설치할 모드가 정해지면 이 자리에
+                        올라옵니다. 지금은 비워 둡니다.
+                      </span>
+                    </div>
+                  )}
+
+                  <figure class="wiz-fig">
+                    <DiagramImportCode />
+                    <figcaption>코드를 붙여넣는 자리와 순서입니다.</figcaption>
+                  </figure>
+                </div>
+                <footer class="wiz-foot">
+                  <label class="wbtn wbtn-back" for="step-2">
+                    <Icon name="arrow-left-02" size={17} />
+                    이전
+                  </label>
+                  <label class="wbtn wbtn-go" for="step-4">
+                    다음
+                    <Icon name="arrow-right-02" size={17} />
+                  </label>
+                </footer>
+              </section>
+
+              <section class="wiz-screen" data-step="4">
+                <div class="wiz-body">
+                  <p class="wiz-kicker">4 / {STEPS.length} 단계</p>
+                  <h3 class="wiz-title">Start modded 로 게임을 켭니다</h3>
+                  <p class="wiz-lead">
+                    여기서 가장 많이 틀립니다. 습관대로 Steam 에서 켜면 모드가
+                    하나도 적용되지 않고, 그 상태로는 서버에 못 들어옵니다.
+                  </p>
+
+                  <Callout title="Steam 에서 직접 켜면 모드가 적용되지 않습니다">
+                    Steam 라이브러리의 플레이 버튼은 모드 없는 바닐라 게임을
+                    켭니다. 반드시 r2modman 왼쪽 위의 Start modded 를 누르세요.
+                    바탕화면 바로가기를 만들어 두면 편합니다.
+                  </Callout>
+
+                  <figure class="wiz-fig">
+                    <DiagramLaunch />
+                    <figcaption>
+                      같은 게임이라도 어디서 켜느냐에 따라 결과가 달라집니다.
+                    </figcaption>
+                  </figure>
+
+                  <ul class="ticks ticks-big">
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>방금 만든 프로필이 골라져 있는지 확인합니다</span>
+                    </li>
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>
+                        첫 실행은 모드 로더를 까느라 평소보다 오래 걸립니다.
+                        검은 화면이 좀 길어도 기다립니다
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+                <footer class="wiz-foot">
+                  <label class="wbtn wbtn-back" for="step-3">
+                    <Icon name="arrow-left-02" size={17} />
+                    이전
+                  </label>
+                  <label class="wbtn wbtn-go" for="step-5">
+                    다음
+                    <Icon name="arrow-right-02" size={17} />
+                  </label>
+                </footer>
+              </section>
+
+              <section class="wiz-screen" data-step="5">
+                <div class="wiz-body">
+                  <p class="wiz-kicker">5 / {STEPS.length} 단계</p>
+                  <h3 class="wiz-title">서버에 들어옵니다</h3>
+                  <p class="wiz-lead">
+                    캐릭터를 고르고 게임 참가 화면에서 서버 직접 연결을 누른 뒤,
+                    아래 주소와 비밀번호를 넣습니다. 이 서버는 공개 목록에 뜨지
+                    않으니 목록에서 찾지 마세요.
+                  </p>
+
                   <div class="card code-card">
-                    <CopyField label="프로필 코드" value={modpackCode} mono />
+                    <CopyField label="주소" value={SERVER.address} mono />
+                    <CopyField label="비밀번호" value={SERVER.password} masked />
                   </div>
-                ) : (
-                  <div class="pending-box">
-                    <Icon name="clock-01" size={16} />
-                    <span>
-                      프로필 코드는 직접 설치할 모드가 정해지면 이 자리에
-                      올라옵니다. 지금은 비워 둡니다.
-                    </span>
+
+                  <ul class="ticks ticks-big">
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>주소는 포트 번호까지 통째로 붙여넣습니다</span>
+                    </li>
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>비밀번호는 접속할 때마다 묻지 않습니다. 처음 한 번만 칩니다</span>
+                    </li>
+                  </ul>
+                </div>
+                <footer class="wiz-foot">
+                  <label class="wbtn wbtn-back" for="step-4">
+                    <Icon name="arrow-left-02" size={17} />
+                    이전
+                  </label>
+                  <label class="wbtn wbtn-go" for="step-6">
+                    다 했습니다
+                    <Icon name="arrow-right-02" size={17} />
+                  </label>
+                </footer>
+              </section>
+
+              <section class="wiz-screen wiz-done" data-step="6">
+                <div class="wiz-body">
+                  <span class="wiz-seal" aria-hidden="true">
+                    <Icon name="checkmark-circle-02" size={40} />
+                  </span>
+                  <p class="wiz-kicker wiz-kicker-done">모두 끝났습니다</p>
+                  <h3 class="wiz-title">이제 서버에서 만나면 됩니다</h3>
+                  <p class="wiz-lead">
+                    다음부터는 r2modman 의 Start modded 만 누르면 됩니다. 설치를
+                    다시 할 일은 없습니다. 모드가 바뀌면 3단계의 코드만 한 번 더
+                    가져오시면 됩니다.
+                  </p>
+
+                  <div class="qa-head">
+                    <h4>
+                      <Icon name="help-circle" size={19} />
+                      잘 안 될 때
+                    </h4>
+                    <p>막히는 자리는 대개 정해져 있습니다.</p>
                   </div>
-                )}
 
-                <figure class="figure">
-                  <DiagramImportCode />
-                  <figcaption>코드를 붙여넣는 자리와 순서입니다.</figcaption>
-                </figure>
-              </div>
-            </li>
+                  <div class="qa-grid">
+                    <article class="qa">
+                      <h5>
+                        <Icon name="alert-02" size={16} />
+                        접속하려는데 거부당합니다
+                      </h5>
+                      <p>
+                        모드 목록이나 버전이 서버와 다릅니다. 모드 탭의 카드에 적힌
+                        버전과 r2modman 에 깔린 버전이 같은지 하나씩 맞춰 보세요.
+                        최신 버전이 아니라 적힌 버전이어야 합니다.
+                      </p>
+                    </article>
 
-            <li>
-              <div class="step-h">
-                <span class="step-n">4</span>
-                <h3>Start modded 로 게임을 켭니다</h3>
-              </div>
-              <div class="step-body">
-                <p>
-                  여기서 가장 많이 틀립니다. 습관대로 Steam 에서 켜면 모드가
-                  하나도 적용되지 않고, 그 상태로는 서버에 못 들어옵니다.
-                </p>
+                    <article class="qa">
+                      <h5>
+                        <Icon name="alert-02" size={16} />
+                        분명히 설치했는데 모드가 안 보입니다
+                      </h5>
+                      <p>
+                        Steam 에서 켰을 가능성이 큽니다. 게임을 끄고 r2modman 의
+                        Start modded 로 다시 켜 보세요.
+                      </p>
+                    </article>
 
-                <Callout title="Steam 에서 직접 켜면 모드가 적용되지 않습니다">
-                  Steam 라이브러리의 플레이 버튼은 모드 없는 바닐라 게임을
-                  켭니다. 반드시 r2modman 왼쪽 위의 Start modded 를 누르세요.
-                  바탕화면 바로가기를 만들어 두면 편합니다.
-                </Callout>
+                    <article class="qa">
+                      <h5>
+                        <Icon name="alert-02" size={16} />
+                        재접속하니 아이템이 사라졌습니다
+                      </h5>
+                      <p>
+                        인벤토리 확장 모드를 둘 이상 깐 경우입니다. 하나만 남기고
+                        나머지를 지운 다음 다시 들어오세요.
+                      </p>
+                    </article>
 
-                <figure class="figure">
-                  <DiagramLaunch />
-                  <figcaption>
-                    같은 게임이라도 어디서 켜느냐에 따라 결과가 달라집니다.
-                  </figcaption>
-                </figure>
+                    <article class="qa">
+                      <h5>
+                        <Icon name="alert-02" size={16} />
+                        프로필 코드가 안 먹힙니다
+                      </h5>
+                      <p>
+                        코드 앞뒤에 공백이나 줄바꿈이 끼어 있는지 보세요. 3단계의
+                        복사 버튼으로 복사하면 그런 일이 없습니다.
+                      </p>
+                    </article>
+                  </div>
 
-                <ul class="ticks">
-                  <li>
-                    <Icon name="arrow-right-02" size={15} />
-                    <span>방금 만든 프로필이 골라져 있는지 확인합니다</span>
-                  </li>
-                  <li>
-                    <Icon name="arrow-right-02" size={15} />
-                    <span>
-                      첫 실행은 모드 로더를 까느라 평소보다 오래 걸립니다.
-                      검은 화면이 좀 길어도 기다립니다
-                    </span>
-                  </li>
-                </ul>
-              </div>
-            </li>
-
-            <li>
-              <div class="step-h">
-                <span class="step-n">5</span>
-                <h3>서버에 들어옵니다</h3>
-              </div>
-              <div class="step-body">
-                <p>
-                  캐릭터를 고르고 게임 참가 화면에서 서버 직접 연결을 누른 뒤,
-                  서버 탭에 적힌 주소와 비밀번호를 넣습니다. 이 서버는 공개
-                  목록에 뜨지 않으니 목록에서 찾지 마세요.
-                </p>
-                <ul class="ticks">
-                  <li>
-                    <Icon name="arrow-right-02" size={15} />
-                    <span>주소는 포트 번호까지 통째로 붙여넣습니다</span>
-                  </li>
-                  <li>
-                    <Icon name="arrow-right-02" size={15} />
-                    <span>비밀번호는 접속할 때마다 묻지 않습니다. 처음 한 번만 칩니다</span>
-                  </li>
-                </ul>
-              </div>
-            </li>
-          </ol>
-
-          <section class="group trouble">
-            <div class="group-h">
-              <h2>
-                <Icon name="help-circle" size={19} />
-                잘 안 될 때
-              </h2>
-              <p class="lead">막히는 자리는 대개 정해져 있습니다.</p>
+                  <figure class="wiz-fig">
+                    <DiagramVersion />
+                    <figcaption>
+                      버전이 하나라도 다르면 그 사람만 막힙니다. 모드 이름이 같아도
+                      소용없습니다.
+                    </figcaption>
+                  </figure>
+                </div>
+                <footer class="wiz-foot">
+                  <label class="wbtn wbtn-back" for="step-5">
+                    <Icon name="arrow-left-02" size={17} />
+                    이전
+                  </label>
+                  <label class="wbtn wbtn-ghost" for="step-1">
+                    <Icon name="arrow-reload-horizontal" size={16} />
+                    처음부터 다시 보기
+                  </label>
+                </footer>
+              </section>
             </div>
-
-            <div class="qa-grid">
-              <article class="qa">
-                <h3>
-                  <Icon name="alert-02" size={16} />
-                  접속하려는데 거부당합니다
-                </h3>
-                <p>
-                  모드 목록이나 버전이 서버와 다릅니다. 모드 탭의 카드에 적힌
-                  버전과 r2modman 에 깔린 버전이 같은지 하나씩 맞춰 보세요.
-                  최신 버전이 아니라 적힌 버전이어야 합니다.
-                </p>
-              </article>
-
-              <article class="qa">
-                <h3>
-                  <Icon name="alert-02" size={16} />
-                  분명히 설치했는데 모드가 안 보입니다
-                </h3>
-                <p>
-                  Steam 에서 켰을 가능성이 큽니다. 게임을 끄고 r2modman 의
-                  Start modded 로 다시 켜 보세요.
-                </p>
-              </article>
-
-              <article class="qa">
-                <h3>
-                  <Icon name="alert-02" size={16} />
-                  재접속하니 아이템이 사라졌습니다
-                </h3>
-                <p>
-                  인벤토리 확장 모드를 둘 이상 깐 경우입니다. 하나만 남기고
-                  나머지를 지운 다음 다시 들어오세요.
-                </p>
-              </article>
-
-              <article class="qa">
-                <h3>
-                  <Icon name="alert-02" size={16} />
-                  프로필 코드가 안 먹힙니다
-                </h3>
-                <p>
-                  코드 앞뒤에 공백이나 줄바꿈이 끼어 있는지 보세요. 위 복사
-                  버튼으로 복사하면 그런 일이 없습니다.
-                </p>
-              </article>
-            </div>
-
-            <figure class="figure">
-              <DiagramVersion />
-              <figcaption>
-                버전이 하나라도 다르면 그 사람만 막힙니다. 모드 이름이 같아도
-                소용없습니다.
-              </figcaption>
-            </figure>
-          </section>
+          </div>
         </div>
 
         <div slot="world">
@@ -567,14 +688,14 @@ const needsAnyInstall = tier3.length > 0;
             <article class="spec">
               <span class="spec-ico" aria-hidden="true"><Icon name="database-02" size={20} /></span>
               <p class="spec-k">백업</p>
-              <p class="spec-v mono spec-v-sm" id="backup-at">확인 중</p>
+              <p class="spec-v num spec-v-sm" id="backup-at">확인 중</p>
               <p class="spec-n">시간마다 자동으로 저장됩니다. 사고가 나도 되돌릴 수 있습니다</p>
             </article>
           </div>
 
           <Callout title="난이도를 올려 두었습니다" tone="info">
             적이 세고 빠른 대신 죽어도 장비를 잃지 않고 자원이 넉넉합니다.
-            혼자 돌아다니기보다 둘 이상 뭉쳐 다니는 쪽이 유리합니다.
+            혼자보다 둘 이상 뭉쳐 다니는 편이 유리합니다.
           </Callout>
         </div>
       </Tabs>
@@ -800,97 +921,321 @@ const needsAnyInstall = tier3.length > 0;
     gap: var(--gap);
   }
 
-  /* 설치 가이드의 단계 카드. */
-  .steps {
-    margin: 0 0 52px;
-    padding: 0;
-    list-style: none;
-    display: grid;
-    gap: 16px;
-  }
-  .steps > li {
-    padding: 22px 26px 24px;
+  /* ── 설치 가이드 단계 화면 ───────────────────────────────────────
+     한 번에 한 단계만 보여준다. 전환은 탭과 같은 방식으로 라디오와
+     CSS 형제 선택자만 쓴다. JavaScript 를 쓰지 않는다.
+
+     라디오(#step-1 ~ #step-6)는 이 div 안, .wizard 앞자리에 있다.
+     `~` 가 닿으려면 같은 부모의 앞 형제여야 한다. */
+  .wizard {
+    margin-top: 24px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-card);
+    box-shadow: var(--shadow-panel);
+    overflow: hidden;
   }
-  .step-h {
+
+  /* 진행 표시. 몇 번째인지, 전체가 몇 단계인지 한눈에 보인다. */
+  .wiz-nav {
+    padding: 22px 32px 0;
+    background: var(--surface-sunken);
+  }
+  .wiz-nav ol {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+  }
+  .wiz-nav label {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin-bottom: 14px;
+    gap: 9px;
+    padding: 6px 4px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text-faint);
+    transition: color 180ms ease;
   }
-  .step-n {
+  .wiz-nav label:hover { color: var(--text-dim); }
+
+  .wiz-dot {
     display: grid;
     place-items: center;
-    width: 34px;
-    height: 34px;
+    width: 28px;
+    height: 28px;
     flex: none;
     border-radius: 50%;
-    background: var(--accent);
-    color: var(--bg);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text-faint);
     font-family: var(--font-mono);
-    font-size: 15px;
+    font-size: 12px;
     font-weight: 700;
+    transition: background 200ms ease, color 200ms ease, border-color 200ms ease;
   }
-  .step-h h3 {
+  .wiz-dot-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 여기까지 왔다는 표시. :nth-child(-n+N) 으로 N 번째까지를 한 번에 잡는다. */
+  #step-2:checked ~ .wizard .wiz-nav li:nth-child(-n+2) .wiz-dot,
+  #step-3:checked ~ .wizard .wiz-nav li:nth-child(-n+3) .wiz-dot,
+  #step-4:checked ~ .wizard .wiz-nav li:nth-child(-n+4) .wiz-dot,
+  #step-5:checked ~ .wizard .wiz-nav li:nth-child(-n+5) .wiz-dot,
+  #step-6:checked ~ .wizard .wiz-nav li:nth-child(-n+6) .wiz-dot {
+    background: color-mix(in srgb, var(--accent) 22%, var(--surface-raised));
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    color: var(--accent-bright);
+  }
+
+  /* 지금 단계. 채워서 확실히 구분한다. */
+  #step-1:checked ~ .wizard .wiz-nav li:nth-child(1) .wiz-dot,
+  #step-2:checked ~ .wizard .wiz-nav li:nth-child(2) .wiz-dot,
+  #step-3:checked ~ .wizard .wiz-nav li:nth-child(3) .wiz-dot,
+  #step-4:checked ~ .wizard .wiz-nav li:nth-child(4) .wiz-dot,
+  #step-5:checked ~ .wizard .wiz-nav li:nth-child(5) .wiz-dot,
+  #step-6:checked ~ .wizard .wiz-nav li:nth-child(6) .wiz-dot {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+  }
+  #step-1:checked ~ .wizard .wiz-nav li:nth-child(1) label,
+  #step-2:checked ~ .wizard .wiz-nav li:nth-child(2) label,
+  #step-3:checked ~ .wizard .wiz-nav li:nth-child(3) label,
+  #step-4:checked ~ .wizard .wiz-nav li:nth-child(4) label,
+  #step-5:checked ~ .wizard .wiz-nav li:nth-child(5) label,
+  #step-6:checked ~ .wizard .wiz-nav li:nth-child(6) label {
+    color: var(--text);
+  }
+
+  /* 마지막은 끝났다는 뜻이라 초록으로 맺는다. */
+  #step-6:checked ~ .wizard .wiz-nav li:nth-child(6) .wiz-dot {
+    background: var(--success);
+    border-color: var(--success);
+  }
+
+  /* 라디오는 화면에서만 가려 두었으므로 포커스 링을 해당 진행 표시에 그린다. */
+  #step-1:focus-visible ~ .wizard .wiz-nav li:nth-child(1) label,
+  #step-2:focus-visible ~ .wizard .wiz-nav li:nth-child(2) label,
+  #step-3:focus-visible ~ .wizard .wiz-nav li:nth-child(3) label,
+  #step-4:focus-visible ~ .wizard .wiz-nav li:nth-child(4) label,
+  #step-5:focus-visible ~ .wizard .wiz-nav li:nth-child(5) label,
+  #step-6:focus-visible ~ .wizard .wiz-nav li:nth-child(6) label {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .wiz-bar {
+    height: 3px;
+    background: var(--border);
+  }
+  .wiz-bar-fill {
+    display: block;
+    height: 100%;
+    width: 0;
+    background: linear-gradient(90deg, var(--accent), var(--highlight));
+    transition: width 320ms var(--ease-out);
+  }
+  #step-1:checked ~ .wizard .wiz-bar-fill { width: 16.666%; }
+  #step-2:checked ~ .wizard .wiz-bar-fill { width: 33.333%; }
+  #step-3:checked ~ .wizard .wiz-bar-fill { width: 50%; }
+  #step-4:checked ~ .wizard .wiz-bar-fill { width: 66.666%; }
+  #step-5:checked ~ .wizard .wiz-bar-fill { width: 83.333%; }
+  #step-6:checked ~ .wizard .wiz-bar-fill {
+    width: 100%;
+    background: var(--success);
+  }
+
+  /* 화면이 바뀔 때 카드 높이가 크게 출렁이지 않도록 바닥을 깔아 둔다. */
+  .wiz-screens { min-height: 540px; }
+
+  .wiz-screen { display: none; }
+  #step-1:checked ~ .wizard .wiz-screen[data-step="1"],
+  #step-2:checked ~ .wizard .wiz-screen[data-step="2"],
+  #step-3:checked ~ .wizard .wiz-screen[data-step="3"],
+  #step-4:checked ~ .wizard .wiz-screen[data-step="4"],
+  #step-5:checked ~ .wizard .wiz-screen[data-step="5"],
+  #step-6:checked ~ .wizard .wiz-screen[data-step="6"] {
+    display: flex;
+    flex-direction: column;
+    min-height: 540px;
+    animation: wizin 220ms var(--ease-out);
+  }
+  @keyframes wizin {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  .wiz-body { flex: 1 1 auto; padding: 40px 44px 32px; }
+
+  .wiz-kicker {
+    margin: 0 0 6px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    color: var(--accent);
+  }
+  .wiz-kicker-done { color: var(--success-bright); }
+
+  /* 한 화면에 한 가지만 말한다. 제목을 크게 두어 지금 할 일이 먼저 읽히게 한다. */
+  .wiz-title {
+    max-width: var(--measure);
+    margin: 0 0 14px;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.25;
+  }
+  .wiz-lead {
+    max-width: var(--measure);
+    margin: 0 0 24px;
+    font-size: 16.5px;
+    line-height: 1.7;
+    color: var(--text-dim);
+  }
+
+  /* 도식이 주인공이다. 화면 폭을 다 쓴다. */
+  .wiz-fig {
+    margin: 24px 0;
+    padding: 24px 26px 18px;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .wiz-fig figcaption {
+    max-width: var(--measure);
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--text-faint);
+  }
+
+  .wiz-seal {
+    display: grid;
+    place-items: center;
+    width: 72px;
+    height: 72px;
+    margin-bottom: 20px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--success) 18%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--success) 45%, transparent);
+    color: var(--success-bright);
+  }
+
+  .qa-head { margin: 36px 0 14px; }
+  .qa-head h4 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
     margin: 0;
-    font-size: 20px;
+    font-size: 19px;
     font-weight: 700;
     letter-spacing: -0.02em;
   }
-  /* 단계 안의 문장은 카드 폭 전체로 늘리지 않는다. 한 줄이 길어지면
-     다음 줄로 눈이 넘어가기 어려워진다. 도식만 카드 폭을 다 쓴다. */
-  .step-body > p { max-width: var(--measure); margin: 0; font-size: 14.5px; color: var(--text-dim); }
-  .step-body > p + * { margin-top: 14px; }
+  .qa-head h4 .icon { color: var(--accent); }
+  .qa-head p { margin: 5px 0 0; font-size: 14px; color: var(--text-dim); }
 
-  .ticks { max-width: var(--measure); margin: 14px 0 0; padding: 0; list-style: none; }
+  /* 단계를 넘기는 줄. 화면 바닥에 붙는다. */
+  .wiz-foot {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 44px 22px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-sunken);
+  }
+  .wiz-hint { font-size: 12.5px; color: var(--text-faint); }
+
+  .wbtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 11px 20px;
+    border-radius: 999px;
+    font-size: 14.5px;
+    font-weight: 600;
+    cursor: pointer;
+    user-select: none;
+    transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
+  }
+  /* 다음으로 가는 버튼만 채운다. 어디를 눌러야 할지 헷갈리지 않게 한다. */
+  .wbtn-go {
+    margin-left: auto;
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: var(--bg);
+  }
+  .wbtn-go:hover { background: var(--accent-bright); border-color: var(--accent-bright); }
+
+  .wbtn-back,
+  .wbtn-ghost {
+    background: transparent;
+    border: 1px solid var(--border-strong);
+    color: var(--text-dim);
+  }
+  .wbtn-back:hover,
+  .wbtn-ghost:hover { color: var(--text); border-color: var(--accent); }
+  .wbtn-ghost { margin-left: auto; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .wiz-screen, .wiz-bar-fill, .wiz-dot, .wiz-nav label, .wbtn { transition: none; }
+    #step-1:checked ~ .wizard .wiz-screen[data-step="1"],
+    #step-2:checked ~ .wizard .wiz-screen[data-step="2"],
+    #step-3:checked ~ .wizard .wiz-screen[data-step="3"],
+    #step-4:checked ~ .wizard .wiz-screen[data-step="4"],
+    #step-5:checked ~ .wizard .wiz-screen[data-step="5"],
+    #step-6:checked ~ .wizard .wiz-screen[data-step="6"] { animation: none; }
+  }
+
+  /* 1024px 에서는 진행 표시의 글자를 지우고 동그라미만 남긴다.
+     여섯 칸에 글자를 다 넣으면 잘린다. */
+  @media (max-width: 1160px) {
+    .wiz-nav ol { gap: 6px; }
+    .wiz-dot-label { display: none; }
+    .wiz-nav label { justify-content: center; }
+    .wiz-body { padding: 32px 28px 26px; }
+    .wiz-foot { padding: 16px 28px 20px; }
+    .wiz-nav { padding: 18px 24px 0; }
+    .wiz-title { font-size: 27px; }
+  }
+
+  .ticks { max-width: var(--measure); margin: 20px 0 0; padding: 0; list-style: none; }
   .ticks li {
     display: flex;
     align-items: flex-start;
-    gap: 9px;
-    font-size: 14px;
+    gap: 10px;
+    font-size: 15px;
+    line-height: 1.65;
     color: var(--text);
   }
-  .ticks li + li { margin-top: 8px; }
-  .ticks .icon { margin-top: 4px; color: var(--accent); }
+  .ticks li + li { margin-top: 10px; }
+  .ticks .icon { margin-top: 5px; color: var(--accent); }
   .ticks a {
     display: inline;
     color: var(--accent-bright);
     text-underline-offset: 3px;
   }
   .ticks a .icon { margin: 0 0 -2px 2px; color: currentColor; }
+  .ticks-big li { font-size: 15.5px; }
 
-  /* 도식은 카드 폭을 다 쓴다. 좁히면 글자가 읽히지 않는다. */
-  .figure {
-    margin: 18px 0 0;
-    padding: 18px 20px 14px;
-    background: var(--surface-sunken);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-  }
-  .figure figcaption {
-    max-width: var(--measure);
-    margin-top: 12px;
-    font-size: 12.5px;
-    color: var(--text-faint);
-  }
-  /* 전체 흐름 도식은 단계 카드 바깥에 놓이므로 여백을 따로 준다. */
-  .figure-flat { margin: 24px 0 36px; }
-
-  .code-card { margin-top: 16px; max-width: 620px; }
+  .code-card { margin-top: 22px; max-width: 640px; }
   .pending-box {
     display: flex;
     align-items: flex-start;
-    gap: 10px;
+    gap: 11px;
     max-width: var(--measure);
-    margin-top: 16px;
-    padding: 14px 16px;
+    margin-top: 22px;
+    padding: 16px 18px;
     background: var(--surface-sunken);
     border: 1px dashed var(--border-strong);
     border-radius: var(--radius);
-    font-size: 13.5px;
+    font-size: 14px;
     color: var(--text-dim);
   }
   .pending-box .icon { margin-top: 2px; color: var(--text-faint); }
@@ -903,13 +1248,13 @@ const needsAnyInstall = tier3.length > 0;
   }
   .qa {
     padding: 16px 18px;
-    background: var(--surface);
+    background: var(--surface-sunken);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     transition: border-color 180ms ease, background 180ms ease;
   }
   .qa:hover { border-color: var(--border-strong); background: var(--surface-raised); }
-  .qa h3 {
+  .qa h5 {
     display: flex;
     align-items: flex-start;
     gap: 8px;
@@ -917,13 +1262,11 @@ const needsAnyInstall = tier3.length > 0;
     font-size: 15px;
     font-weight: 700;
   }
-  .qa h3 .icon { margin-top: 3px; color: var(--warning); }
+  .qa h5 .icon { margin-top: 3px; color: var(--warning); }
   .qa p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--text-dim); }
   @media (prefers-reduced-motion: reduce) {
     .qa { transition: none; }
   }
-
-  .trouble .figure { margin-top: 20px; }
 
   /* 월드 설정 타일. 한 줄짜리 표보다 훑어보기 쉽다. */
   .spec-grid {
