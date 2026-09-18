@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "modpack": "node scripts/build-modpack.mjs"
   },
   "devDependencies": {
     "vitest": "^2.1.0"

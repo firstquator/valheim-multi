@@ -119,7 +119,7 @@
 | `shudnal/MyLittleUI` | 1.2.20 | 생산 타이머, 툴팁, 상자 이름, 버프 목록 등 UI 편의 모음 |
 | `Goldenrevolver/Quick_Stack_Store_Sort_Trash_Restock` | 1.4.15 | 인벤토리 빠른 정리/보관/버리기 |
 
-설치 방법: Thunderstore 에서 위 패키지를 받아 개인 `BepInEx/plugins` 에 넣으면 된다. r2modman 프로필 코드에는 포함되어 있지 않다. 프로필 코드는 3층(전원 필수) 모드만 담는다.
+설치 방법: Thunderstore 에서 위 패키지를 받아 개인 `BepInEx/plugins` 에 넣으면 된다. 프로필 파일에는 포함되어 있지 않다. 프로필 파일은 3층(전원 필수) 모드만 담는다.
 
 **2층 판정 근거는 "계층 분류" 절 참고.** README 문구나 DLL 안의 `NetworkCompatibilityAttribute` 유무로 확인했다.
 
@@ -127,7 +127,7 @@
 
 # 3층: 모드팩 (친구들도 설치)
 
-**서버 쪽 설치는 완료했다 (2026-09-18).** 친구들이 r2modman 프로필 코드를 받아 설치해야 실제로 접속이 된다. 자세한 내용은 아래 "서버 쪽 설치 결과" 참고.
+**서버 쪽 설치는 완료했다 (2026-09-18).** 친구들이 프로필 파일을 받아 설치해야 실제로 접속이 된다. 자세한 내용은 아래 "서버 쪽 설치 결과" 참고.
 
 ## 구성
 
@@ -159,7 +159,7 @@
 
 즉 **`ExtraSlots` 를 제외한 나머지 여섯 개(PlanBuild, MultiUserChest, SlopeCombatAssistance, SkilledCarryWeight, BottleShips, WackyEpicMMOSystem)는 서버에 있으면 모드 없는 바닐라 클라이언트가 접속하지 못하거나, 접속하더라도 정상적인 플레이가 되지 않는다.**
 
-실제 접속 테스트(모드 없는 클라이언트로 접속 시도)는 하지 않았다. 위 판단은 README 문구와 DLL 안의 속성 확인으로 내린 것이다. 결론적으로 **이 서버는 이제 3층 모드팩을 설치한 사람만 정상 접속할 수 있다.** 친구들에게 r2modman 프로필 코드 배포가 끝나기 전까지는 접속에 지장이 있을 수 있다는 뜻이다.
+실제 접속 테스트(모드 없는 클라이언트로 접속 시도)는 하지 않았다. 위 판단은 README 문구와 DLL 안의 속성 확인으로 내린 것이다. 결론적으로 **이 서버는 이제 3층 모드팩을 설치한 사람만 정상 접속할 수 있다.** 친구들이 프로필 파일을 설치하기 전까지는 접속에 지장이 있다는 뜻이다.
 
 ### ExtraSlots 인벤토리 옵션은 서버가 강제한다
 
@@ -204,20 +204,37 @@ Thunderstore 카테고리에 `Bog Witch Update` 만 있고 `Deep North Update` �
 
 **이 정책은 서버 설정으로 강제되어 있다.** 위 "서버 쪽 설치 결과" 절 참고. 친구들 클라이언트 설정과 무관하게 서버 값이 적용된다.
 
-## 배포 방법 (r2modman 프로필 코드)
+## 배포 방법 (프로필 파일)
 
-**프로필 코드 발급은 r2modman GUI 에서 방장이 직접 해야 하는 작업이다.** 자동화할 수 없다.
+**프로필 파일을 만들어 사이트에 올려 두었다. 방장이 GUI 로 할 일은 없다.**
 
-```
-방장:
-1. r2modman (또는 Thunderstore Mod Manager) 설치
-2. Valheim 프로필 새로 생성
-3. 아래 목록의 모드를 정확히 같은 버전으로 설치
-4. "프로필 공유" -> 코드 발급
-5. 발급된 코드를 data/mods.json 의 modpack.r2modmanCode 에 채워 넣는다
+친구는 사이트의 설치 가이드에서 파일을 내려받아 r2modman 의 **파일로 가져오기**로 불러오면 된다. 목록과 버전이 그대로 맞춰진다.
 
-친구: r2modman 설치 -> 코드 붙여넣기 -> 동일 모드셋 자동 구성
-```
+| 항목 | 값 |
+|---|---|
+| 파일 | `web/public/gaybar-modpack.r2z` |
+| 배포 경로 | `https://firstquator.github.io/valheim-multi/gaybar-modpack.r2z` |
+| 만드는 곳 | `scripts/build-modpack.mjs` |
+| 다시 만들기 | `npm run modpack` |
+
+### 모드를 바꾸면 반드시 다시 만든다
+
+`data/mods.json` 의 3층 모드나 `modpack.dependencies` 를 고치면 `npm run modpack` 을 다시 돌려야 한다. 잊으면 친구들이 낡은 버전을 깔게 되고, **버전이 다른 사람은 접속하지 못한다.**
+
+잊는 것을 막으려고 `tests/modpack.test.mjs` 가 커밋된 파일과 `data/mods.json` 을 대조한다. 어긋나면 `npm test` 가 실패한다.
+
+### 포맷 근거
+
+`.r2z` 는 `export.r2x`(YAML) 하나가 든 zip 이다. r2modman 소스에서 확인했다.
+
+- `src/utils/ProfileUtils.ts` : `.r2z` 안의 `export.r2x` 를 읽는다
+- `src/model/exports/ExportMod.ts` : `name`, `version{major,minor,patch}`, `enabled`
+
+`name` 은 Thunderstore 의 `작성자-패키지명` 이다. 하나라도 틀리면 가져오기가 실패한다. 실제로 `Digitalroot/SlopeCombatAssistance` 로 잘못 적혀 있던 것을 API 로 대조해 `Digitalroot/Digitalroots_Slope_Combat_Assistance` 로 고쳤다.
+
+### 프로필 코드를 쓰고 싶다면
+
+코드 발급은 r2modman GUI 에서 사람이 직접 해야 한다. 발급했다면 `data/mods.json` 의 `modpack.r2modmanCode` 에 채운다. 사이트가 코드 방식도 함께 안내한다. 채우지 않아도 파일 방식으로 설치가 되므로 필수는 아니다.
 
 프로필에 넣을 모드 목록 (버전은 이 문서에 적힌 값과 항상 같아야 한다). 3층(전원 필수) 모드만 넣는다. 2층(개인 선택) 모드는 원하는 사람이 각자 알아서 추가하는 것이라 이 프로필에는 넣지 않는다.
 
@@ -485,5 +502,5 @@ Thunderstore API 상으로는 Deep North 태그가 없어 "미확인" 판정이�
 | SkilledCarryWeight | 1.5.0 동작 확인 (config 생성됨) |
 | BottleShips | 1.1.12 동작 확인 (config 생성됨) |
 | EpicMMOSystem / EpicMMOSystemUI | 1.9.67 동작 확인 (DLL 하나가 플러그인 두 개로 등록됨, 둘 다 config 생성됨) |
-| 3층 모드팩 | 서버 쪽 설치 완료 (2026-09-18). r2modman 프로필 코드 미발급 - 친구 배포 전 단계. ExtraSlots/ConditionalConfigSync/PlanBuild/Jotunn/MultiUserChest/SlopeCombatAssistance/SkilledCarryWeight/BottleShips/WackyEpicMMOSystem 총 9개 패키지가 프로필에 들어가야 한다 |
+| 3층 모드팩 | 서버 쪽 설치 완료 (2026-09-18). 프로필 파일 생성 완료, 사이트에서 내려받을 수 있다. BepInEx 로더와 의존성 2종을 포함해 총 10개 패키지가 들어간다 |
 | 2층 모드 | MassFarming, FastTeleport, Gizmo, MyLittleUI, QuickStackStore - 서버에는 설치하지 않음, 원하는 사람만 개인 클라이언트에 설치 |

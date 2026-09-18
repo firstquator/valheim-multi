@@ -123,34 +123,6 @@ const STEPS = [
                 <CopyField label="주소" value={SERVER.address} mono id="server-address" />
                 <CopyField label="비밀번호" value={SERVER.password} masked />
               </div>
-
-              <h2 class="block-h block-h-gap">
-                <Icon name="game-controller-01" size={17} />
-                게임 안에서 접속하는 법
-              </h2>
-              <ol class="mini-steps">
-                <li>
-                  <span class="mini-n">1</span>
-                  <div>
-                    <strong>발헤임을 켜고 캐릭터를 고릅니다</strong>
-                    <p>모드가 있는 서버라면 반드시 r2modman 의 Start modded 로 켜야 합니다.</p>
-                  </div>
-                </li>
-                <li>
-                  <span class="mini-n">2</span>
-                  <div>
-                    <strong>게임 참가 화면에서 서버 직접 연결을 고릅니다</strong>
-                    <p>목록에서 찾지 마세요. 이 서버는 목록에 뜨지 않습니다.</p>
-                  </div>
-                </li>
-                <li>
-                  <span class="mini-n">3</span>
-                  <div>
-                    <strong>위 주소를 넣고 비밀번호를 칩니다</strong>
-                    <p>주소는 포트 번호까지 그대로 붙여넣으면 됩니다.</p>
-                  </div>
-                </li>
-              </ol>
             </section>
 
             <aside class="block">
@@ -852,7 +824,6 @@ const STEPS = [
     color: var(--text-dim);
   }
   .block-h .icon { color: var(--accent); }
-  .block-h-gap { margin-top: 32px; }
 
   .card {
     background: var(--surface);
@@ -894,30 +865,6 @@ const STEPS = [
   .side-card + .callout { margin-top: 14px; }
 
   /* 접속 절차 같은 짧은 순서. 설치 가이드의 단계 카드보다 가볍다. */
-  .mini-steps { margin: 0; padding: 0; list-style: none; }
-  .mini-steps li {
-    display: flex;
-    gap: 14px;
-    padding: 12px 0;
-    border-bottom: 1px solid var(--border);
-  }
-  .mini-steps li:last-child { border-bottom: none; }
-  .mini-n {
-    display: grid;
-    place-items: center;
-    width: 26px;
-    height: 26px;
-    flex: none;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--accent) 16%, var(--surface));
-    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-    color: var(--accent-bright);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-  }
-  .mini-steps strong { display: block; font-size: 14.5px; font-weight: 600; }
-  .mini-steps p { margin: 2px 0 0; font-size: 13.5px; color: var(--text-dim); }
 
   /* 모드 탭 제목 옆 개수 요약. */
   .count-pills { display: flex; gap: 8px; }
