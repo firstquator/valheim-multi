@@ -45,6 +45,10 @@
 | `Advize/PlantEverything` | 1.21.2 | 베리, 버섯, 엉겅퀴, 민들레 재배 허용 |
 | `ArgusMagnus/ServersideQoL` | 2.0.13 | 기능 모듈들의 **프레임워크** |
 | `ArgusMagnus/ServersideQoL_AutoProcess` | 2.0.11 | **제련소, 가마, 풍차 자동 공급** |
+| `ArgusMagnus/ServersideQoL_ContainerSigns` | 2.0.11 | 상자에 내용물 표시 간판 |
+| `ArgusMagnus/ServersideQoL_AutoMapTables` | 2.0.11 | 지도 테이블에 포탈, 배, 광맥 아이콘 자동 표시 |
+| `ArgusMagnus/ServersideQoL_AutoDoors` | 2.0.11 | 문 자동 닫힘 |
+| `ArgusMagnus/ServersideQoL_TameAssist` | 2.0.11 | 길들인 동물 관련 설정 |
 | `ValheimModding/YamlDotNet` | 16.3.1 | ServersideQoL 의존성 |
 
 ## 주의: ServersideQoL 은 프레임워크다
@@ -61,12 +65,12 @@
 |---|---|---|
 | `ServersideQoL_AutoProcess` | 제련소, 가마, 풍차에 근처 상자에서 자동 공급 | **도입 완료** |
 | `ServersideQoL_AutoStore` | 떨어진 아이템과 인벤 물건을 근처 상자로 자동 보관 | 제외 (`QuickStackStore` 와 중복) |
-| `ServersideQoL_ContainerSigns` | 상자에 내용물 표시 간판 | 검토 중 |
+| `ServersideQoL_ContainerSigns` | 상자에 내용물 표시 간판 | **도입 완료** |
 | `ServersideQoL_AutoPortalHub` | 포탈 허브 자동 생성 | 제외 (`TargetPortal` 과 중복) |
-| `ServersideQoL_AutoMapTables` | 지도 테이블에 포탈, 배, 광맥 아이콘 자동 표시 | 검토 중 |
-| `ServersideQoL_ContainerSizes` | 상자 용량 설정 가능 | 검토 중 |
-| `ServersideQoL_AutoDoors` | 문 자동 닫힘 | 검토 중 |
-| `ServersideQoL_TameAssist` | 길들인 동물 관련 설정 | 검토 중 |
+| `ServersideQoL_AutoMapTables` | 지도 테이블에 포탈, 배, 광맥 아이콘 자동 표시 | **도입 완료** |
+| `ServersideQoL_ContainerSizes` | 상자 용량 설정 가능 | **제외** (난이도 저하 소지, 아래 개별 메모 참고) |
+| `ServersideQoL_AutoDoors` | 문 자동 닫힘 | **도입 완료** |
+| `ServersideQoL_TameAssist` | 길들인 동물 관련 설정 | **도입 완료** |
 | `ServersideQoL_Player` | 무한 스태미나 등 | **제외** (난이도 저하) |
 
 프레임워크는 2.0.13, 모듈은 2.0.11 로 버전이 다르다. 도입 시 호환성을 확인한다.
@@ -332,6 +336,12 @@ RPG 레벨업과 스탯 분배를 얹는 시스템이다. 편의 모드가 아�
 
 1층(서버 전용)으로 쓸 수 있는 것은 `ServersideQoL` 모듈 계열뿐이다.
 
+## `ServersideQoL_ContainerSizes` 를 제외한 근거 (2026-09-18)
+
+상자 용량을 설정 가능하게 하고, 한 종류의 아이템만 든 상자는 용량이 무한히 늘어나게 하는 옵션도 있다.
+
+보관 편의로 볼 여지가 있지만, 이 서버는 월드 설정으로 이미 `resources_more`(자원 150%) 를 켜 두어 들어오는 자원량이 늘어난 상태다. 여기에 상자 용량 제한까지 없애면 "채집한 것을 어디에 둘지" 라는 관리 부담이 사실상 사라진다. 이 프로젝트가 무게 제한 증가를 난이도 저하로 보고 제외한 것과 같은 결의 문제로 판단해 제외한다.
+
 ## 중복 회피
 
 요청 목록과 겹치는 `ServersideQoL` 모듈은 도입하지 않는다.
@@ -356,4 +366,8 @@ RPG 레벨업과 스탯 분배를 얹는 시스템이다. 편의 모드가 아�
 | YamlDotNet | 16.3.1 로드 확인 |
 | ServersideQoL | 2.0.13 동작 확인 (config 생성됨) |
 | ServersideQoL_AutoProcess | 2.0.11 동작 확인 (config 생성됨) |
+| ServersideQoL_ContainerSigns | 2.0.11 동작 확인 (config 생성됨) |
+| ServersideQoL_AutoMapTables | 2.0.11 동작 확인 (config 생성됨) |
+| ServersideQoL_AutoDoors | 2.0.11 동작 확인 (config 생성됨) |
+| ServersideQoL_TameAssist | 2.0.11 동작 확인 (config 생성됨) |
 | 3층 모드팩 | 미도입 |

@@ -37,6 +37,50 @@
       "usage": "제련소 옆에 광석 상자를 두기만 하면 됩니다. 일일이 넣지 않아도 됩니다",
       "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/ArgusMagnus/ServersideQoL_AutoProcess/",
       "warnings": []
+    },
+    {
+      "id": "ServersideQoL_ContainerSigns",
+      "owner": "ArgusMagnus",
+      "version": "2.0.11",
+      "tier": 1,
+      "name": "상자 내용물 간판",
+      "summary": "상자와 통 위에 안에 뭐가 들었는지 보여주는 간판이 붙습니다",
+      "usage": "설치만 되어 있으면 자동으로 보입니다. 상자를 뒤져보지 않아도 뭐가 들었는지 알 수 있습니다",
+      "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/ArgusMagnus/ServersideQoL_ContainerSigns/",
+      "warnings": []
+    },
+    {
+      "id": "ServersideQoL_AutoMapTables",
+      "owner": "ArgusMagnus",
+      "version": "2.0.11",
+      "tier": 1,
+      "name": "지도 테이블 자동 표시",
+      "summary": "지도 테이블에 포탈, 배, 광맥 위치 아이콘이 자동으로 올라옵니다",
+      "usage": "지도 테이블을 놓고 쓰기만 하면 됩니다. 직접 아이콘을 찍을 필요가 없습니다",
+      "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/ArgusMagnus/ServersideQoL_AutoMapTables/",
+      "warnings": []
+    },
+    {
+      "id": "ServersideQoL_AutoDoors",
+      "owner": "ArgusMagnus",
+      "version": "2.0.11",
+      "tier": 1,
+      "name": "문 자동 닫힘",
+      "summary": "열어 둔 문이 시간이 지나면 저절로 닫힙니다",
+      "usage": "따로 할 일은 없습니다. 문을 열고 지나가면 알아서 닫힙니다",
+      "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/ArgusMagnus/ServersideQoL_AutoDoors/",
+      "warnings": []
+    },
+    {
+      "id": "ServersideQoL_TameAssist",
+      "owner": "ArgusMagnus",
+      "version": "2.0.11",
+      "tier": 1,
+      "name": "길들인 동물 보조",
+      "summary": "길들인 동물이 포탈이나 던전 안까지도 따라올 수 있고, 근처 사람에게 길들이기/성장 진행률이 보입니다",
+      "usage": "따로 설정할 것은 없습니다. 동물을 데리고 다니면 자동으로 적용됩니다",
+      "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/ArgusMagnus/ServersideQoL_TameAssist/",
+      "warnings": []
     }
   ]
 }
