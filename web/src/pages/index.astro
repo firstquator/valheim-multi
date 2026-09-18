@@ -5,7 +5,13 @@ import Tabs from "../components/Tabs.astro";
 import CopyField from "../components/CopyField.astro";
 import Icon from "../components/Icon.astro";
 import ModCard from "../components/ModCard.astro";
-import WarningBlock from "../components/WarningBlock.astro";
+import Callout from "../components/Callout.astro";
+import PageHead from "../components/PageHead.astro";
+import DiagramFlow from "../components/diagrams/DiagramFlow.astro";
+import DiagramR2modman from "../components/diagrams/DiagramR2modman.astro";
+import DiagramImportCode from "../components/diagrams/DiagramImportCode.astro";
+import DiagramLaunch from "../components/diagrams/DiagramLaunch.astro";
+import DiagramVersion from "../components/diagrams/DiagramVersion.astro";
 import { SERVER } from "../config.mjs";
 import modsData from "../../../data/mods.json";
 
@@ -19,6 +25,12 @@ const TABS = [
 const tier1 = modsData.mods.filter((m) => m.tier === 1);
 const tier3 = modsData.mods.filter((m) => m.tier === 3);
 const modpackCode = modsData.modpack.r2modmanCode;
+
+// 화면 문구는 data/mods.json 의 내용에 따라 저절로 달라진다.
+// 3층(직접 설치) 모드가 하나라도 있으면 "설치할 것이 있다" 로,
+// 없으면 "지금은 없다" 로 읽힌다. 모드가 추가될 때 이 파일을 다시
+// 고칠 필요가 없어야 한다.
+const needsAnyInstall = tier3.length > 0;
 ---
 
 <!doctype html>
@@ -59,125 +71,511 @@ const modpackCode = modsData.modpack.r2modmanCode;
 
       <Tabs tabs={TABS}>
         <div slot="server">
-          <header class="hero">
-            <h1>gaybar</h1>
-            <p class="badge" id="status-badge" data-state="unknown" aria-live="polite" aria-atomic="true">상태 확인 중</p>
-            <p class="age" id="status-age"></p>
-          </header>
-
-          <div class="card">
-            <CopyField label="주소" value={SERVER.address} mono id="server-address" />
-            <CopyField label="비밀번호" value={SERVER.password} masked />
-            <div class="field">
-              <span class="k">게임 버전</span>
-              <span class="v mono" id="game-version">확인 중</span>
-              <span class="hint">클라이언트도 같은 버전이어야 접속됩니다</span>
+          <PageHead
+            kicker="발헤임 전용 서버"
+            title="gaybar"
+            icon="home-01"
+            desc="주소와 비밀번호만 있으면 들어올 수 있습니다. 설치할 모드가 있는지는 모드 탭에서 확인하세요."
+          >
+            <div class="status-pill" slot="aside">
+              <p class="badge" id="status-badge" data-state="unknown" aria-live="polite" aria-atomic="true">상태 확인 중</p>
+              <p class="age" id="status-age"></p>
             </div>
+          </PageHead>
+
+          <div class="cols cols-wide">
+            <section class="block">
+              <h2 class="block-h">
+                <Icon name="key-01" size={17} />
+                접속 정보
+              </h2>
+              <div class="card card-lead">
+                <CopyField label="주소" value={SERVER.address} mono id="server-address" />
+                <CopyField label="비밀번호" value={SERVER.password} masked />
+              </div>
+
+              <h2 class="block-h block-h-gap">
+                <Icon name="game-controller-01" size={17} />
+                게임 안에서 접속하는 법
+              </h2>
+              <ol class="mini-steps">
+                <li>
+                  <span class="mini-n">1</span>
+                  <div>
+                    <strong>발헤임을 켜고 캐릭터를 고릅니다</strong>
+                    <p>모드가 있는 서버라면 반드시 r2modman 의 Start modded 로 켜야 합니다.</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="mini-n">2</span>
+                  <div>
+                    <strong>게임 참가 화면에서 서버 직접 연결을 고릅니다</strong>
+                    <p>목록에서 찾지 마세요. 이 서버는 목록에 뜨지 않습니다.</p>
+                  </div>
+                </li>
+                <li>
+                  <span class="mini-n">3</span>
+                  <div>
+                    <strong>위 주소를 넣고 비밀번호를 칩니다</strong>
+                    <p>주소는 포트 번호까지 그대로 붙여넣으면 됩니다.</p>
+                  </div>
+                </li>
+              </ol>
+            </section>
+
+            <aside class="block">
+              <h2 class="block-h">
+                <Icon name="user-group" size={17} />
+                지금 서버
+              </h2>
+
+              <div class="card side-card">
+                <div class="side-row" id="player-wrap">
+                  <span class="side-k">접속 중</span>
+                  <p class="side-v" id="player-list" hidden></p>
+                </div>
+                <div class="side-row">
+                  <span class="side-k">게임 버전</span>
+                  <span class="side-v mono" id="game-version">확인 중</span>
+                  <span class="side-note">클라이언트도 같은 버전이어야 접속됩니다</span>
+                </div>
+                <div class="side-row">
+                  <span class="side-k">월드</span>
+                  <span class="side-v mono">gaybar</span>
+                  <span class="side-note">설정은 월드 탭에 적어 두었습니다</span>
+                </div>
+              </div>
+
+              <Callout title="상태 표시가 늦을 수 있습니다" tone="info">
+                서버 PC 가 1분에 한 번 상태를 올립니다. 방금 켰다면 잠시 뒤
+                다시 보세요.
+              </Callout>
+            </aside>
           </div>
-
-          <section class="players" id="player-wrap">
-            <h2><Icon name="user-02" size={18} /> 접속 중</h2>
-            <p id="player-list" hidden></p>
-          </section>
         </div>
+
         <div slot="mods">
-          <h1>모드</h1>
-
-          <section class="group">
-            <h2>설치할 것 없음</h2>
-            <p class="lead">서버에만 깔려 있습니다. 그냥 접속하시면 됩니다.</p>
-            <div class="grid">
-              {tier1.map((m) => <ModCard mod={m} />)}
+          <PageHead
+            kicker="이 서버에 적용된 것"
+            title="모드"
+            icon="package-02"
+            desc="서버에만 깔리는 모드와 직접 설치해야 하는 모드를 나눠 두었습니다. 위쪽 구역만 보시면 됩니다."
+          >
+            <div class="count-pills" slot="aside">
+              <span class="pill">
+                <Icon name="package-02" size={14} />
+                전체 {modsData.mods.length}개
+              </span>
+              <span class={`pill ${needsAnyInstall ? "pill-hot" : "pill-ok"}`}>
+                <Icon name={needsAnyInstall ? "download-04" : "checkmark-circle-02"} size={14} />
+                직접 설치 {tier3.length}개
+              </span>
             </div>
-          </section>
+          </PageHead>
 
-          {tier3.length > 0 && (
+          {needsAnyInstall ? (
             <section class="group">
-              <h2>설치 필요</h2>
-              <WarningBlock title="전원이 정확히 같은 버전을 설치해야 합니다">
-                Thunderstore 에서 최신 버전을 임의로 받지 마세요. 아래 카드에 적힌
-                버전 번호를 그대로 설치해야 합니다. 한 명이라도 버전이 다르면 그
-                사람은 서버에 접속할 수 없습니다.
-              </WarningBlock>
-              <WarningBlock title="인벤토리 모드는 하나만 설치하세요">
-                ExtraSlots, EquipmentAndQuickSlots, AzuExtendedPlayerInventory 는
-                같은 코드를 건드립니다. 둘 이상 설치하면 슬롯이 늘어나는 것이 아니라
-                재접속할 때 아이템이 사라집니다.
-              </WarningBlock>
+              <div class="group-h">
+                <h2>
+                  <Icon name="download-04" size={19} />
+                  직접 설치해야 하는 모드
+                </h2>
+                <p class="lead">
+                  {tier3.length}개입니다. 설치 가이드 탭의 순서대로 하면 한 번에 끝납니다.
+                </p>
+              </div>
+
+              <div class="callouts">
+                <Callout title="전원이 정확히 같은 버전을 설치해야 합니다">
+                  Thunderstore 에서 최신 버전을 임의로 받지 마세요. 아래 카드에 적힌
+                  버전 번호를 그대로 설치해야 합니다. 한 명이라도 버전이 다르면 그
+                  사람은 서버에 접속할 수 없습니다.
+                </Callout>
+                <Callout title="인벤토리 모드는 하나만 설치하세요">
+                  ExtraSlots, EquipmentAndQuickSlots, AzuExtendedPlayerInventory 는
+                  같은 코드를 건드립니다. 둘 이상 설치하면 슬롯이 늘어나는 것이 아니라
+                  재접속할 때 아이템이 사라집니다.
+                </Callout>
+              </div>
+
               <div class="grid">
                 {tier3.map((m) => <ModCard mod={m} />)}
               </div>
             </section>
+          ) : (
+            <section class="group">
+              <div class="group-h group-h-ok">
+                <h2>
+                  <Icon name="checkmark-circle-02" size={19} />
+                  직접 설치할 것은 없습니다
+                </h2>
+              </div>
+              <Callout title="지금은 아무것도 설치하지 않아도 됩니다" tone="success">
+                아래 모드는 전부 서버에만 깔려 있습니다. 그냥 발헤임을 켜고
+                접속하시면 됩니다. 설치가 필요한 모드가 생기면 이 자리에
+                카드로 올라옵니다.
+              </Callout>
+            </section>
           )}
+
+          <section class="group">
+            <div class="group-h">
+              <h2>
+                <Icon name="server-stack-01" size={19} />
+                서버에만 깔린 모드
+              </h2>
+              <p class="lead">
+                {tier1.length}개입니다. 접속하면 저절로 적용되니 읽고 넘기셔도 됩니다.
+              </p>
+            </div>
+            <div class="grid">
+              {tier1.map((m) => <ModCard mod={m} />)}
+            </div>
+          </section>
         </div>
+
         <div slot="install">
-          <h1>설치 가이드</h1>
-          <p class="lead">
-            설치가 필요한 모드가 있을 때만 따라 하시면 됩니다.
-            지금은 서버에만 깔려 있어 아무것도 안 하셔도 접속됩니다.
-          </p>
+          <PageHead
+            kicker="처음 한 번만 하면 됩니다"
+            title="설치 가이드"
+            icon="download-04"
+            tone={needsAnyInstall ? "accent" : "success"}
+            desc={needsAnyInstall
+              ? "아래 순서를 위에서부터 그대로 따라 하시면 됩니다. 처음이라면 10분 정도 걸립니다."
+              : "지금은 따라 할 필요가 없습니다. 앞으로 설치가 필요한 모드가 생겼을 때를 위해 적어 둡니다."}
+          />
+
+          {needsAnyInstall ? (
+            <Callout title={`직접 설치해야 하는 모드가 ${tier3.length}개 있습니다`}>
+              설치하지 않으면 서버에 접속할 수 없습니다. 어떤 모드인지는 모드 탭에
+              적혀 있고, 아래 3단계의 프로필 코드 하나로 한꺼번에 설치됩니다.
+            </Callout>
+          ) : (
+            <Callout title="지금 친구들은 아무것도 설치하지 않아도 접속됩니다" tone="success">
+              현재 서버에는 서버에만 깔리는 모드만 있습니다. 발헤임을 그냥 켜고
+              서버 탭의 주소로 들어오시면 됩니다. 아래 절차는 앞으로 직접 설치할
+              모드가 추가될 때를 위한 안내입니다.
+            </Callout>
+          )}
+
+          <figure class="figure figure-flat">
+            <DiagramFlow />
+            <figcaption>전체 흐름. 4단계만 틀리지 않으면 나머지는 쉽습니다.</figcaption>
+          </figure>
 
           <ol class="steps">
             <li>
-              <h3>r2modman 설치</h3>
-              <p>
-                모드를 관리해 주는 프로그램입니다.
-                <a href="https://thunderstore.io/package/ebkr/r2modman/" target="_blank" rel="noreferrer">
-                  Thunderstore 에서 받기
-                </a>
-              </p>
+              <div class="step-h">
+                <span class="step-n">1</span>
+                <h3>r2modman 을 내려받습니다</h3>
+              </div>
+              <div class="step-body">
+                <p>
+                  모드를 프로필 단위로 관리해 주는 프로그램입니다. 게임 폴더를
+                  직접 건드리지 않으므로 바닐라로 되돌리기도 쉽습니다.
+                </p>
+                <ul class="ticks">
+                  <li>
+                    <Icon name="arrow-right-02" size={15} />
+                    <span>
+                      <a href="https://thunderstore.io/package/ebkr/r2modman/" target="_blank" rel="noopener noreferrer">
+                        Thunderstore 의 r2modman 페이지
+                        <Icon name="arrow-up-right-01" size={13} />
+                        <span class="sr-only">새 탭에서 열림</span>
+                      </a>
+                      에서 Manual Download 를 누릅니다
+                    </span>
+                  </li>
+                  <li>
+                    <Icon name="arrow-right-02" size={15} />
+                    <span>받은 압축 파일을 풀고 안에 있는 설치 파일을 실행합니다</span>
+                  </li>
+                  <li>
+                    <Icon name="arrow-right-02" size={15} />
+                    <span>
+                      윈도우가 알 수 없는 앱이라고 막으면 추가 정보를 누르고
+                      실행을 고릅니다
+                    </span>
+                  </li>
+                </ul>
+              </div>
             </li>
+
             <li>
-              <h3>게임 선택</h3>
-              <p>목록에서 Valheim 을 고르고 Steam 을 선택합니다.</p>
+              <div class="step-h">
+                <span class="step-n">2</span>
+                <h3>발헤임과 Steam 을 고릅니다</h3>
+              </div>
+              <div class="step-body">
+                <p>
+                  r2modman 을 처음 켜면 게임 목록이 나옵니다. 여기서 한 번만
+                  고르면 다음부터는 묻지 않습니다.
+                </p>
+                <ul class="ticks">
+                  <li>
+                    <Icon name="arrow-right-02" size={15} />
+                    <span>검색창에 Valheim 을 치고 목록에서 고른 뒤 Select game 을 누릅니다</span>
+                  </li>
+                  <li>
+                    <Icon name="arrow-right-02" size={15} />
+                    <span>플랫폼을 묻는 화면에서 Steam 을 고릅니다</span>
+                  </li>
+                  <li>
+                    <Icon name="arrow-right-02" size={15} />
+                    <span>
+                      게임 폴더를 못 찾는다고 하면 Settings 의 Locations 에서
+                      발헤임 설치 폴더를 직접 지정합니다
+                    </span>
+                  </li>
+                </ul>
+              </div>
             </li>
+
             <li>
-              <h3>프로필 가져오기</h3>
-              <p>
-                Profiles 화면에서 Import / Update 를 누르고 아래 코드를 붙여넣습니다.
-                {modpackCode
-                  ? <span class="mono code">{modpackCode}</span>
-                  : <span class="pending">코드는 설치 필요 모드가 정해지면 여기에 올라옵니다</span>}
-              </p>
+              <div class="step-h">
+                <span class="step-n">3</span>
+                <h3>프로필 코드를 가져옵니다</h3>
+              </div>
+              <div class="step-body">
+                <p>
+                  모드를 하나씩 찾아서 받을 필요가 없습니다. 코드 한 줄이면
+                  목록과 버전이 통째로 맞춰집니다.
+                </p>
+
+                <figure class="figure">
+                  <DiagramR2modman />
+                  <figcaption>
+                    r2modman 창의 구조입니다. 왼쪽이 프로필, 오른쪽 위가
+                    Import / Update, 왼쪽 아래가 실행 버튼입니다.
+                  </figcaption>
+                </figure>
+
+                <ul class="ticks">
+                  <li>
+                    <Icon name="arrow-right-02" size={15} />
+                    <span>프로필 화면에서 Import / Update 를 누릅니다</span>
+                  </li>
+                  <li>
+                    <Icon name="arrow-right-02" size={15} />
+                    <span>코드로 가져오기를 고르고 아래 코드를 붙여넣습니다</span>
+                  </li>
+                  <li>
+                    <Icon name="arrow-right-02" size={15} />
+                    <span>
+                      프로필 이름을 정하고 확인을 누르면 모드가 자동으로
+                      내려받아집니다. 끝날 때까지 기다립니다
+                    </span>
+                  </li>
+                </ul>
+
+                {modpackCode ? (
+                  <div class="card code-card">
+                    <CopyField label="프로필 코드" value={modpackCode} mono />
+                  </div>
+                ) : (
+                  <div class="pending-box">
+                    <Icon name="clock-01" size={16} />
+                    <span>
+                      프로필 코드는 직접 설치할 모드가 정해지면 이 자리에
+                      올라옵니다. 지금은 비워 둡니다.
+                    </span>
+                  </div>
+                )}
+
+                <figure class="figure">
+                  <DiagramImportCode />
+                  <figcaption>코드를 붙여넣는 자리와 순서입니다.</figcaption>
+                </figure>
+              </div>
             </li>
+
             <li>
-              <h3>Start modded 로 실행</h3>
-              <p>
-                r2modman 의 Start modded 버튼으로 게임을 켭니다.
-                Steam 에서 직접 켜면 모드가 적용되지 않습니다.
-              </p>
+              <div class="step-h">
+                <span class="step-n">4</span>
+                <h3>Start modded 로 게임을 켭니다</h3>
+              </div>
+              <div class="step-body">
+                <p>
+                  여기서 가장 많이 틀립니다. 습관대로 Steam 에서 켜면 모드가
+                  하나도 적용되지 않고, 그 상태로는 서버에 못 들어옵니다.
+                </p>
+
+                <Callout title="Steam 에서 직접 켜면 모드가 적용되지 않습니다">
+                  Steam 라이브러리의 플레이 버튼은 모드 없는 바닐라 게임을
+                  켭니다. 반드시 r2modman 왼쪽 위의 Start modded 를 누르세요.
+                  바탕화면 바로가기를 만들어 두면 편합니다.
+                </Callout>
+
+                <figure class="figure">
+                  <DiagramLaunch />
+                  <figcaption>
+                    같은 게임이라도 어디서 켜느냐에 따라 결과가 달라집니다.
+                  </figcaption>
+                </figure>
+
+                <ul class="ticks">
+                  <li>
+                    <Icon name="arrow-right-02" size={15} />
+                    <span>방금 만든 프로필이 골라져 있는지 확인합니다</span>
+                  </li>
+                  <li>
+                    <Icon name="arrow-right-02" size={15} />
+                    <span>
+                      첫 실행은 모드 로더를 까느라 평소보다 오래 걸립니다.
+                      검은 화면이 좀 길어도 기다립니다
+                    </span>
+                  </li>
+                </ul>
+              </div>
             </li>
+
             <li>
-              <h3>서버 접속</h3>
-              <p>서버 탭의 주소와 비밀번호로 들어오시면 됩니다.</p>
+              <div class="step-h">
+                <span class="step-n">5</span>
+                <h3>서버에 들어옵니다</h3>
+              </div>
+              <div class="step-body">
+                <p>
+                  캐릭터를 고르고 게임 참가 화면에서 서버 직접 연결을 누른 뒤,
+                  서버 탭에 적힌 주소와 비밀번호를 넣습니다. 이 서버는 공개
+                  목록에 뜨지 않으니 목록에서 찾지 마세요.
+                </p>
+                <ul class="ticks">
+                  <li>
+                    <Icon name="arrow-right-02" size={15} />
+                    <span>주소는 포트 번호까지 통째로 붙여넣습니다</span>
+                  </li>
+                  <li>
+                    <Icon name="arrow-right-02" size={15} />
+                    <span>비밀번호는 접속할 때마다 묻지 않습니다. 처음 한 번만 칩니다</span>
+                  </li>
+                </ul>
+              </div>
             </li>
           </ol>
-        </div>
-        <div slot="world">
-          <h1>월드</h1>
-          <p class="lead">이 서버의 월드 설정입니다. 기본값과 다른 부분이 있습니다.</p>
 
-          <div class="card">
-            <div class="field"><span class="k">이름</span><span class="v mono">gaybar</span></div>
-            <div class="field"><span class="k">전투</span><span class="v">어렵게. 적 피해 150%, 적 속도와 크기 110%</span></div>
-            <div class="field"><span class="k">사망</span><span class="v">가볍게. 장비 유지, 스킬 손실 15%</span></div>
-            <div class="field"><span class="k">자원</span><span class="v">150%</span></div>
-            <div class="field"><span class="k">포탈</span><span class="v">모든 아이템 이동 가능. 금속도 옮길 수 있습니다</span></div>
+          <section class="group trouble">
+            <div class="group-h">
+              <h2>
+                <Icon name="help-circle" size={19} />
+                잘 안 될 때
+              </h2>
+              <p class="lead">막히는 자리는 대개 정해져 있습니다.</p>
+            </div>
+
+            <div class="qa-grid">
+              <article class="qa">
+                <h3>
+                  <Icon name="alert-02" size={16} />
+                  접속하려는데 거부당합니다
+                </h3>
+                <p>
+                  모드 목록이나 버전이 서버와 다릅니다. 모드 탭의 카드에 적힌
+                  버전과 r2modman 에 깔린 버전이 같은지 하나씩 맞춰 보세요.
+                  최신 버전이 아니라 적힌 버전이어야 합니다.
+                </p>
+              </article>
+
+              <article class="qa">
+                <h3>
+                  <Icon name="alert-02" size={16} />
+                  분명히 설치했는데 모드가 안 보입니다
+                </h3>
+                <p>
+                  Steam 에서 켰을 가능성이 큽니다. 게임을 끄고 r2modman 의
+                  Start modded 로 다시 켜 보세요.
+                </p>
+              </article>
+
+              <article class="qa">
+                <h3>
+                  <Icon name="alert-02" size={16} />
+                  재접속하니 아이템이 사라졌습니다
+                </h3>
+                <p>
+                  인벤토리 확장 모드를 둘 이상 깐 경우입니다. 하나만 남기고
+                  나머지를 지운 다음 다시 들어오세요.
+                </p>
+              </article>
+
+              <article class="qa">
+                <h3>
+                  <Icon name="alert-02" size={16} />
+                  프로필 코드가 안 먹힙니다
+                </h3>
+                <p>
+                  코드 앞뒤에 공백이나 줄바꿈이 끼어 있는지 보세요. 위 복사
+                  버튼으로 복사하면 그런 일이 없습니다.
+                </p>
+              </article>
+            </div>
+
+            <figure class="figure">
+              <DiagramVersion />
+              <figcaption>
+                버전이 하나라도 다르면 그 사람만 막힙니다. 모드 이름이 같아도
+                소용없습니다.
+              </figcaption>
+            </figure>
+          </section>
+        </div>
+
+        <div slot="world">
+          <PageHead
+            kicker="이 서버의 규칙"
+            title="월드"
+            icon="globe-02"
+            desc="기본값과 다른 부분만 적었습니다. 적지 않은 것은 발헤임 기본 설정 그대로입니다."
+          />
+
+          <div class="spec-grid">
+            <article class="spec">
+              <span class="spec-ico" aria-hidden="true"><Icon name="map-pinpoint-01" size={20} /></span>
+              <p class="spec-k">월드 이름</p>
+              <p class="spec-v mono">gaybar</p>
+              <p class="spec-n">접속하면 이 월드로 들어옵니다</p>
+            </article>
+
+            <article class="spec spec-hard">
+              <span class="spec-ico" aria-hidden="true"><Icon name="sword-01" size={20} /></span>
+              <p class="spec-k">전투</p>
+              <p class="spec-v">어렵게</p>
+              <p class="spec-n">적 피해 150%, 적 속도와 크기 110%</p>
+            </article>
+
+            <article class="spec spec-soft">
+              <span class="spec-ico" aria-hidden="true"><Icon name="shield-01" size={20} /></span>
+              <p class="spec-k">사망 페널티</p>
+              <p class="spec-v">가볍게</p>
+              <p class="spec-n">장비를 그대로 들고 있고 스킬만 15% 잃습니다</p>
+            </article>
+
+            <article class="spec">
+              <span class="spec-ico" aria-hidden="true"><Icon name="gem" size={20} /></span>
+              <p class="spec-k">자원</p>
+              <p class="spec-v">150%</p>
+              <p class="spec-n">채집과 전리품이 기본보다 넉넉합니다</p>
+            </article>
+
+            <article class="spec spec-soft">
+              <span class="spec-ico" aria-hidden="true"><Icon name="connect" size={20} /></span>
+              <p class="spec-k">포탈</p>
+              <p class="spec-v">모든 아이템 이동 가능</p>
+              <p class="spec-n">금속도 옮길 수 있습니다. 배로 나를 필요가 없습니다</p>
+            </article>
+
+            <article class="spec">
+              <span class="spec-ico" aria-hidden="true"><Icon name="database-02" size={20} /></span>
+              <p class="spec-k">백업</p>
+              <p class="spec-v mono spec-v-sm" id="backup-at">확인 중</p>
+              <p class="spec-n">시간마다 자동으로 저장됩니다. 사고가 나도 되돌릴 수 있습니다</p>
+            </article>
           </div>
 
-          <section class="group" style="margin-top:32px">
-            <h2>백업</h2>
-            <p class="lead">
-              월드는 시간마다 자동으로 백업됩니다.
-              혹시 사고가 나도 되돌릴 수 있습니다.
-            </p>
-            <div class="card">
-              <div class="field">
-                <span class="k">최근 백업</span>
-                <span class="v mono" id="backup-at">확인 중</span>
-              </div>
-            </div>
-          </section>
+          <Callout title="난이도를 올려 두었습니다" tone="info">
+            적이 세고 빠른 대신 죽어도 장비를 잃지 않고 자원이 넉넉합니다.
+            혼자 돌아다니기보다 둘 이상 뭉쳐 다니는 쪽이 유리합니다.
+          </Callout>
         </div>
       </Tabs>
       <Sidebar tabs={TABS} />
@@ -204,31 +602,44 @@ const modpackCode = modsData.modpack.r2modmanCode;
     border: 0;
   }
 
-  .shell {
-    padding-left: var(--sidebar-w-collapsed);
-  }
+  /* 사이드바는 64px 을 덮고 콘텐츠를 밀지 않는다.
+     그만큼만 비워 두고 나머지 폭은 전부 콘텐츠가 쓴다. */
+  .shell { padding-left: var(--sidebar-w-collapsed); }
+
   .panels {
-    max-width: 960px;
+    width: 100%;
+    max-width: var(--content-max);
     margin: 0 auto;
-    padding: 48px 32px;
-  }
-  @media (max-width: 1280px) {
-    .panels { max-width: none; }
+    padding: 44px var(--pad-x) 110px;
   }
 
-  .hero { margin-bottom: 32px; }
-  .hero h1 {
-    margin: 0 0 12px;
-    font-size: 40px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+  /* 넓은 화면에서는 두 단으로 나눠 오른쪽이 비지 않게 한다.
+     좁아지면 한 단으로 떨어진다. */
+  .cols {
+    display: grid;
+    gap: 24px;
+    align-items: start;
+  }
+  .cols-wide { grid-template-columns: minmax(0, 1.55fr) minmax(320px, 1fr); }
+  @media (max-width: 1024px) {
+    .cols-wide { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  /* 서버 탭 제목 옆의 상태 표시. */
+  .status-pill {
+    padding: 10px 16px;
+    text-align: right;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
   }
   .badge {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     margin: 0;
-    font-size: 17px;
+    font-size: 16px;
+    font-weight: 600;
     color: var(--text-dim);
   }
   .badge::before {
@@ -238,7 +649,7 @@ const modpackCode = modsData.modpack.r2modmanCode;
     border-radius: 50%;
     background: var(--text-faint);
   }
-  .badge[data-state="running"] { color: var(--success); }
+  .badge[data-state="running"] { color: var(--success-bright); }
   .badge[data-state="running"]::before {
     background: var(--success);
     box-shadow: var(--shadow-pulse-start);
@@ -248,22 +659,334 @@ const modpackCode = modsData.modpack.r2modmanCode;
   @keyframes pulse {
     to { box-shadow: var(--shadow-pulse-end); }
   }
-  .age { margin: 6px 0 0; font-size: 13px; color: var(--text-faint); }
+  @media (prefers-reduced-motion: reduce) {
+    .badge[data-state="running"]::before { animation: none; }
+  }
+  .age { margin: 2px 0 0; font-size: 12px; color: var(--text-faint); }
+
+  /* 구역 제목. 탭 제목보다 한 단계 작고 아이콘을 앞에 둔다. */
+  .block-h {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--text-dim);
+  }
+  .block-h .icon { color: var(--accent); }
+  .block-h-gap { margin-top: 32px; }
 
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
     overflow: hidden;
   }
-  .hint { font-size: 12px; color: var(--text-faint); }
+  /* 서버 탭의 주소와 비밀번호는 이 페이지에서 가장 자주 쓰는 값이다.
+     다른 카드보다 크게 보이도록 값 글자를 키운다. */
+  .card-lead .v { font-size: 17px; }
+  .card-lead .field { padding: 16px 20px; }
+
+  /* 서버 탭 오른쪽 요약 카드. */
+  .side-card .side-row {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+  }
+  .side-card .side-row:last-child { border-bottom: none; }
+  .side-k {
+    display: block;
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+  .side-v {
+    display: block;
+    margin: 2px 0 0;
+    font-size: 15px;
+    color: var(--text);
+    word-break: break-all;
+  }
+  .side-note {
+    display: block;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+  /* Callout 은 자기 여백을 갖지 않는다. 앞 카드와 붙지 않게 여기서 띄운다. */
+  .side-card + .callout { margin-top: 14px; }
+
+  /* 접속 절차 같은 짧은 순서. 설치 가이드의 단계 카드보다 가볍다. */
+  .mini-steps { margin: 0; padding: 0; list-style: none; }
+  .mini-steps li {
+    display: flex;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .mini-steps li:last-child { border-bottom: none; }
+  .mini-n {
+    display: grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    flex: none;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    color: var(--accent-bright);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .mini-steps strong { display: block; font-size: 14.5px; font-weight: 600; }
+  .mini-steps p { margin: 2px 0 0; font-size: 13.5px; color: var(--text-dim); }
+
+  /* 모드 탭 제목 옆 개수 요약. */
+  .count-pills { display: flex; gap: 8px; }
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  .pill-hot {
+    color: var(--accent-bright);
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface));
+  }
+  .pill-ok {
+    color: var(--success-bright);
+    border-color: color-mix(in srgb, var(--success) 45%, transparent);
+    background: color-mix(in srgb, var(--success) 10%, var(--surface));
+  }
+
+  .group { margin-bottom: 52px; }
+  .group:last-child { margin-bottom: 0; }
+  .group-h { margin-bottom: 16px; }
+  .group-h h2 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .group-h h2 .icon { color: var(--accent); }
+  .group-h-ok h2 .icon { color: var(--success); }
+  .lead {
+    max-width: var(--measure);
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+
+  /* 경고 블록이 여러 개 나란히 올 수 있다. 하나의 덩어리로 묶는다. */
+  .callouts { margin-bottom: 20px; }
+
+  /* 카드가 3개든 10개든 무너지지 않게 자동으로 칸 수를 정한다. */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: var(--gap);
+  }
+
+  /* 설치 가이드의 단계 카드. */
+  .steps {
+    margin: 0 0 52px;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 16px;
+  }
+  .steps > li {
+    padding: 22px 26px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+  }
+  .step-h {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .step-n {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    flex: none;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .step-h h3 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  /* 단계 안의 문장은 카드 폭 전체로 늘리지 않는다. 한 줄이 길어지면
+     다음 줄로 눈이 넘어가기 어려워진다. 도식만 카드 폭을 다 쓴다. */
+  .step-body > p { max-width: var(--measure); margin: 0; font-size: 14.5px; color: var(--text-dim); }
+  .step-body > p + * { margin-top: 14px; }
+
+  .ticks { max-width: var(--measure); margin: 14px 0 0; padding: 0; list-style: none; }
+  .ticks li {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .ticks li + li { margin-top: 8px; }
+  .ticks .icon { margin-top: 4px; color: var(--accent); }
+  .ticks a {
+    display: inline;
+    color: var(--accent-bright);
+    text-underline-offset: 3px;
+  }
+  .ticks a .icon { margin: 0 0 -2px 2px; color: currentColor; }
+
+  /* 도식은 카드 폭을 다 쓴다. 좁히면 글자가 읽히지 않는다. */
+  .figure {
+    margin: 18px 0 0;
+    padding: 18px 20px 14px;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .figure figcaption {
+    max-width: var(--measure);
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: var(--text-faint);
+  }
+  /* 전체 흐름 도식은 단계 카드 바깥에 놓이므로 여백을 따로 준다. */
+  .figure-flat { margin: 24px 0 36px; }
+
+  .code-card { margin-top: 16px; max-width: 620px; }
+  .pending-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    max-width: var(--measure);
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: var(--surface-sunken);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    font-size: 13.5px;
+    color: var(--text-dim);
+  }
+  .pending-box .icon { margin-top: 2px; color: var(--text-faint); }
+
+  /* 자주 막히는 자리를 묻고 답하는 카드. */
+  .qa-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--gap);
+  }
+  .qa {
+    padding: 16px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color 180ms ease, background 180ms ease;
+  }
+  .qa:hover { border-color: var(--border-strong); background: var(--surface-raised); }
+  .qa h3 {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0 0 6px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .qa h3 .icon { margin-top: 3px; color: var(--warning); }
+  .qa p { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--text-dim); }
+  @media (prefers-reduced-motion: reduce) {
+    .qa { transition: none; }
+  }
+
+  .trouble .figure { margin-top: 20px; }
+
+  /* 월드 설정 타일. 한 줄짜리 표보다 훑어보기 쉽다. */
+  .spec-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: var(--gap);
+    margin-bottom: 24px;
+  }
+  .spec {
+    padding: 18px 20px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    transition: border-color 200ms ease, transform 240ms var(--ease-out);
+  }
+  .spec:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+  .spec-ico {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    margin-bottom: 12px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+  .spec-k { margin: 0; font-size: 12px; color: var(--text-faint); }
+  .spec-v {
+    margin: 3px 0 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .spec-v-sm { font-size: 14px; font-weight: 600; word-break: break-all; }
+  .spec-n { margin: 8px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--text-dim); }
+
+  /* 난이도를 올린 항목과 낮춘 항목을 색으로도 구분한다.
+     값 글자가 함께 있으므로 색만으로 판단하게 두지는 않는다. */
+  .spec-hard .spec-ico {
+    color: var(--warning-bright);
+    background: color-mix(in srgb, var(--warning) 14%, var(--surface-raised));
+    border-color: color-mix(in srgb, var(--warning) 35%, var(--border));
+  }
+  .spec-hard .spec-v { color: var(--warning-bright); }
+  .spec-soft .spec-ico {
+    color: var(--success-bright);
+    background: color-mix(in srgb, var(--success) 14%, var(--surface-raised));
+    border-color: color-mix(in srgb, var(--success) 35%, var(--border));
+  }
+  .spec-soft .spec-v { color: var(--success-bright); }
+  @media (prefers-reduced-motion: reduce) {
+    .spec { transition: none; }
+    .spec:hover { transform: none; }
+  }
 
   /* CopyField.astro 의 .field/.k/.v 는 그 컴포넌트에만 스코프된 스타일이라
-     여기서 직접 쓰는 필드 목록(월드 탭, 서버 탭의 게임 버전 줄)에는 적용되지
-     않는다. 같은 시각 언어를 쓰기 위해 동일한 규칙을 전역으로 둔다. */
+     여기서 직접 쓰는 필드 목록에는 적용되지 않는다. 같은 시각 언어를 쓰기
+     위해 동일한 규칙을 전역으로 둔다. */
   .field {
     display: grid;
-    grid-template-columns: 72px 1fr auto;
+    grid-template-columns: 76px 1fr auto;
     align-items: center;
     gap: 12px;
     padding: 12px 16px;
@@ -272,76 +995,4 @@ const modpackCode = modsData.modpack.r2modmanCode;
   .field:last-child { border-bottom: none; }
   .k { color: var(--text-faint); font-size: 13px; }
   .v { color: var(--text); font-size: 15px; word-break: break-all; }
-
-  .players { margin-top: 32px; }
-  .players h2 {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0 0 8px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-faint);
-  }
-
-  .group { margin-bottom: 48px; }
-  .group h2 {
-    margin: 0 0 4px;
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: -0.01em;
-  }
-  .lead { margin: 0 0 18px; font-size: 14px; color: var(--text-faint); }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--gap);
-  }
-  @media (max-width: 1024px) {
-    .grid { grid-template-columns: 1fr; }
-  }
-
-  .steps { margin: 0; padding-left: 0; list-style: none; counter-reset: s; }
-  .steps li {
-    position: relative;
-    padding: 0 0 28px 44px;
-    counter-increment: s;
-  }
-  .steps li::before {
-    content: counter(s);
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 28px;
-    height: 28px;
-    display: grid;
-    place-items: center;
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--accent);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-  }
-  .steps li:not(:last-child)::after {
-    content: "";
-    position: absolute;
-    left: 13px;
-    top: 32px;
-    bottom: 4px;
-    width: 1px;
-    background: var(--border);
-  }
-  .steps h3 { margin: 4px 0 6px; font-size: 16px; font-weight: 600; }
-  .steps p { margin: 0; font-size: 14px; color: var(--text-dim); }
-  .steps a { color: var(--accent); }
-  .code {
-    display: inline-block;
-    margin-left: 6px;
-    padding: 2px 8px;
-    background: var(--surface-raised);
-    border-radius: 6px;
-    font-size: 13px;
-  }
-  .pending { color: var(--text-faint); font-size: 13px; }
 </style>

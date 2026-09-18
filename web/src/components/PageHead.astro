@@ -1,0 +1,140 @@
+---
+import Icon from "./Icon.astro";
+
+interface Props {
+  // 제목 위에 붙는 작은 머리말. 이 탭이 무엇에 대한 화면인지 알려준다.
+  kicker: string;
+  title: string;
+  // 제목 아래 한두 줄 설명. 없으면 그리지 않는다.
+  desc?: string;
+  icon: string;
+  // aside 슬롯을 오른쪽에 붙일지 여부와 무관하게 톤은 테두리 색을 바꾼다.
+  tone?: "accent" | "warning" | "success";
+}
+
+const { kicker, title, desc, icon, tone = "accent" } = Astro.props;
+---
+
+<header class="head" data-tone={tone}>
+  <div class="row">
+    <span class="mark" aria-hidden="true"><Icon name={icon} size={30} /></span>
+    <div class="text">
+      <p class="kicker">{kicker}</p>
+      <h1>{title}</h1>
+    </div>
+    <div class="aside"><slot name="aside" /></div>
+  </div>
+  {desc && <p class="desc">{desc}</p>}
+  <div class="rule" aria-hidden="true"></div>
+</header>
+
+<style>
+  .head { margin-bottom: 36px; }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+
+  /* 제목 옆 아이콘 패. 청동 등불 같은 인상을 주려고 안쪽을 살짝 밝힌다. */
+  .mark {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    flex: none;
+    border-radius: var(--radius);
+    color: var(--accent-bright);
+    background:
+      linear-gradient(
+        160deg,
+        color-mix(in srgb, var(--accent) 22%, var(--surface)),
+        var(--surface)
+      );
+    border: 1px solid color-mix(in srgb, var(--accent) 38%, var(--border));
+    box-shadow: var(--shadow-panel);
+  }
+  [data-tone="warning"] .mark {
+    color: var(--warning-bright);
+    background: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--warning) 22%, var(--surface)),
+      var(--surface)
+    );
+    border-color: color-mix(in srgb, var(--warning) 38%, var(--border));
+  }
+  [data-tone="success"] .mark {
+    color: var(--success-bright);
+    background: linear-gradient(
+      160deg,
+      color-mix(in srgb, var(--success) 22%, var(--surface)),
+      var(--surface)
+    );
+    border-color: color-mix(in srgb, var(--success) 38%, var(--border));
+  }
+
+  .text { min-width: 0; }
+
+  .kicker {
+    margin: 0 0 2px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  [data-tone="warning"] .kicker { color: var(--warning-bright); }
+  [data-tone="success"] .kicker { color: var(--success-bright); }
+
+  h1 {
+    margin: 0;
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+  }
+
+  .aside { margin-left: auto; }
+
+  .desc {
+    max-width: var(--measure);
+    margin: 14px 0 0;
+    font-size: 15px;
+    color: var(--text-dim);
+  }
+
+  /* 제목 영역과 본문을 가르는 선. 왼쪽만 악센트로 물들이고 오른쪽으로
+     사라진다. 화면 전체를 가로지르는 균일한 선보다 덜 답답하다. */
+  .rule {
+    height: 1px;
+    margin-top: 24px;
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--accent) 70%, transparent),
+      var(--border) 26%,
+      transparent
+    );
+  }
+  [data-tone="warning"] .rule {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--warning) 70%, transparent),
+      var(--border) 26%,
+      transparent
+    );
+  }
+  [data-tone="success"] .rule {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--success) 70%, transparent),
+      var(--border) 26%,
+      transparent
+    );
+  }
+
+  @media (max-width: 1024px) {
+    h1 { font-size: 32px; }
+    .mark { width: 50px; height: 50px; }
+  }
+</style>

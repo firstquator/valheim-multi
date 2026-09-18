@@ -1,0 +1,83 @@
+---
+import Icon from "./Icon.astro";
+
+interface Props {
+  title: string;
+  // warning 은 틀리면 손해가 나는 것, success 는 안심해도 되는 것,
+  // info 는 알아두면 좋은 것이다.
+  tone?: "warning" | "success" | "info";
+  // 기본 아이콘이 어울리지 않을 때만 넘긴다.
+  icon?: string;
+}
+
+const { title, tone = "warning", icon } = Astro.props;
+
+const DEFAULT_ICON = {
+  warning: "alert-02",
+  success: "checkmark-circle-02",
+  info: "information-circle",
+};
+const iconName = icon ?? DEFAULT_ICON[tone];
+---
+
+<aside class="callout" data-tone={tone}>
+  <span class="ico" aria-hidden="true"><Icon name={iconName} size={22} /></span>
+  <div class="body">
+    <strong>{title}</strong>
+    <p><slot /></p>
+  </div>
+</aside>
+
+<style>
+  /* 아이템이 사라지는 문제처럼 되돌릴 수 없는 것을 다루므로 각주가 아니라
+     블록으로 놓는다. 작은 글씨로 적으면 아무도 읽지 않는다.
+
+     여러 개가 연달아 올 수 있다. 각각을 카드처럼 두껍게 만들면 화면이
+     경고로 도배된다. 왼쪽 굵은 선 하나로 묶고 배경은 옅게만 깐다. */
+  .callout {
+    display: flex;
+    gap: 14px;
+    padding: 14px 18px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    color: var(--text);
+  }
+
+  /* 연달아 올 때는 사이를 좁히고 바깥 여백만 크게 둔다.
+     이렇게 하면 경고 여러 개가 하나의 덩어리로 읽힌다. */
+  .callout + .callout { margin-top: 8px; }
+
+  .body { min-width: 0; }
+  strong {
+    display: block;
+    margin-bottom: 3px;
+    font-size: 14px;
+  }
+  p {
+    margin: 0;
+    max-width: var(--measure);
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+  .ico { margin-top: 1px; }
+
+  [data-tone="warning"] {
+    background: color-mix(in srgb, var(--warning) 11%, var(--surface));
+    border-left: 3px solid var(--warning);
+  }
+  [data-tone="warning"] .ico { color: var(--warning-bright); }
+  [data-tone="warning"] strong { color: var(--warning-bright); }
+
+  [data-tone="success"] {
+    background: color-mix(in srgb, var(--success) 11%, var(--surface));
+    border-left: 3px solid var(--success);
+  }
+  [data-tone="success"] .ico { color: var(--success-bright); }
+  [data-tone="success"] strong { color: var(--success-bright); }
+
+  [data-tone="info"] {
+    background: color-mix(in srgb, var(--info) 11%, var(--surface));
+    border-left: 3px solid var(--info);
+  }
+  [data-tone="info"] .ico { color: var(--info-bright); }
+  [data-tone="info"] strong { color: var(--info-bright); }
+</style>
