@@ -46,6 +46,12 @@ const modpackCode = modsData.modpack.r2modmanCode;
 const MODPACK_FILE = "gaybar-modpack.r2z";
 const modpackDepCount = modsData.modpack.dependencies.length;
 
+// 프로필을 가져온 뒤 r2modman 왼쪽에 뜨는 "Installed" 숫자다. 이 숫자가
+// 맞으면 빠진 것이 없다는 뜻이라, 친구가 스스로 확인할 수 있는 유일한
+// 신호다. scripts/build-modpack.mjs 가 의존성 + 3층 + 2층을 담으므로
+// 여기서도 같은 식으로 센다. 손으로 적으면 모드가 늘 때 어긋난다.
+const modpackPackageCount = modpackDepCount + tier3.length + tier2.length;
+
 // 화면 문구는 data/mods.json 의 내용에 따라 저절로 달라진다.
 // 3층(직접 설치) 모드가 하나라도 있으면 "설치할 것이 있다" 로,
 // 없으면 "지금은 없다" 로 읽힌다. 모드가 추가될 때 이 파일을 다시
@@ -58,11 +64,12 @@ const needsAnyInstall = tier3.length > 0;
 const STEPS = [
   { n: 1, label: "r2modman 설치" },
   { n: 2, label: "발헤임 고르기" },
-  { n: 3, label: "프로필 파일 받기" },
-  { n: 4, label: "가져오기 마치기" },
-  { n: 5, label: "Start modded" },
-  { n: 6, label: "서버 접속" },
-  { n: 7, label: "완료" },
+  { n: 3, label: "파일 받기" },
+  { n: 4, label: "가져오기" },
+  { n: 5, label: "프로필 고르기" },
+  { n: 6, label: "Start modded" },
+  { n: 7, label: "서버 접속" },
+  { n: 8, label: "완료" },
 ];
 ---
 
@@ -281,12 +288,15 @@ const STEPS = [
               : "지금은 따라 할 필요가 없습니다. 앞으로 설치가 필요한 모드가 생겼을 때를 위해 적어 둡니다."}
           />
 
-          {needsAnyInstall ? (
-            <Callout title={`전원이 설치해야 하는 모드가 ${tier3.length}개 있습니다`}>
-              설치하지 않으면 서버에 접속할 수 없습니다. 어떤 모드인지는 모드 탭에
-              적혀 있고, 3단계의 프로필 파일 하나로 한꺼번에 설치됩니다.
-            </Callout>
-          ) : (
+          {/*
+            설치할 것이 있다는 안내는 여기 두지 않는다. 이 탭을 연 사람은
+            이미 설치하러 온 사람이고, 개수와 목록은 모드 탭에, 파일 하나로
+            끝난다는 사실은 3단계에 적혀 있다.
+
+            반대로 설치할 것이 없을 때는 알려 줘야 한다. 그냥 켜고 들어오면
+            된다는 사실을 모르면 이 절차를 처음부터 따라 하게 된다.
+          */}
+          {!needsAnyInstall && (
             <Callout title="지금 친구들은 아무것도 설치하지 않아도 접속됩니다" tone="success">
               현재 서버에는 서버에만 깔리는 모드만 있습니다. 발헤임을 그냥 켜고
               서버 탭의 주소로 들어오시면 됩니다. 아래 절차는 앞으로 직접 설치할
@@ -353,13 +363,13 @@ const STEPS = [
                           <Icon name="arrow-up-right-01" size={14} />
                           <span class="sr-only">새 탭에서 열림</span>
                         </a>
-                        를 열고 오른쪽의 보라색 <Hi text="Download" ui /> 를 누릅니다
+                        를 열고 오른쪽의 보라색 <Hi text="Download" ui />{" "}를 누릅니다
                       </span>
                     </li>
                     <li>
                       <Icon name="arrow-right-02" size={16} />
                       <span>
-                        바로 위의 초록색 <Hi text="Install with App" tone="caution" ui /> 은 누르지 마세요.
+                        바로 위의 초록색 <Hi text="Install with App" tone="caution" ui />{" "}은 누르지 마세요.
                         Thunderstore 앱이 따로 있어야 동작합니다
                       </span>
                     </li>
@@ -438,7 +448,7 @@ const STEPS = [
                     <li>
                       <Icon name="arrow-right-02" size={16} />
                       <span>
-                        나온 카드 위의 <Hi text="Select game" ui /> 을 누릅니다.
+                        나온 카드 위의 <Hi text="Select game" ui />{" "}을 누릅니다.
                         아래의 Set as default 는 안 눌러도 됩니다
                       </span>
                     </li>
@@ -463,14 +473,7 @@ const STEPS = [
                       <Icon name="arrow-right-02" size={16} />
                       <span>
                         이어서 어느 스토어로 샀는지 묻는 화면이 나옵니다. Steam 을
-                        고르고 <Hi text="Select platform" ui /> 을 누릅니다
-                      </span>
-                    </li>
-                    <li>
-                      <Icon name="arrow-right-02" size={16} />
-                      <span>
-                        그래도 게임 폴더를 못 찾는다고 하면 Settings 의 Locations
-                        에서 발헤임 설치 폴더를 직접 지정합니다
+                        고르고 <Hi text="Select platform" ui />{" "}을 누릅니다
                       </span>
                     </li>
                   </ul>
@@ -492,10 +495,6 @@ const STEPS = [
                     </figcaption>
                   </figure>
 
-                  <Callout title="한 번 고르면 바꿀 일이 거의 없습니다" tone="info">
-                    다른 게임에도 r2modman 을 쓰고 있다면 왼쪽 위에서 게임을
-                    바꿀 수 있습니다. 발헤임만 쓴다면 신경 쓰지 않아도 됩니다.
-                  </Callout>
                 </div>
                 <footer class="wiz-foot">
                   <label class="wbtn wbtn-back" for="step-1">
@@ -553,14 +552,14 @@ const STEPS = [
                       <Icon name="arrow-right-02" size={16} />
                       <span>
                         r2modman 의 Profile selection 화면에서{" "}
-                        <Hi text="Import / Update" ui /> 를 누릅니다
+                        <Hi text="Import / Update" ui />{" "}를 누릅니다
                       </span>
                     </li>
                     <li>
                       <Icon name="arrow-right-02" size={16} />
                       <span>
-                        가져오는 방법을 묻는 화면에서 <Hi text="From file" ui /> 을
-                        고릅니다
+                        가져오는 방법을 묻는 화면에서{" "}
+                        <Hi text="From file" ui />{" "}을 고릅니다
                       </span>
                     </li>
                     <li>
@@ -613,7 +612,7 @@ const STEPS = [
                       </h4>
                       <p class="alt-lead">
                         파일을 받기 어려운 상황이면 가져오는 방법을 묻는 화면에서
-                        <Hi text="From code" ui /> 를 고르고 아래 코드를 붙여넣어도
+                        <Hi text="From code" ui />{" "}를 고르고 아래 코드를 붙여넣어도
                         됩니다. 그 뒤에 나오는 화면은 파일 방식과 같습니다.
                       </p>
 
@@ -663,13 +662,13 @@ const STEPS = [
                       <Icon name="arrow-right-02" size={16} />
                       <span>
                         새로 만들지 기존 것을 고칠지 묻습니다.{" "}
-                        <Hi text="Import new profile" ui /> 을 누릅니다
+                        <Hi text="Import new profile" ui />{" "}을 누릅니다
                       </span>
                     </li>
                     <li>
                       <Icon name="arrow-right-02" size={16} />
                       <span>
-                        <Hi text="Update existing profile" tone="caution" ui /> 은 고르지 마세요.
+                        <Hi text="Update existing profile" tone="caution" ui />{" "}은 고르지 마세요.
                         쓰던 프로필을 통째로 덮어씁니다
                       </span>
                     </li>
@@ -703,7 +702,7 @@ const STEPS = [
                     <li>
                       <Icon name="arrow-right-02" size={16} />
                       <span>
-                        아래의 <Hi text="Import" ui /> 를 누르고 내려받기가 끝날
+                        아래의 <Hi text="Import" ui />{" "}를 누르고 내려받기가 끝날
                         때까지 기다립니다
                       </span>
                     </li>
@@ -728,10 +727,6 @@ const STEPS = [
                     </figcaption>
                   </figure>
 
-                  <Callout title="목록이 비어 있거나 이상하면 파일을 다시 받으세요">
-                    내려받다가 끊긴 파일일 수 있습니다. 창을 닫고 3단계의 내려받기
-                    버튼으로 다시 받은 다음 처음부터 하시면 됩니다.
-                  </Callout>
                 </div>
                 <footer class="wiz-foot">
                   <label class="wbtn wbtn-back" for="step-3">
@@ -748,39 +743,78 @@ const STEPS = [
               <section class="wiz-screen" data-step="5">
                 <div class="wiz-body">
                   <p class="wiz-kicker">5 / {STEPS.length} 단계</p>
-                  <h3 class="wiz-title">Start modded 로 게임을 켭니다</h3>
+                  <h3 class="wiz-title">프로필을 만들고 고릅니다</h3>
                   <p class="wiz-lead">
-                    여기서 가장 많이 틀립니다. 습관대로{" "}
-                    <Hi text="Steam 에서 직접 실행" tone="caution" /> 하면 모드가
-                    하나도 적용되지 않습니다. 그 상태로는 서버에 못 들어옵니다.
+                    이름을 지을 필요가 없습니다. 파일 안에 이름이 담겨 있어서
+                    그대로 채워집니다.
                   </p>
 
-                  <Callout title="Steam 에서 직접 켜면 모드가 적용되지 않습니다">
-                    Steam 라이브러리의 플레이 버튼은 모드 없는 바닐라 게임을
-                    켭니다. 반드시 r2modman 왼쪽 위의 <Hi text="Start modded" ui /> 를
-                    누르세요. 바탕화면 바로가기를 만들어 두면 편합니다.
-                  </Callout>
+                  <ul class="ticks ticks-big">
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>
+                        이름 입력칸에 gaybar 가 이미 들어 있습니다. 고치지 말고
+                        그대로 둡니다
+                      </span>
+                    </li>
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>
+                        초록색 표시가 뜨면 쓸 수 있는 이름이라는 뜻입니다.{" "}
+                        <Hi text="Create" ui />{" "}를 누릅니다
+                      </span>
+                    </li>
+                  </ul>
 
                   <figure class="wiz-fig">
-                    <DiagramLaunch />
+                    <Shot
+                      src={base("guide/10-name-profile.png")}
+                      alt="Import a profile 화면. 이름 입력칸에 gaybar 가 채워져 있고 그 아래 초록색으로 쓸 수 있는 이름이라는 표시가 떠 있습니다."
+                      width={990}
+                      height={540}
+                      marks={[
+                        { x: 4.2, y: 43.0, w: 91.5, h: 13.5, n: 1 },
+                        { x: 4.0, y: 79.5, w: 13.5, h: 13.5, n: 2 },
+                      ]}
+                    />
                     <figcaption>
-                      같은 게임이라도 어디서 켜느냐에 따라 결과가 달라집니다.
+                      이름은 프로필 파일에서 따라옵니다. 손댈 것이 없습니다.
                     </figcaption>
                   </figure>
 
                   <ul class="ticks ticks-big">
                     <li>
                       <Icon name="arrow-right-02" size={16} />
-                      <span>방금 만든 프로필이 골라져 있는지 확인합니다</span>
+                      <span>
+                        프로필 목록으로 돌아오면 Default 아래에 gaybar 가 새로
+                        생겨 있습니다
+                      </span>
                     </li>
                     <li>
                       <Icon name="arrow-right-02" size={16} />
                       <span>
-                        첫 실행은 모드 로더를 까느라 평소보다 오래 걸립니다.
-                        검은 화면이 좀 길어도 기다립니다
+                        gaybar 를 고른 다음 <Hi text="Select profile" ui />{" "}을
+                        누릅니다
                       </span>
                     </li>
                   </ul>
+
+                  <figure class="wiz-fig">
+                    <Shot
+                      src={base("guide/11-profile-created.png")}
+                      alt="프로필 목록 화면. Default 아래에 gaybar 가 새로 생겨 있고 아래에 Select profile 버튼이 있습니다."
+                      width={1513}
+                      height={317}
+                      marks={[
+                        { x: 2.0, y: 33.0, w: 96.0, h: 21.0, n: 1 },
+                        { x: 1.7, y: 68.5, w: 13.5, h: 22.0, n: 2 },
+                      ]}
+                    />
+                    <figcaption>
+                      Default 는 모드가 없는 원래 프로필입니다. 새로 생긴 gaybar
+                      쪽을 골라야 합니다.
+                    </figcaption>
+                  </figure>
                 </div>
                 <footer class="wiz-foot">
                   <label class="wbtn wbtn-back" for="step-4">
@@ -797,10 +831,89 @@ const STEPS = [
               <section class="wiz-screen" data-step="6">
                 <div class="wiz-body">
                   <p class="wiz-kicker">6 / {STEPS.length} 단계</p>
+                  <h3 class="wiz-title">Start modded 로 게임을 켭니다</h3>
+                  <p class="wiz-lead">
+                    프로필을 고르면 r2modman 본 화면이 열립니다. 숫자 하나만
+                    확인하고 왼쪽 위에서 게임을 켜면 됩니다.
+                  </p>
+
+                  <ul class="ticks ticks-big">
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>
+                        왼쪽의 <Hi text="Installed" ui />{" "}옆 숫자가{" "}
+                        {modpackPackageCount}개면 빠짐없이 깔린 것입니다
+                      </span>
+                    </li>
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>
+                        창 제목도 r2modman - gaybar 로 바뀌어 있습니다
+                      </span>
+                    </li>
+                  </ul>
+
+                  <figure class="wiz-fig">
+                    <Shot
+                      src={base("guide/12-installed-list.png")}
+                      alt="r2modman 본 화면. 창 제목이 r2modman - gaybar 이고 왼쪽 위에 Start modded 버튼, 그 아래 Installed 개수와 설치된 모드 목록이 보입니다."
+                      width={1778}
+                      height={1136}
+                      marks={[
+                        { x: 0.6, y: 23.8, w: 16.5, h: 6.6, n: 1 },
+                        { x: 0.6, y: 10.0, w: 16.5, h: 6.4, n: 2 },
+                      ]}
+                    />
+                    <figcaption>
+                      1번 자리의 숫자를 봅니다. 사진은 찍을 때의 것이라 숫자가
+                      지금과 다를 수 있으니 위에 적힌 개수와 맞춰 보세요. 게임은
+                      2번 버튼으로 켭니다.
+                    </figcaption>
+                  </figure>
+
+                  <Callout title="Steam 에서 직접 켜면 모드가 적용되지 않습니다">
+                    Steam 라이브러리의 플레이 버튼은 모드 없는 바닐라 게임을
+                    켭니다. 반드시 r2modman 왼쪽 위의{" "}
+                    <Hi text="Start modded" ui />{" "}를 누르세요. 바탕화면
+                    바로가기를 만들어 두면 편합니다.
+                  </Callout>
+
+                  <figure class="wiz-fig">
+                    <DiagramLaunch />
+                    <figcaption>
+                      같은 게임이라도 어디서 켜느냐에 따라 결과가 달라집니다.
+                    </figcaption>
+                  </figure>
+
+                  <ul class="ticks ticks-big">
+                    <li>
+                      <Icon name="arrow-right-02" size={16} />
+                      <span>
+                        첫 실행은 모드 로더를 까느라 평소보다 오래 걸립니다.
+                        검은 화면이 좀 길어도 기다립니다
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+                <footer class="wiz-foot">
+                  <label class="wbtn wbtn-back" for="step-5">
+                    <Icon name="arrow-left-02" size={17} />
+                    이전
+                  </label>
+                  <label class="wbtn wbtn-go" for="step-7">
+                    다음
+                    <Icon name="arrow-right-02" size={17} />
+                  </label>
+                </footer>
+              </section>
+
+              <section class="wiz-screen" data-step="7">
+                <div class="wiz-body">
+                  <p class="wiz-kicker">7 / {STEPS.length} 단계</p>
                   <h3 class="wiz-title">서버에 들어옵니다</h3>
                   <p class="wiz-lead">
                     캐릭터를 고르고 게임 참가 화면에서{" "}
-                    <Hi text="서버 직접 연결" ui /> 을 누릅니다. 아래 주소와
+                    <Hi text="서버 직접 연결" ui />{" "}을 누릅니다. 아래 주소와
                     비밀번호를 넣으면 됩니다. 이 서버는{" "}
                     <Hi text="공개 목록에 뜨지 않으니" tone="caution" /> 목록에서
                     찾지 마세요.
@@ -823,18 +936,18 @@ const STEPS = [
                   </ul>
                 </div>
                 <footer class="wiz-foot">
-                  <label class="wbtn wbtn-back" for="step-5">
+                  <label class="wbtn wbtn-back" for="step-6">
                     <Icon name="arrow-left-02" size={17} />
                     이전
                   </label>
-                  <label class="wbtn wbtn-go" for="step-7">
+                  <label class="wbtn wbtn-go" for="step-8">
                     다 했습니다
                     <Icon name="arrow-right-02" size={17} />
                   </label>
                 </footer>
               </section>
 
-              <section class="wiz-screen wiz-done" data-step="7">
+              <section class="wiz-screen wiz-done" data-step="8">
                 <div class="wiz-body">
                   <span class="wiz-seal" aria-hidden="true">
                     <Icon name="checkmark-circle-02" size={40} />
@@ -842,13 +955,13 @@ const STEPS = [
                   <p class="wiz-kicker wiz-kicker-done">모두 끝났습니다</p>
                   <h3 class="wiz-title">이제 서버에서 만나면 됩니다</h3>
                   <p class="wiz-lead">
-                    다음부터는 r2modman 의 <Hi text="Start modded" ui /> 만 누르면
+                    다음부터는 r2modman 의 <Hi text="Start modded" ui />{" "}만 누르면
                     됩니다. 설치를 다시 할 일은 없습니다. 모드가 바뀌면 파일만 한 번
                     더 받으시면 됩니다.
                   </p>
                 </div>
                 <footer class="wiz-foot">
-                  <label class="wbtn wbtn-back" for="step-6">
+                  <label class="wbtn wbtn-back" for="step-7">
                     <Icon name="arrow-left-02" size={17} />
                     이전
                   </label>
@@ -1144,7 +1257,7 @@ const STEPS = [
   }
   .wiz-nav ol {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
+    grid-template-columns: repeat(8, 1fr);
     gap: 8px;
     margin: 0 0 16px;
     padding: 0;
@@ -1191,7 +1304,8 @@ const STEPS = [
   #step-4:checked ~ .wizard .wiz-nav li:nth-child(-n+4) .wiz-dot,
   #step-5:checked ~ .wizard .wiz-nav li:nth-child(-n+5) .wiz-dot,
   #step-6:checked ~ .wizard .wiz-nav li:nth-child(-n+6) .wiz-dot,
-  #step-7:checked ~ .wizard .wiz-nav li:nth-child(-n+7) .wiz-dot {
+  #step-7:checked ~ .wizard .wiz-nav li:nth-child(-n+7) .wiz-dot,
+  #step-8:checked ~ .wizard .wiz-nav li:nth-child(-n+8) .wiz-dot {
     background: color-mix(in srgb, var(--accent) 22%, var(--surface-raised));
     border-color: color-mix(in srgb, var(--accent) 55%, transparent);
     color: var(--accent-bright);
@@ -1204,7 +1318,8 @@ const STEPS = [
   #step-4:checked ~ .wizard .wiz-nav li:nth-child(4) .wiz-dot,
   #step-5:checked ~ .wizard .wiz-nav li:nth-child(5) .wiz-dot,
   #step-6:checked ~ .wizard .wiz-nav li:nth-child(6) .wiz-dot,
-  #step-7:checked ~ .wizard .wiz-nav li:nth-child(7) .wiz-dot {
+  #step-7:checked ~ .wizard .wiz-nav li:nth-child(7) .wiz-dot,
+  #step-8:checked ~ .wizard .wiz-nav li:nth-child(8) .wiz-dot {
     background: var(--accent);
     border-color: var(--accent);
     color: var(--bg);
@@ -1215,12 +1330,13 @@ const STEPS = [
   #step-4:checked ~ .wizard .wiz-nav li:nth-child(4) label,
   #step-5:checked ~ .wizard .wiz-nav li:nth-child(5) label,
   #step-6:checked ~ .wizard .wiz-nav li:nth-child(6) label,
-  #step-7:checked ~ .wizard .wiz-nav li:nth-child(7) label {
+  #step-7:checked ~ .wizard .wiz-nav li:nth-child(7) label,
+  #step-8:checked ~ .wizard .wiz-nav li:nth-child(8) label {
     color: var(--text);
   }
 
   /* 마지막은 끝났다는 뜻이라 초록으로 맺는다. */
-  #step-7:checked ~ .wizard .wiz-nav li:nth-child(7) .wiz-dot {
+  #step-8:checked ~ .wizard .wiz-nav li:nth-child(8) .wiz-dot {
     background: var(--success);
     border-color: var(--success);
   }
@@ -1232,7 +1348,8 @@ const STEPS = [
   #step-4:focus-visible ~ .wizard .wiz-nav li:nth-child(4) label,
   #step-5:focus-visible ~ .wizard .wiz-nav li:nth-child(5) label,
   #step-6:focus-visible ~ .wizard .wiz-nav li:nth-child(6) label,
-  #step-7:focus-visible ~ .wizard .wiz-nav li:nth-child(7) label {
+  #step-7:focus-visible ~ .wizard .wiz-nav li:nth-child(7) label,
+  #step-8:focus-visible ~ .wizard .wiz-nav li:nth-child(8) label {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
@@ -1248,13 +1365,14 @@ const STEPS = [
     background: linear-gradient(90deg, var(--accent), var(--highlight));
     transition: width 320ms var(--ease-out);
   }
-  #step-1:checked ~ .wizard .wiz-bar-fill { width: 14.286%; }
-  #step-2:checked ~ .wizard .wiz-bar-fill { width: 28.571%; }
-  #step-3:checked ~ .wizard .wiz-bar-fill { width: 42.857%; }
-  #step-4:checked ~ .wizard .wiz-bar-fill { width: 57.143%; }
-  #step-5:checked ~ .wizard .wiz-bar-fill { width: 71.429%; }
-  #step-6:checked ~ .wizard .wiz-bar-fill { width: 85.714%; }
-  #step-7:checked ~ .wizard .wiz-bar-fill {
+  #step-1:checked ~ .wizard .wiz-bar-fill { width: 12.500%; }
+  #step-2:checked ~ .wizard .wiz-bar-fill { width: 25.000%; }
+  #step-3:checked ~ .wizard .wiz-bar-fill { width: 37.500%; }
+  #step-4:checked ~ .wizard .wiz-bar-fill { width: 50.000%; }
+  #step-5:checked ~ .wizard .wiz-bar-fill { width: 62.500%; }
+  #step-6:checked ~ .wizard .wiz-bar-fill { width: 75.000%; }
+  #step-7:checked ~ .wizard .wiz-bar-fill { width: 87.500%; }
+  #step-8:checked ~ .wizard .wiz-bar-fill {
     width: 100%;
     background: var(--success);
   }
@@ -1269,7 +1387,8 @@ const STEPS = [
   #step-4:checked ~ .wizard .wiz-screen[data-step="4"],
   #step-5:checked ~ .wizard .wiz-screen[data-step="5"],
   #step-6:checked ~ .wizard .wiz-screen[data-step="6"],
-  #step-7:checked ~ .wizard .wiz-screen[data-step="7"] {
+  #step-7:checked ~ .wizard .wiz-screen[data-step="7"],
+  #step-8:checked ~ .wizard .wiz-screen[data-step="8"] {
     display: flex;
     flex-direction: column;
     min-height: 540px;
@@ -1412,7 +1531,8 @@ const STEPS = [
     #step-4:checked ~ .wizard .wiz-screen[data-step="4"],
     #step-5:checked ~ .wizard .wiz-screen[data-step="5"],
     #step-6:checked ~ .wizard .wiz-screen[data-step="6"],
-    #step-7:checked ~ .wizard .wiz-screen[data-step="7"] { animation: none; }
+    #step-7:checked ~ .wizard .wiz-screen[data-step="7"],
+    #step-8:checked ~ .wizard .wiz-screen[data-step="8"] { animation: none; }
   }
 
   /* 1024px 에서는 진행 표시의 글자를 지우고 동그라미만 남긴다.
