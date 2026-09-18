@@ -32,18 +32,21 @@ const iconName = icon ?? DEFAULT_ICON[tone];
   /* 아이템이 사라지는 문제처럼 되돌릴 수 없는 것을 다루므로 각주가 아니라
      블록으로 놓는다. 작은 글씨로 적으면 아무도 읽지 않는다.
 
+     왼쪽에 굵은 띠를 긋지 않는다. 띠 형태 장식은 이 프로젝트에서 쓰지
+     않기로 되어 있다. 대신 사방 테두리와 옅은 배경, 그리고 색이 찬
+     아이콘 칩으로 무게를 준다.
+
      여러 개가 연달아 올 수 있다. 각각을 카드처럼 두껍게 만들면 화면이
-     경고로 도배된다. 왼쪽 굵은 선 하나로 묶고 배경은 옅게만 깐다. */
+     경고로 도배되므로 사이를 좁혀 하나의 덩어리로 읽히게 한다. */
   .callout {
     display: flex;
-    gap: 14px;
+    gap: 13px;
     padding: 14px 18px;
-    border-radius: 0 var(--radius) var(--radius) 0;
+    border-radius: var(--radius);
+    border: 1px solid;
     color: var(--text);
   }
 
-  /* 연달아 올 때는 사이를 좁히고 바깥 여백만 크게 둔다.
-     이렇게 하면 경고 여러 개가 하나의 덩어리로 읽힌다. */
   .callout + .callout { margin-top: 8px; }
 
   .body { min-width: 0; }
@@ -58,26 +61,36 @@ const iconName = icon ?? DEFAULT_ICON[tone];
     font-size: 14px;
     color: var(--text-dim);
   }
-  .ico { margin-top: 1px; }
+
+  /* 아이콘을 칩 안에 넣어 색을 채운다. 띠 없이도 블록의 성격이 한눈에 들어온다. */
+  .ico {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    flex: none;
+    border-radius: var(--radius-sm);
+    color: var(--bg);
+  }
 
   [data-tone="warning"] {
     background: color-mix(in srgb, var(--warning) 11%, var(--surface));
-    border-left: 3px solid var(--warning);
+    border-color: color-mix(in srgb, var(--warning) 45%, transparent);
   }
-  [data-tone="warning"] .ico { color: var(--warning-bright); }
+  [data-tone="warning"] .ico { background: var(--warning); }
   [data-tone="warning"] strong { color: var(--warning-bright); }
 
   [data-tone="success"] {
     background: color-mix(in srgb, var(--success) 11%, var(--surface));
-    border-left: 3px solid var(--success);
+    border-color: color-mix(in srgb, var(--success) 45%, transparent);
   }
-  [data-tone="success"] .ico { color: var(--success-bright); }
+  [data-tone="success"] .ico { background: var(--success); }
   [data-tone="success"] strong { color: var(--success-bright); }
 
   [data-tone="info"] {
     background: color-mix(in srgb, var(--info) 11%, var(--surface));
-    border-left: 3px solid var(--info);
+    border-color: color-mix(in srgb, var(--info) 45%, transparent);
   }
-  [data-tone="info"] .ico { color: var(--info-bright); }
+  [data-tone="info"] .ico { background: var(--info); }
   [data-tone="info"] strong { color: var(--info-bright); }
 </style>
