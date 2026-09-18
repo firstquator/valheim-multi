@@ -49,7 +49,9 @@
 | `ArgusMagnus/ServersideQoL_AutoMapTables` | 2.0.11 | 지도 테이블에 포탈, 배, 광맥 아이콘 자동 표시 |
 | `ArgusMagnus/ServersideQoL_AutoDoors` | 2.0.11 | 문 자동 닫힘 |
 | `ArgusMagnus/ServersideQoL_TameAssist` | 2.0.11 | 길들인 동물 관련 설정 |
+| `shudnal/GammaOfNightLights` | 1.0.10 | 야간 조명/낮밤 길이 조정 프레임워크 (기본값 그대로, `ValheimGammaMod` 대체) |
 | `ValheimModding/YamlDotNet` | 16.3.1 | ServersideQoL 의존성 |
+| `shudnal/ConditionalConfigSync` | 1.0.8 | GammaOfNightLights 의존성 (ExtraSlots 도 같이 씀, 3층 참고) |
 
 ## 주의: ServersideQoL 은 프레임워크다
 
@@ -105,6 +107,24 @@
 
 ---
 
+# 2층: 개인 선택 모드
+
+서버와 무관하다. 원하는 사람만 자기 클라이언트에 설치하면 되고, 설치하지 않은 친구도 아무 지장 없이 접속하고 플레이할 수 있다. **서버에는 설치하지 않았다.**
+
+| 모드 | 버전 | 역할 |
+|---|---|---|
+| `MainStreetGaming/MassFarming` | 1.13.0 | 단축키로 주변 범위 수확/파종 |
+| `GemHunter1/FastTeleport` | 1.1.1 | 포탈/던전 로딩 대기시간 단축 |
+| `ComfyMods/Gizmo` | 1.16.0 | 건축 배치 시 축 회전 보조 도구 |
+| `shudnal/MyLittleUI` | 1.2.20 | 생산 타이머, 툴팁, 상자 이름, 버프 목록 등 UI 편의 모음 |
+| `Goldenrevolver/Quick_Stack_Store_Sort_Trash_Restock` | 1.4.15 | 인벤토리 빠른 정리/보관/버리기 |
+
+설치 방법: Thunderstore 에서 위 패키지를 받아 개인 `BepInEx/plugins` 에 넣으면 된다. r2modman 프로필 코드에는 포함되어 있지 않다. 프로필 코드는 3층(전원 필수) 모드만 담는다.
+
+**2층 판정 근거는 "계층 분류" 절 참고.** README 문구나 DLL 안의 `NetworkCompatibilityAttribute` 유무로 확인했다.
+
+---
+
 # 3층: 모드팩 (친구들도 설치)
 
 **서버 쪽 설치는 완료했다 (2026-09-18).** 친구들이 r2modman 프로필 코드를 받아 설치해야 실제로 접속이 된다. 자세한 내용은 아래 "서버 쪽 설치 결과" 참고.
@@ -118,7 +138,11 @@
 | `shudnal/ConditionalConfigSync` | 1.0.8 | `ExtraSlots` 의존성. 서버 설정값을 클라이언트에 강제 동기화 |
 | `MathiasDecrock/PlanBuild` | 0.19.0 | 건축 청사진 |
 | `MSchmoecker/MultiUserChest` | 0.6.2 | 여러 명이 같은 상자 동시 사용 |
-| `ValheimModding/Jotunn` | 2.30.1 | `PlanBuild`, `MultiUserChest` 공통 의존성 (모딩 라이브러리) |
+| `ValheimModding/Jotunn` | 2.30.1 | `PlanBuild`, `MultiUserChest`, `SlopeCombatAssistance`, `SkilledCarryWeight` 공통 의존성 (모딩 라이브러리) |
+| `Digitalroot/Digitalroots_Slope_Combat_Assistance` | 2.0.30 | 경사면 전투 버그 보정 |
+| `Searica/SkilledCarryWeight` | 1.5.0 | 스킬 연동 소지 중량 증가 |
+| `sighsorry/BottleShips` | 1.1.12 | 배/수레/공성 장비를 병에 담아 이동 |
+| `WackyMole/WackyEpicMMOSystem` | 1.9.67 | 레벨/스탯 RPG 시스템 |
 
 버전은 문서에 적어 둔 값을 믿지 말고 항상 Thunderstore API 로 다시 확인한다. `PlanBuild` 는 문서에 0.18.5 로 적혀 있었지만 실제 확인 시점(2026-09-18)의 최신은 0.19.0 이었다. `manifest.json` 을 열어보고서야 `ExtraSlots` 가 `ConditionalConfigSync`, `PlanBuild`/`MultiUserChest` 가 `Jotunn` 을 요구한다는 것을 알았다. Thunderstore 페이지 설명에는 이 의존성이 나오지 않는다.
 
@@ -126,10 +150,14 @@
 
 ### 바닐라 클라이언트는 접속할 수 없다
 
-세 모드의 성격이 다르다.
+모드마다 성격이 다르다.
 
 - **`ExtraSlots`**: README 에 "does not require every connecting player to have the mod at the synchronization protocol level" 이라고 명시되어 있다. 바닐라 클라이언트도 접속은 된다. 다만 확장 슬롯 UI 는 보이지 않는다
-- **`PlanBuild`, `MultiUserChest`**: 둘 다 `Jotunn` 을 쓰고, DLL 안에 `NetworkCompatibilityAttribute` 가 박혀 있다. `Jotunn` 을 쓰는 모드는 별도로 완화하지 않는 한 기본값이 "전원이 모드를 가지고 있어야 함" 이다. 즉 **이 두 모드가 서버에 있으면 모드 없는 바닐라 클라이언트는 접속하지 못하거나 버전 불일치로 튕긴다.**
+- **`PlanBuild`, `MultiUserChest`, `SlopeCombatAssistance`, `SkilledCarryWeight`**: 전부 `Jotunn` 을 쓰고, DLL 안에 `NetworkCompatibilityAttribute` 가 박혀 있다. `Jotunn` 을 쓰는 모드는 별도로 완화하지 않는 한 기본값이 "전원이 모드를 가지고 있어야 함" 이다
+- **`BottleShips`**: `Jotunn` 은 안 쓰지만 README 원문에 "must be installed on the server and every connecting client because it adds synchronized network prefabs and gameplay settings" 라고 명시되어 있다
+- **`WackyEpicMMOSystem`**: `NetworkCompatibilityAttribute` 나 `Jotunn` 의존을 확인하지 못했다. 기술적 차단 증거는 없지만, 레벨/스탯을 서버가 들고 있는 시스템이라 일부만 설치하면 형평성이 깨진다. 자세한 근거는 아래 "검토 목록"의 "계층 분류" 절 참고
+
+즉 **`ExtraSlots` 를 제외한 나머지 여섯 개(PlanBuild, MultiUserChest, SlopeCombatAssistance, SkilledCarryWeight, BottleShips, WackyEpicMMOSystem)는 서버에 있으면 모드 없는 바닐라 클라이언트가 접속하지 못하거나, 접속하더라도 정상적인 플레이가 되지 않는다.**
 
 실제 접속 테스트(모드 없는 클라이언트로 접속 시도)는 하지 않았다. 위 판단은 README 문구와 DLL 안의 속성 확인으로 내린 것이다. 결론적으로 **이 서버는 이제 3층 모드팩을 설치한 사람만 정상 접속할 수 있다.** 친구들에게 r2modman 프로필 코드 배포가 끝나기 전까지는 접속에 지장이 있을 수 있다는 뜻이다.
 
@@ -191,13 +219,17 @@ Thunderstore 카테고리에 `Bog Witch Update` 만 있고 `Deep North Update` �
 친구: r2modman 설치 -> 코드 붙여넣기 -> 동일 모드셋 자동 구성
 ```
 
-프로필에 넣을 모드 목록 (버전은 이 문서의 "구성" 표와 항상 같아야 한다):
+프로필에 넣을 모드 목록 (버전은 이 문서에 적힌 값과 항상 같아야 한다). 3층(전원 필수) 모드만 넣는다. 2층(개인 선택) 모드는 원하는 사람이 각자 알아서 추가하는 것이라 이 프로필에는 넣지 않는다.
 
 - `shudnal-ExtraSlots-1.2.10`
 - `shudnal-ConditionalConfigSync-1.0.8`
 - `MathiasDecrock-PlanBuild-0.19.0`
 - `ValheimModding-Jotunn-2.30.1`
 - `MSchmoecker-MultiUserChest-0.6.2`
+- `Digitalroot-Digitalroots_Slope_Combat_Assistance-2.0.30`
+- `Searica-SkilledCarryWeight-1.5.0`
+- `sighsorry-BottleShips-1.1.12`
+- `WackyMole-WackyEpicMMOSystem-1.9.67`
 
 친구가 할 일은 코드 하나를 붙여넣는 것뿐이다. 코드는 한곳에서만 관리한다. 메신저로 뿌리면 옛 코드를 쓰는 사람이 반드시 생긴다. `data/mods.json` 의 `r2modmanCode` 가 코드를 담아 사이트에 표시하는 자리이므로, 코드가 나오면 그 자리를 채우고 다시 배포한다.
 
@@ -311,7 +343,7 @@ ls -la C:/ValheimServer/backups/
 
 ---
 
-# 검토 목록 (2026-09-18 조사)
+# 검토 목록 (2026-09-18 조사, 2026-09-18 설치 완료)
 
 Thunderstore 전체 카탈로그(11,376개)와 대조한 결과다. 판정 기준은 이렇다.
 
@@ -321,27 +353,27 @@ Thunderstore 전체 카탈로그(11,376개)와 대조한 결과다. 판정 기�
 | 미확인 | 1.0 출시(2026-09-09) 이후 업데이트했으나 Deep North 태그는 없다 |
 | 위험 | 1.0 출시 전이 마지막 업데이트다 |
 
-## 판정표
+## 판정표 (설치 결과 반영)
 
-| 모드 | 패키지 | 버전 | 최종 | 판정 |
+| 모드 | 패키지 | 최종 설치 버전 | 판정 | 처리 |
 |---|---|---|---|---|
-| MassFarming | `MainStreetGaming/MassFarming` | 1.13.0 | 09-10 | 안전 |
-| Slope Combat Assistance | `Digitalroot/Digitalroots_Slope_Combat_Assistance` | 2.0.30 | 09-10 | 안전 |
-| FastTeleport | `GemHunter1/FastTeleport` | 1.1.1 | 09-09 | 안전 |
-| SkilledCarryWeight | `Searica/SkilledCarryWeight` | 1.5.0 | 09-15 | 안전, **도입 결정** |
-| MyLittleUI | `shudnal/MyLittleUI` | 1.2.19 | 09-15 | 안전 |
-| Gizmo | `ComfyMods/Gizmo` | 1.16.0 | 09-14 | 안전 |
-| BottleShips | `sighsorry/BottleShips` | 1.1.12 | 09-09 | 안전 |
-| WackyEpicMMOSystem | `WackyMole/WackyEpicMMOSystem` | 1.9.67 | 09-13 | 안전, **도입 결정** |
-| AzuClock | `Azumatt/AzuClock` | 1.1.0 | 09-14 | 미확인 |
-| TrueInstantLootDrop | `Azumatt/TrueInstantLootDrop` | 1.0.4 | 09-14 | 미확인 |
-| QuickStackStore | `Goldenrevolver/Quick_Stack_Store_Sort_Trash_Restock` | 1.4.15 | 09-12 | 미확인 |
-| AzuRepair | `Azumatt/AzuAreaRepair` (추정) | 1.1.7 | 09-14 | 미확인, 이름 불일치 |
-| TargetPortal | `Smoothbrain/TargetPortal` | 1.2.3 | **2026-02-22** | 위험 |
-| Farming | `Smoothbrain/Farming` | 2.2.2 | **2026-02-05** | 위험 |
-| InteractWhileBuilding | `tonsit/InteractWhileBuilding` | 1.0.0 | **2021-03-01** | 위험, 5년 방치 |
-| ValheimGammaMod | `ColdSpirit/ValheimGammaMod` | 1.0.0 | **2022-01-18** | 위험, 4년 방치 |
-| CraftFromContainers | 여러 포크 | - | - | 위험, **1.0 대응판 없음** |
+| MassFarming | `MainStreetGaming/MassFarming` | 1.13.0 | 안전 | **설치 완료 (2층)** |
+| Slope Combat Assistance | `Digitalroot/Digitalroots_Slope_Combat_Assistance` | 2.0.30 | 안전 | **설치 완료 (3층)** |
+| FastTeleport | `GemHunter1/FastTeleport` | 1.1.1 | 안전 | **설치 완료 (2층)** |
+| SkilledCarryWeight | `Searica/SkilledCarryWeight` | 1.5.0 | 안전, 도입 결정 | **설치 완료 (3층)** |
+| MyLittleUI | `shudnal/MyLittleUI` | 1.2.20 (조사 시점 1.2.19 에서 갱신) | 안전 | **설치 완료 (2층)** |
+| Gizmo | `ComfyMods/Gizmo` | 1.16.0 | 안전 | **설치 완료 (2층)** |
+| BottleShips | `sighsorry/BottleShips` | 1.1.12 | 안전 | **설치 완료 (3층)** |
+| WackyEpicMMOSystem | `WackyMole/WackyEpicMMOSystem` | 1.9.67 | 안전, 도입 결정 | **설치 완료 (3층)** |
+| QuickStackStore | `Goldenrevolver/Quick_Stack_Store_Sort_Trash_Restock` | 1.4.15 | 미확인(태그 없음)이지만 체인지로그로 1.0 대응 확인 | **설치 완료 (2층)** |
+| AzuClock | `Azumatt/AzuClock` | - | 미확인 | **제외** (아래 개별 메모) |
+| TrueInstantLootDrop | `Azumatt/TrueInstantLootDrop` | - | 미확인 | **제외** (아래 개별 메모) |
+| AzuRepair | `Azumatt/AzuAreaRepair` 또는 `Azumatt/RepairStation` | - | 미확인, 이름 불일치 | **제외** (아래 개별 메모) |
+| TargetPortal | `Smoothbrain/TargetPortal` | 1.2.3 | 위험 | 제외 |
+| Farming | `Smoothbrain/Farming` | 2.2.2 | 위험 | 제외 |
+| InteractWhileBuilding | `tonsit/InteractWhileBuilding` | 1.0.0 | 위험, 5년 방치 | 제외 |
+| ValheimGammaMod | `ColdSpirit/ValheimGammaMod` | 1.0.0 | 위험, 4년 방치 | **제외, `GammaOfNightLights` 로 대체 설치 (1층)** |
+| CraftFromContainers | 여러 포크 | - | 위험, 1.0 대응판 없음 | 제외 |
 
 ## 개별 메모
 
@@ -351,9 +383,11 @@ Thunderstore 전체 카탈로그(11,376개)와 대조한 결과다. 판정 기�
 
 가장 가까운 대체재가 `ServersideQoL_AutoProcess` 인데, 이쪽은 **제련소·가마·풍차 자동 공급**이라 제작대 크래프팅은 커버하지 않는다. 계속 주시할 항목이다.
 
-**`ValheimGammaMod` 는 대안이 있다**
+**`ValheimGammaMod` 대신 `GammaOfNightLights` 를 설치했다**
 
-`ColdSpirit/ValheimGammaMod` 는 2022년 이후 방치다. 대신 `shudnal/GammaOfNightLights` 1.0.10 (2026-09-10, Deep North 태그 보유) 이 같은 목적의 현행 모드다.
+`ColdSpirit/ValheimGammaMod` 는 2022년 이후 방치다. 원래 기능은 "밤과 동굴을 밝게 만든다"로, 이 자체가 어둠이라는 발헤임의 긴장 요소를 없애는 난이도 저하 모드다. 대신 `shudnal/GammaOfNightLights` 1.0.10 (Deep North 태그 보유, `ConditionalConfigSync` 에 의존)을 설치했는데, 이쪽은 밤 밝기 외에도 낮/밤 길이까지 제어하는 범용 도구다.
+
+**설치는 했지만 기본값을 바꾸지 않았다.** config 확인 결과 `[Day night cycle] Enabled = false`, `Day length in seconds = 1800`(바닐라 기본값), 모든 밝기 배율이 `1`(변화 없음)으로 되어 있다. 즉 지금은 바닐라와 완전히 동일하게 동작한다. `ValheimGammaMod` 가 원래 하던 "밤을 밝게" 는 적용하지 않았다. 나중에 관리자가 명시적으로 밝기나 낮/밤 길이를 조정하고 싶으면 그때 config 를 바꾸면 된다. 자동으로 난이도를 낮추는 방향으로 켜 두지 않았다는 뜻이다.
 
 **`Gizmo` 는 이전 조사의 상충이 해소되었다**
 
@@ -374,15 +408,38 @@ RPG 레벨업과 스탯 분배를 얹는 시스템이다. 편의 모드가 아�
 도입 시 주의: 기존 캐릭터의 레벨이 0부터 시작하므로 전원이 같은 시점에 적용해야
 형평성 문제가 없다. 그리고 한 번 도입한 뒤 제거하면 레벨과 스탯이 전부 사라진다.
 
-**`AzuRepair` 는 정확한 패키지를 특정하지 못했다**
+**`AzuClock`, `TrueInstantLootDrop` 은 폐기(Deprecated) 상태라 제외했다**
 
-`Azumatt` 계정에서 수리 관련으로 `AzuAreaRepair` (1.1.7, 09-14), `RepairStation` (1.2.6, 2026-02) 를 찾았다. 어느 쪽을 의도한 것인지 확인이 필요하다.
+Thunderstore API 로 확인한 결과 `Azumatt/AzuClock` 1.1.0 과 `Azumatt/TrueInstantLootDrop` 1.0.4 모두 `is_deprecated: true` 다. Deep North 태그도 없다. 폐기된 모드를 새로 설치할 이유가 없어 제외했다.
 
-## 계층 분류
+**`AzuRepair` 는 결국 설치하지 않았다**
 
-위 17개는 **전부 3층**이다. Thunderstore 분류에서 모두 `Client-side` 를 달고 있어 친구들도 설치해야 한다.
+`Azumatt` 계정에서 수리 관련 후보 두 개를 확인했다. `AzuAreaRepair` (1.1.7, 2026-09-14 최종 업데이트)와 `RepairStation` (1.2.6, 2026-02 최종 업데이트) 모두 `is_deprecated: true` 로 확인됐다. `RepairStation` 은 마지막 업데이트가 1.0 출시(09-09) 이전이라 "위험" 판정에도 해당한다. 정확히 어느 쪽을 의도했는지 특정할 수 없었고, 확인된 두 후보 모두 폐기 상태라 추측으로 설치하지 않았다.
 
-1층(서버 전용)으로 쓸 수 있는 것은 `ServersideQoL` 모듈 계열뿐이다.
+**`QuickStackStore` 는 태그는 없지만 체인지로그로 1.0 대응을 확인해 설치했다**
+
+Thunderstore API 상으로는 Deep North 태그가 없어 "미확인" 판정이었다. 하지만 CHANGELOG.md 를 열어 보면 `1.4.14 - Updated for 1.0 release` 항목이 있고, 최신 `1.4.15` 는 "Equipment and Quickslots" 호환 핫픽스로 계속 관리되고 있다. 태그만으로 판단하지 않고 체인지로그 원문으로 1.0 대응을 확인한 뒤 설치했다.
+
+## 계층 분류 (README/DLL 근거로 개별 판정)
+
+이전 조사에서는 위 17개를 Thunderstore 의 `Client-side` 분류만 보고 "전부 3층"으로 뭉뚱그렸는데, 이는 부정확했다. 실제로는 모드마다 성격이 다르다. 아래는 README 문구와 DLL 안의 `NetworkCompatibilityAttribute` 유무를 직접 확인해 다시 판정한 결과다.
+
+| 모드 | 계층 | 근거 |
+|---|---|---|
+| `GammaOfNightLights` | **1층** | `ConditionalConfigSync` 기반이라 `NetworkCompatibilityAttribute` 없음(DLL 확인). 낮/밤 길이는 서버가 시뮬레이션하는 값이라 클라이언트 모드 유무와 무관하게 전원에게 적용된다. 조명 시각 효과만 클라이언트 모드가 있어야 보인다 |
+| `MassFarming` | **2층** | Thunderstore 분류가 `Client-side` 뿐이고 `Server-side` 태그가 아예 없다. 서버에 설치하지 않았다 |
+| `FastTeleport` | **2층** | README 원문: "Client-side mod works with any server." 서버에 설치하지 않았다 |
+| `Gizmo` | **2층** | Thunderstore 분류가 `Client-side` 뿐이다. 건축 배치 중에만 동작하는 순수 클라이언트 도구라 서버에 설치하지 않았다 |
+| `MyLittleUI` | **2층** | `ConditionalConfigSync` 기반, `NetworkCompatibilityAttribute` 없음(DLL 확인). 툴팁/정렬 등 클라이언트 렌더링 UI라 안 깔아도 접속과 플레이에 지장이 없다. 서버에는 설치하지 않았다 |
+| `QuickStackStore` | **2층** | DLL 에 `NetworkCompatibilityAttribute` 없음. 개인 인벤토리 정리 도구라 서버에 설치하지 않았다 |
+| `SlopeCombatAssistance` | **3층** | `Jotunn` 의존, DLL 에 `NetworkCompatibilityAttribute` 확인됨(문자열 존재 확인, 정확한 enforcement 값까지는 역어셈블하지 않음) |
+| `SkilledCarryWeight` | **3층** | `Jotunn` 의존, DLL 에 `NetworkCompatibilityAttribute` 확인됨 |
+| `BottleShips` | **3층** | README 원문: "BottleShips must be installed on the server and every connecting client because it adds synchronized network prefabs and gameplay settings." DLL 에서 속성 문자열 자체는 못 찾았지만 README 가 명시적이라 3층으로 판정 |
+| `WackyEpicMMOSystem` | **3층** | `NetworkCompatibilityAttribute` 나 `Jotunn` 의존은 확인되지 않았다. **하드웨어적 접속 차단 증거는 없다.** 다만 캐릭터 레벨/스탯을 서버가 들고 있는 시스템이고, 이 문서에 이미 적힌 형평성 우려("전원이 같은 시점에 적용해야") 때문에 실질적으로는 전원이 함께 써야 의미가 있는 모드라 3층으로 분류했다. 순수 기술적 차단 근거가 아니라 설계 의도에 근거한 판정임을 밝혀둔다 |
+
+**실제 접속 테스트는 하지 않았다.** 위 판정은 README 문구, DLL 안의 속성 문자열 존재 여부, Thunderstore 분류 태그를 근거로 한 것이다.
+
+1층(서버 전용)으로 쓸 수 있는 것은 `ServersideQoL` 모듈 계열과 `GammaOfNightLights` 다.
 
 ## `ServersideQoL_ContainerSizes` 를 제외한 근거 (2026-09-18)
 
@@ -423,4 +480,10 @@ RPG 레벨업과 스탯 분배를 얹는 시스템이다. 편의 모드가 아�
 | ExtraSlots | 1.2.10 동작 확인 (config 생성됨, 서버 강제 정책 기본값 그대로) |
 | PlanBuild | 0.19.0 동작 확인 (config 생성됨) |
 | MultiUserChest | 0.6.2 로드 확인 (config 없음 - 이 모드는 설정 항목 자체가 없음, DLL 에 BepInEx.Configuration 참조 없음으로 확인) |
-| 3층 모드팩 | 서버 쪽 설치 완료 (2026-09-18). r2modman 프로필 코드 미발급 - 친구 배포 전 단계 |
+| GammaOfNightLights | 1.0.10 동작 확인 (config 생성됨, 기본값 그대로라 바닐라와 동일) |
+| Digitalroot's Slope Combat Assistance | 2.0.30 동작 확인 (config 생성됨) |
+| SkilledCarryWeight | 1.5.0 동작 확인 (config 생성됨) |
+| BottleShips | 1.1.12 동작 확인 (config 생성됨) |
+| EpicMMOSystem / EpicMMOSystemUI | 1.9.67 동작 확인 (DLL 하나가 플러그인 두 개로 등록됨, 둘 다 config 생성됨) |
+| 3층 모드팩 | 서버 쪽 설치 완료 (2026-09-18). r2modman 프로필 코드 미발급 - 친구 배포 전 단계. ExtraSlots/ConditionalConfigSync/PlanBuild/Jotunn/MultiUserChest/SlopeCombatAssistance/SkilledCarryWeight/BottleShips/WackyEpicMMOSystem 총 9개 패키지가 프로필에 들어가야 한다 |
+| 2층 모드 | MassFarming, FastTeleport, Gizmo, MyLittleUI, QuickStackStore - 서버에는 설치하지 않음, 원하는 사람만 개인 클라이언트에 설치 |
