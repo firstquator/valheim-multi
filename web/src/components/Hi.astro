@@ -36,9 +36,10 @@ const mono = ui && !HANGUL.test(text);
     border-radius: 5px;
     font-weight: 600;
 
-    /* 줄바꿈이 일어나도 양쪽 끝의 둥근 모서리와 여백이 살아 있게 한다. */
-    -webkit-box-decoration-break: clone;
-    box-decoration-break: clone;
+    /* 강조 덩어리 안에서 줄이 바뀌면 배경이 두 토막으로 갈라져 어디까지가
+       한 덩어리인지 안 보인다. 통째로 다음 줄로 넘어가게 묶는다. 가장 긴
+       강조도 200px 이 안 되므로 1024px 에서도 넘치지 않는다. */
+    white-space: nowrap;
   }
 
   .hi-mono {

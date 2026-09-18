@@ -60,6 +60,10 @@ const iconName = icon ?? DEFAULT_ICON[tone];
     max-width: var(--measure);
     font-size: 14px;
     color: var(--text-dim);
+
+    /* 마지막 줄에 한 어절만 떨어지면 문장이 끊긴 것처럼 읽힌다.
+       줄을 고르게 나누는 일은 브라우저에 맡긴다. */
+    text-wrap: pretty;
   }
 
   /* 아이콘을 칩 안에 넣어 색을 채운다. 띠 없이도 블록의 성격이 한눈에 들어온다. */

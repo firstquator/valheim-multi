@@ -161,6 +161,11 @@ const modIcon = pickModIcon(mod);
     font-size: 14.5px;
     line-height: 1.65;
     color: var(--text);
+
+    /* 마지막 줄에 한 어절만 떨어지면 문장이 끊긴 것처럼 읽힌다. 설명 문구는
+       data/mods.json 에서 오므로 길이를 여기서 줄일 수 없다. 줄을 고르게
+       나누는 일은 브라우저에 맡긴다. */
+    text-wrap: pretty;
   }
 
   /* 쓰는 법은 설명과 성격이 달라 블록으로 떼어 놓는다. */
@@ -185,6 +190,7 @@ const modIcon = pickModIcon(mod);
     font-size: 13.5px;
     line-height: 1.6;
     color: var(--text-dim);
+    text-wrap: pretty;
   }
 
   .warns { margin: 12px 0 0; padding: 0; list-style: none; }
@@ -195,6 +201,7 @@ const modIcon = pickModIcon(mod);
     font-size: 13px;
     line-height: 1.55;
     color: var(--warning-bright);
+    text-wrap: pretty;
   }
   .warns li + li { margin-top: 5px; }
   .warns :global(.icon) { margin-top: 3px; color: var(--warning); }
