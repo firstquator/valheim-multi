@@ -1,0 +1,109 @@
+---
+// 설치 가이드에 붙이는 실제 화면 사진이다. 손으로 그린 도식보다 정확하므로
+// 화면을 그대로 보여줄 수 있는 자리에서는 이쪽을 쓴다.
+//
+// 사진만 두면 "어디를 눌러야 하는지" 가 안 보인다. marks 로 눌러야 하는 자리
+// 위에 상자를 덮어 번호를 매긴다. 상자는 CSS 로 얹을 뿐 이미지 파일 자체는
+// 건드리지 않는다. 좌표는 이미지 크기에 대한 백분율이라 화면 폭이 달라져도
+// 따라 움직인다.
+import Icon from "./Icon.astro";
+
+interface Mark {
+  // 이미지 왼쪽 위를 0 으로 하는 백분율이다.
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  // 번호를 붙이면 순서가 있는 동작으로 읽힌다. 하나뿐이면 생략한다.
+  n?: number;
+  // action 은 눌러야 하는 것, caution 은 누르면 안 되는 것이다.
+  tone?: "action" | "caution";
+}
+
+interface Props {
+  // base() 를 이미 거친 경로를 받는다. 여기서 다시 붙이지 않는다.
+  src: string;
+  // 무엇이 보이는 화면인지 한국어로 적는다. "스크린샷" 같은 말은 쓰지 않는다.
+  alt: string;
+  // 실제 픽셀 크기다. 넣어야 이미지가 늦게 와도 자리가 흔들리지 않는다.
+  width: number;
+  height: number;
+  marks?: Mark[];
+}
+
+const { src, alt, width, height, marks = [] } = Astro.props;
+---
+
+<div class="shot">
+  <img src={src} alt={alt} width={width} height={height} loading="lazy" decoding="async" />
+  {marks.map((m) => (
+    <span
+      class="mark"
+      data-tone={m.tone ?? "action"}
+      aria-hidden="true"
+      style={`left:${m.x}%;top:${m.y}%;width:${m.w}%;height:${m.h}%`}
+    >
+      {m.n !== undefined && <span class="mark-n">{m.n}</span>}
+      {m.tone === "caution" && (
+        <span class="mark-x"><Icon name="cancel-01" size={14} /></span>
+      )}
+    </span>
+  ))}
+</div>
+
+<style>
+  /* 어두운 배경 위에 밝은 사진이 그대로 놓이면 경계가 튄다.
+     테두리와 둥근 모서리로 한 겹 감싸고 안쪽을 잘라낸다. */
+  .shot {
+    position: relative;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--surface-sunken);
+    line-height: 0;
+  }
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* 눌러야 하는 자리를 덮는 상자. 사진 위에 얹을 뿐이라 클릭을 가로채지
+     않게 해 둔다. */
+  .mark {
+    position: absolute;
+    border: 2px solid;
+    border-radius: 6px;
+    pointer-events: none;
+  }
+  [data-tone="action"] {
+    border-color: var(--accent-bright);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 28%, transparent);
+  }
+  [data-tone="caution"] {
+    border-color: var(--warning-bright);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 28%, transparent);
+  }
+
+  /* 번호와 금지 표시는 상자 왼쪽 위 모서리에 걸쳐 놓는다. */
+  .mark-n,
+  .mark-x {
+    position: absolute;
+    top: -12px;
+    left: -12px;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--bg);
+  }
+  [data-tone="action"] .mark-n { background: var(--accent-bright); }
+  [data-tone="caution"] .mark-n { background: var(--warning-bright); }
+  .mark-x { background: var(--warning-bright); }
+</style>

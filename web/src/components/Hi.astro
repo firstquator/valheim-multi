@@ -1,0 +1,62 @@
+---
+// 설치 가이드 본문에서 "이것만은 놓치면 안 되는 말" 에 붙이는 인라인 강조다.
+// 훑어 읽는 친구의 눈이 걸리게 하는 것이 목적이라, 아무 데나 칠하면 목적이
+// 사라진다. 한 화면(한 단계)에 두세 개까지만 쓴다.
+//
+// tone 은 성격이 다른 두 가지만 둔다. 색만으로 구분되지 않도록 caution 쪽에는
+// 테두리를 따로 그린다. 그래도 색을 못 보는 사람이 있으므로, caution 을 쓰는
+// 문장 자체가 경고로 읽히게 쓰는 것이 원칙이다.
+//   action  : 눌러야 하는 버튼, 골라야 하는 항목
+//   caution : 하면 안 되는 것, 틀리면 결과가 갈리는 조건
+interface Props {
+  text: string;
+  tone?: "action" | "caution";
+  // 프로그램 화면에 그대로 적혀 있는 말(버튼 이름, 파일 이름)이면 켠다.
+  ui?: boolean;
+}
+
+const { text, tone = "action", ui = false } = Astro.props;
+
+// 한글에는 모노스페이스를 쓰지 않는다. JetBrains Mono 에 한글 글리프가 없어서
+// 글자마다 대체 폰트로 떨어지고 자간과 굵기가 제각각이 된다. ui 를 켰더라도
+// 한글이 한 글자라도 섞이면 여기서 막는다. 사람이 규칙을 기억하지 않아도
+// 되게 하는 편이 안전하다.
+const HANGUL = /[ᄀ-ᇿ㄰-㆏가-힯]/;
+const mono = ui && !HANGUL.test(text);
+---
+
+<mark class:list={["hi", { "hi-mono": mono }]} data-tone={tone}>{text}</mark>
+
+<style>
+  /* mark 의 기본값은 노란 형광펜에 검은 글씨라 다크 테마에서 눈이 아프다.
+     배경은 아주 옅게 깔고 글자색으로 성격을 드러낸다. */
+  .hi {
+    padding: 1px 6px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    font-weight: 600;
+
+    /* 줄바꿈이 일어나도 양쪽 끝의 둥근 모서리와 여백이 살아 있게 한다. */
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  .hi-mono {
+    font-family: var(--font-mono);
+    /* 모노가 본문보다 커 보이므로 한 단계 줄여 줄 높이를 흐트러뜨리지 않는다. */
+    font-size: 0.92em;
+  }
+
+  /* 눌러야 하는 것. 페이지의 기본 악센트와 같은 계열이라 "여기를 보라" 로 읽힌다. */
+  [data-tone="action"] {
+    background: color-mix(in srgb, var(--accent) 17%, transparent);
+    color: var(--accent-bright);
+  }
+
+  /* 하면 안 되는 것. 테두리를 한 겹 둘러 색을 못 봐도 다른 종류임이 보인다. */
+  [data-tone="caution"] {
+    background: color-mix(in srgb, var(--warning) 15%, transparent);
+    border-color: color-mix(in srgb, var(--warning) 40%, transparent);
+    color: var(--warning-bright);
+  }
+</style>
