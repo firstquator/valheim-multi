@@ -23,3 +23,4 @@ Thumbs.db
 
 # Playwright MCP 실물 확인 산출물
 .playwright-mcp/
+agent/apply-server-changes.log

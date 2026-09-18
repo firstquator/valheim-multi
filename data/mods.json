@@ -120,6 +120,28 @@
       "warnings": []
     },
     {
+      "id": "ServersideQoL_PrefabConfigurator",
+      "owner": "ArgusMagnus",
+      "version": "2.0.11",
+      "tier": 1,
+      "name": "프리팹 설정",
+      "summary": "건물이 비에 깎이지 않고 파괴되지 않게 합니다",
+      "usage": "따로 할 일은 없습니다. 지어 둔 건물이 비와 공격에 상하지 않습니다",
+      "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/ArgusMagnus/ServersideQoL_PrefabConfigurator/",
+      "warnings": []
+    },
+    {
+      "id": "ServersideQoL_Player",
+      "owner": "ArgusMagnus",
+      "version": "2.0.11",
+      "tier": 1,
+      "name": "플레이어 설정",
+      "summary": "건설할 때 스태미나가 닳지 않습니다",
+      "usage": "망치를 들고 지으면 됩니다. 다른 활동의 스태미나는 그대로입니다",
+      "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/ArgusMagnus/ServersideQoL_Player/",
+      "warnings": []
+    },
+    {
       "id": "MassFarming",
       "owner": "MainStreetGaming",
       "version": "1.13.0",

@@ -26,6 +26,34 @@
 - `ServersideQoL_Player` (무한 스태미나)
 - `ValheimPlus` 계열의 배수 설정, 무게 제한 증가, 사망 페널티 제거
 
+### 예약 적용 (2026-09-19 06:00)
+
+접속자가 8명이라 낮에 재시작할 수 없어서 새벽으로 예약했다. 준비는 전날 밤에 끝냈고 6시에는 재시작만 한다.
+
+| 항목 | 방법 | 계층 |
+|---|---|---|
+| 자원 2배 | `SERVER_ARGS=-modifier resources muchmore` | 월드 설정 |
+| 건물 파괴 불가 | `PrefabConfigurator` / `MakeIndestructible` | 1층 |
+| 비 피해 차단 | `PrefabConfigurator` / `DisableRainDamage` | 1층 |
+| 건설 무한 스태미나 | `Player` / `InfiniteBuildingStamina` | 1층 |
+| 문 자동 닫힘 해제 | `AutoDoors` / `Enabled = false` | 1층 |
+
+**전부 서버에서만 한다. 친구들은 아무것도 설치하지 않는다.**
+
+`AutoDoors` 는 DLL 을 지우지 않고 `Enabled` 만 껐다. 되돌리려면 `true` 로 바꾸고 재시작하면 된다.
+
+`ServersideQoL_Player` 는 원래 무한 스태미나 때문에 제외했던 모듈이다. 스태미나 항목이 활동별로 일곱 개라 건설만 켜고 나머지는 기본값(꺼짐)으로 뒀다.
+
+### 예약 방식
+
+`scripts/apply-server-changes.mjs` 를 Windows 작업 스케줄러(`valheim-apply-changes`)가 매일 06:00 에 부른다.
+
+**접속자가 0명일 때만 재시작한다.** 사람이 있으면 아무것도 하지 않고 종료한다. 사람 없이 도는 작업이라 이 확인이 없으면 플레이 중인 사람을 말없이 끊게 된다.
+
+재시작 완료 판정은 컨테이너가 떴는지가 아니라 `status.json` 이 응답하는지로 한다. 컨테이너는 먼저 뜨고 게임 서버는 한참 뒤에 준비된다.
+
+결과는 `agent/apply-server-changes.log` 에 남는다. 적용 여부를 아침에 그 파일만 보고 확인할 수 있다.
+
 ### 사망 시 아이템 보존 (2026-09-19 검토, 도입하지 않음)
 
 "죽어도 아이템을 안 떨어뜨리게" 요청이 있어 조사했다. 결론은 **그대로 둔다** 이다.
