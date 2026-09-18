@@ -1,5 +1,6 @@
 ---
 import Icon from "./Icon.astro";
+import { pickModIcon } from "../lib/mod-icon.mjs";
 
 interface Props {
   mod: {
@@ -9,89 +10,330 @@ interface Props {
   };
 }
 const { mod } = Astro.props;
+
+// 3층은 친구가 직접 설치해야 하는 모드다. 1층은 서버에만 깔린다.
 const needsInstall = mod.tier === 3;
+const modIcon = pickModIcon(mod);
 ---
 
 <article class={`mod ${needsInstall ? "need" : "free"}`}>
+  <span class="rail" aria-hidden="true"></span>
+
   <header>
-    <h3>{mod.name}</h3>
-    <span class="pkg mono">{mod.id}</span>
-    <span class={`ver mono ${needsInstall ? "pinned" : ""}`}>{mod.version}</span>
-    {needsInstall && <span class="pin-label">전원 동일 버전 필수</span>}
+    <span class="ico" aria-hidden="true"><Icon name={modIcon} size={22} /></span>
+    <div class="ident">
+      <h3>{mod.name}</h3>
+      <p class="pkg mono">{mod.id}</p>
+    </div>
+    <span class="tier">
+      <Icon name={needsInstall ? "download-04" : "checkmark-circle-02"} size={14} />
+      {needsInstall ? "직접 설치" : "설치 불필요"}
+    </span>
   </header>
-  <p class="owner">제작: {mod.owner}</p>
-  <p class="summary">{mod.summary}</p>
-  <p class="usage">{mod.usage}</p>
-  {mod.warnings.length > 0 && (
-    <ul class="warns">
-      {mod.warnings.map((w) => <li>{w}</li>)}
-    </ul>
-  )}
-  <a class="link" href={mod.thunderstoreUrl} target="_blank" rel="noopener noreferrer">
-    <Icon name="globe-02" size={14} />
-    Thunderstore 페이지 (새 탭에서 열림)
-  </a>
+
+  <div class="body">
+    <p class="summary">{mod.summary}</p>
+
+    <div class="usage">
+      <span class="usage-k">
+        <Icon name="idea-01" size={14} />
+        이렇게 씁니다
+      </span>
+      <p>{mod.usage}</p>
+    </div>
+
+    {mod.warnings.length > 0 && (
+      <ul class="warns">
+        {mod.warnings.map((w) => (
+          <li><Icon name="alert-02" size={14} />{w}</li>
+        ))}
+      </ul>
+    )}
+  </div>
+
+  <footer>
+    {needsInstall ? (
+      <span class="ver pinned mono">
+        <Icon name="password-validation" size={13} />
+        {mod.version}
+        <span class="ver-note">전원 동일</span>
+      </span>
+    ) : (
+      <span class="ver mono">{mod.version}</span>
+    )}
+    <span class="owner">제작 {mod.owner}</span>
+    <a class="link" href={mod.thunderstoreUrl} target="_blank" rel="noopener noreferrer">
+      Thunderstore
+      <Icon name="arrow-up-right-01" size={14} />
+      <span class="sr-only">새 탭에서 열림</span>
+    </a>
+  </footer>
 </article>
 
 <style>
   .mod {
-    padding: 18px 20px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    /* 카드 높이를 그리드 줄에 맞춰 늘린다. 설명 길이가 달라도
+       아래쪽 링크 줄이 한 선에 놓인다. */
+    height: 100%;
+    padding: 20px 22px 16px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    transition: border-color 160ms ease, transform 160ms ease;
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transition:
+      transform 260ms var(--ease-out),
+      border-color 200ms ease,
+      box-shadow 260ms var(--ease-out),
+      background 200ms ease;
   }
-  .mod:hover { transform: translateY(-1px); }
 
-  /* 설치 불필요 그룹은 낮은 채도로 둔다. 넘어가도 된다는 인상을 준다. */
-  .free { opacity: 0.88; }
-  .free:hover { border-color: var(--border); }
+  /* 카드 위쪽에 깔리는 악센트 띠. 1층은 hover 때만 좌에서 우로 그어지고
+     3층은 처음부터 그어져 있다. */
+  .rail {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 2px;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 320ms var(--ease-out);
+  }
+  .mod:hover .rail { transform: scaleX(1); }
 
-  /* 설치 필요 그룹은 악센트로 눈에 띄게 한다.
-     같은 스타일로 나열하면 친구들이 전부 설치하려 든다. */
-  .need { border-left: 3px solid var(--accent); }
-  .need:hover { border-color: var(--accent); }
+  header {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 12px;
+  }
 
-  header { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-  h3 { margin: 0; font-size: 17px; font-weight: 600; }
-  .pkg { font-size: 12px; color: var(--text-faint); }
+  /* 모드 성격을 나타내는 아이콘. 이름을 읽기 전에 무슨 종류인지 짐작하게 한다. */
+  .ico {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    transition: color 200ms ease, border-color 200ms ease, background 200ms ease;
+  }
+
+  .ident { min-width: 0; }
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.3;
+  }
+  /* 영문 패키지명은 이름의 부속 정보다. 이름과 같은 줄에 두면 뭉쳐 보여
+     아래로 내리고 무게를 확실히 낮춘다. */
+  .pkg {
+    margin: 3px 0 0;
+    font-size: 11.5px;
+    color: var(--text-faint);
+    word-break: break-all;
+  }
+
+  /* 층 구분은 색과 글자 레이블을 함께 쓴다.
+     색만으로 구분하면 색각 이상이 있는 사람은 못 알아본다. */
+  .tier {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex: none;
+    padding: 4px 9px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .summary {
+    margin: 16px 0 0;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--text);
+  }
+
+  /* 쓰는 법은 설명과 성격이 달라 블록으로 떼어 놓는다. */
+  .usage {
+    margin: 14px 0 0;
+    padding: 10px 12px;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .usage-k {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--text-faint);
+  }
+  .usage p {
+    margin: 4px 0 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+
+  .warns { margin: 12px 0 0; padding: 0; list-style: none; }
+  .warns li {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--warning-bright);
+  }
+  .warns li + li { margin-top: 5px; }
+  .warns :global(.icon) { margin-top: 3px; color: var(--warning); }
+
+  /* 설명 길이가 달라도 링크 줄은 카드 바닥에 붙는다. */
+  .body { flex: 1 1 auto; }
+
+  footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
   .ver { font-size: 12px; color: var(--text-faint); }
 
-  /* 버전이 참고 정보가 아니라 반드시 맞춰야 하는 값임을 굵기와 테두리로 드러낸다.
-     색만으로 구분하면 색각 이상이 있는 사람은 못 알아본다. */
+  /* 3층 버전은 참고 정보가 아니라 반드시 맞춰야 하는 값이다.
+     한 명이라도 다르면 그 사람은 접속하지 못한다. 테두리와 굵기,
+     그리고 "전원 동일" 이라는 글자로 그 사실을 드러낸다. */
   .ver.pinned {
-    padding: 1px 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 8px;
     border: 1px solid var(--accent);
-    border-radius: 4px;
-    color: var(--accent);
+    border-radius: 6px;
+    color: var(--accent-bright);
+    font-size: 12.5px;
     font-weight: 700;
   }
-  .pin-label {
+  .ver-note {
+    padding-left: 6px;
+    margin-left: 1px;
+    border-left: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    font-family: var(--font-sans);
     font-size: 11px;
     font-weight: 600;
     color: var(--accent);
   }
 
-  .owner { margin: 8px 0 0; font-size: 12px; color: var(--text-faint); }
-  .summary { margin: 10px 0 0; font-size: 14px; color: var(--text-dim); }
-  .usage {
-    margin: 10px 0 0;
-    padding-left: 12px;
-    border-left: 2px solid var(--border);
-    font-size: 13px;
-    color: var(--text-faint);
-  }
-  .warns { margin: 12px 0 0; padding-left: 18px; font-size: 13px; color: var(--warning); }
+  .owner { font-size: 12px; color: var(--text-faint); }
 
   .link {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    margin-top: 14px;
-    font-size: 13px;
+    gap: 4px;
+    margin-left: auto;
+    padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    font-size: 12.5px;
     color: var(--text-dim);
     text-decoration: none;
+    transition: color 180ms ease, border-color 180ms ease, background 180ms ease;
   }
-  .link:hover { color: var(--accent); text-decoration: underline; }
-  .link :global(.icon) { color: currentColor; }
+  .link:hover,
+  .link:focus-visible {
+    color: var(--accent-bright);
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+  }
+
+  /* 설치 불필요 그룹. 넘어가도 된다는 인상을 주려고 차분하게 둔다. */
+  .free .rail { background: linear-gradient(90deg, var(--success), transparent); }
+  .free .tier {
+    color: var(--success-bright);
+    background: color-mix(in srgb, var(--success) 14%, transparent);
+    border: 1px solid color-mix(in srgb, var(--success) 32%, transparent);
+  }
+  .free:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-raised);
+  }
+  .free:hover .ico { color: var(--success-bright); border-color: var(--border-strong); }
+
+  /* 설치 필요 그룹. 이 화면에서 친구가 얻어야 할 답이 "내가 뭘 설치해야
+     하나" 이므로 1층과 확실히 달라 보여야 한다. 배경, 테두리, 상단 띠를
+     모두 다르게 준다. */
+  .need {
+    background: linear-gradient(
+      165deg,
+      color-mix(in srgb, var(--accent) 7%, var(--surface)),
+      var(--surface) 60%
+    );
+    border-color: color-mix(in srgb, var(--accent) 42%, var(--border));
+  }
+  .need .rail {
+    transform: scaleX(1);
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), var(--highlight) 55%, transparent);
+  }
+  .need .tier {
+    color: var(--bg);
+    background: var(--accent);
+    border: 1px solid var(--accent);
+  }
+  .need .ico {
+    color: var(--accent-bright);
+    background: color-mix(in srgb, var(--accent) 16%, var(--surface-raised));
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  }
+  .need .usage { background: color-mix(in srgb, var(--accent) 5%, var(--surface-sunken)); }
+  .need:hover { border-color: var(--accent); }
+  .need:hover .ico {
+    background: color-mix(in srgb, var(--accent) 26%, var(--surface-raised));
+  }
+
+  /* hover 이펙트. 살짝 떠오르고 그림자가 깊어지며 테두리 바깥으로
+     아주 옅은 링이 번진다. 세 가지가 함께 움직여야 기분 좋게 느껴진다. */
+  .mod:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card-hover), var(--ring-accent);
+  }
+  /* 카드 안 링크로 키보드 포커스가 들어오면 카드도 같이 들뜬다.
+     마우스 사용자만 상태 변화를 보는 일이 없게 한다. */
+  .mod:focus-within {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-card-hover), var(--ring-accent);
+  }
+  .mod:focus-within .rail { transform: scaleX(1); }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* 동작 최소화 설정에서는 떠오르는 움직임과 띠 그리기를 없앤다.
+     색과 테두리 변화만 남겨 hover 여부는 여전히 알 수 있게 한다. */
+  @media (prefers-reduced-motion: reduce) {
+    .mod, .rail, .ico, .link { transition: none; }
+    .mod:hover, .mod:focus-within { transform: none; }
+    .rail { transform: scaleX(1); }
+  }
 </style>
