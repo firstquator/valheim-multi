@@ -88,6 +88,11 @@ html, body {
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+
+  /* 한국어는 어절 단위로 끊어야 읽힌다. 기본값인 normal 은 단어 중간에서
+     줄을 넘겨 "뭉쳐 다니는 쪽이 유리합니다" 같은 문장을 어색하게 자른다.
+     긴 ASCII 값(주소, 패키지명)은 각 요소에서 break-all 로 되돌린다. */
+  word-break: keep-all;
 }
 
 /* 화면 위쪽에 아주 옅은 모닥불 빛을 깔아 상단이 무겁지 않게 한다.
@@ -116,4 +121,12 @@ body::before {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
+/* 모노스페이스는 순수 ASCII 값에만 쓴다. JetBrains Mono 에는 한글 글리프가
+   없어서 한글이 섞이면 글자마다 대체 폰트로 떨어지고 자간과 굵기가 제각각이
+   된다. 주소, 포트, 버전 번호, 코드, 패키지명처럼 자리 맞춤이 실제로
+   도움이 되는 값에만 쓴다. */
 code, .mono { font-family: var(--font-mono); }
+
+/* 한글이 섞일 수 있는데 숫자 정렬은 필요한 자리에 쓴다.
+   본문 폰트를 그대로 쓰면서 숫자 폭만 고정한다. */
+.num { font-variant-numeric: tabular-nums; }
