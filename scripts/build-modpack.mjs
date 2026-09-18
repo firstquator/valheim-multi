@@ -193,6 +193,8 @@ if (process.argv[1] && resolve(process.argv[1]) === resolve(fileURLToPath(import
  */
 export async function verifyPackages(packages) {
   const bad = [];
+  const inProfile = new Set(packages.map((p) => p.name));
+
   for (const p of packages) {
     const version = `${p.major}.${p.minor}.${p.patch}`;
     const [owner, ...rest] = p.name.split("-");
@@ -212,6 +214,23 @@ export async function verifyPackages(packages) {
     const json = await res.json();
     if (json.full_name !== `${p.name}-${version}`) {
       bad.push({ name: p.name, version, why: `이름 불일치 (${json.full_name})` });
+      continue;
+    }
+
+    // 이 패키지가 요구하는 다른 패키지가 프로필에 들어 있는지 본다.
+    //
+    // YamlDotNet 을 "서버 전용 라이브러리" 로 잘못 보고 뺐다가, 친구가
+    // Start modded 를 눌렀을 때 Localization 이 YamlDotNet 16.0.0.0 을
+    // 찾지 못해 예외가 터졌다. ExtraSlots 의 manifest 에 적혀 있던 것을
+    // 사람이 읽고 넘긴 것이다. 그래서 기계가 보게 한다.
+    //
+    // BepInEx 로더는 제외한다. 컨테이너 이미지와 r2modman 이 알아서 넣는다.
+    for (const dep of json.dependencies ?? []) {
+      if (/^(BepInEx|denikson-BepInExPack)/i.test(dep)) continue;
+      const depName = dep.replace(/-\d+\.\d+\.\d+$/, "");
+      if (!inProfile.has(depName)) {
+        bad.push({ name: p.name, version, why: `요구하는 ${dep} 가 프로필에 없다` });
+      }
     }
   }
   return bad;

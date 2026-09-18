@@ -1,13 +1,5 @@
 {
   "schemaVersion": 1,
-  "serverLibraries": [
-    {
-      "owner": "ValheimModding",
-      "id": "YamlDotNet",
-      "version": "16.3.1",
-      "why": "ServersideQoL 이 요구하는 YAML 라이브러리. 1층 모드의 의존성이라 서버에만 필요하고 친구 프로필에는 넣지 않는다"
-    }
-  ],
   "modpack": {
     "version": "v1",
     "r2modmanCode": null,
@@ -29,6 +21,12 @@
         "id": "ConditionalConfigSync",
         "version": "1.0.8",
         "why": "ExtraSlots 가 요구하는 라이브러리"
+      },
+      {
+        "owner": "ValheimModding",
+        "id": "YamlDotNet",
+        "version": "16.3.1",
+        "why": "ExtraSlots 가 요구한다. 서버의 ServersideQoL 도 쓰지만 클라이언트에도 필요하다. 없으면 Localization 이 YamlDotNet 16.0.0.0 을 못 찾아 게임 시작 중 예외가 뜬다"
       }
     ]
   },
