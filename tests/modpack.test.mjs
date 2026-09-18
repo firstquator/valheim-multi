@@ -103,3 +103,21 @@ describe("모드팩 프로필", () => {
     expect(zip.readUInt32LE(0)).toBe(0x04034b50);
   });
 });
+
+describe("서버 전용 라이브러리", () => {
+  it("프로필에 들어가지 않는다. 친구가 서버 전용 모드의 라이브러리를 받을 이유가 없다", () => {
+    const names = collectPackages(data).map((p) => p.name);
+    const libs = data.serverLibraries ?? [];
+    expect(libs.length).toBeGreaterThan(0);
+    for (const l of libs) {
+      expect(names).not.toContain(`${l.owner}-${l.id}`);
+    }
+  });
+
+  it("왜 서버에만 필요한지 근거가 적혀 있다", () => {
+    for (const l of data.serverLibraries ?? []) {
+      expect(typeof l.why).toBe("string");
+      expect(l.why.length).toBeGreaterThan(10);
+    }
+  });
+});

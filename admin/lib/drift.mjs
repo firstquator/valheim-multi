@@ -95,7 +95,11 @@ export function detectDrift({ declared, pluginFiles, configFiles, loadedPlugins,
 
     const actualVersion = hits.length > 0 ? hits[0].version : null;
     const versionMismatch =
-      hits.length > 0 && actualVersion != null && mod.version != null && actualVersion !== mod.version;
+      hits.length > 0 &&
+      actualVersion != null &&
+      mod.version != null &&
+      !mod.ignoreVersion &&
+      actualVersion !== mod.version;
 
     const notes = [];
     let verdict;

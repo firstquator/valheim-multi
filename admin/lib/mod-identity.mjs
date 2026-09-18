@@ -24,6 +24,7 @@ export function normalizeName(value) {
  * - `fileNames`    `/config/bepinex/plugins` 안의 파일 또는 디렉터리 이름
  * - `configNames`  `/config/bepinex/*.cfg` 의 파일 이름
  * - `configOptional` config 를 만들지 않는 것이 정상인 모드
+ * - `ignoreVersion` 로그의 버전이 패키지 버전과 다른 것이 정상인 모드
  * - `why`          왜 예외인지. 근거 없이 예외를 늘리면 감지가 무의미해진다
  */
 export const IDENTITY_OVERRIDES = {
@@ -64,6 +65,13 @@ export const IDENTITY_OVERRIDES = {
     skipServerCheck: true,
     why: "모드 로더 자체다. 컨테이너 이미지가 설치하며 plugins 목록에도 Loading 로그에도 플러그인으로 등장하지 않는다. 드리프트 대상이 아니다",
   },
+  "ValheimModding/YamlDotNet": {
+    pluginNames: ["YamlDotNet Detector"],
+    fileNames: ["YamlDotNet.dll", "YamlDotNetDetector.dll"],
+    configOptional: true,
+    ignoreVersion: true,
+    why: "패키지는 YamlDotNet 16.3.1 인데 로그에는 동봉된 탐지기가 'YamlDotNet Detector 1.0.0' 으로 뜬다. 서로 다른 것의 버전이라 비교하면 항상 불일치가 된다. DLL 두 개가 한 패키지에서 나오고, 라이브러리라 config 는 만들지 않는다. 2026-09-18 실제 컨테이너에서 확인했다",
+  },
 };
 
 /** 서버에 설치되는 계층. 2층은 각자 클라이언트에만 깔므로 서버 드리프트 대상이 아니다. */
@@ -76,6 +84,8 @@ export const SERVER_SIDE_TIERS = [1, 3];
  * - 2층 모드: 개인 클라이언트 전용이라 서버에 없는 것이 정상이다. 제외한다
  * - `modpack.dependencies`: 3층 모드가 요구하는 라이브러리라 서버에도 깔려 있다.
  *   빼면 Jotunn 같은 것이 전부 "유령 모드" 로 뜬다
+ * - `serverLibraries`: 1층 모드가 요구하는 라이브러리. 서버에만 있고
+ *   친구 프로필에는 넣지 않는다
  *
  * @param {object} modsJson data/mods.json 을 파싱한 객체
  */
@@ -97,6 +107,7 @@ export function declaredServerMods(modsJson) {
       fileNames: ov.fileNames ?? null,
       configNames: ov.configNames ?? null,
       configOptional: ov.configOptional === true,
+      ignoreVersion: ov.ignoreVersion === true,
       identityNote: ov.why ?? null,
     });
   };
@@ -107,6 +118,12 @@ export function declaredServerMods(modsJson) {
   }
   for (const d of modsJson?.modpack?.dependencies ?? []) {
     push({ ...d, name: d.id, tier: null }, "dependency");
+  }
+  // 서버 전용 라이브러리. 1층 모드가 요구해서 서버에는 깔려 있지만
+  // 친구 프로필(.r2z)에는 넣지 않는다. 여기에 선언하지 않으면 드리프트
+  // 검사가 매번 "유령 모드" 로 잡는다. 실제로 YamlDotNet 이 그랬다.
+  for (const d of modsJson?.serverLibraries ?? []) {
+    push({ ...d, name: d.id, tier: null }, "serverLibrary");
   }
   return out;
 }
