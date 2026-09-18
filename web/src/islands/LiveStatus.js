@@ -1,19 +1,18 @@
 import { judgeStatus, formatAge } from "../lib/status.mjs";
-import { GIST_ID, GIST_FILE } from "../config.mjs";
+import { buildGistRawUrl } from "../lib/gist-url.mjs";
+import { GIST_ID, GIST_FILE, GIST_OWNER, POLL_INTERVAL_MS } from "../config.mjs";
 
 // fetch 와 DOM 갱신만 한다. 판정은 status.mjs 가 맡는다.
 
 async function loadStatus() {
-  if (!GIST_ID) return null;
+  // URL 을 못 만들면 아직 사용자가 GIST_ID 를 채우지 않은 상태다.
+  const url = buildGistRawUrl(GIST_OWNER, GIST_ID, GIST_FILE, Date.now());
+  if (!url) return null;
   try {
-    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-      headers: { Accept: "application/vnd.github+json" },
-      cache: "no-store",
-    });
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) return null;
-    const gist = await res.json();
-    const raw = gist.files?.[GIST_FILE]?.content;
-    return raw ? JSON.parse(raw) : null;
+    // raw 호스트는 파일 내용을 그대로 준다. API 응답처럼 감싸여 있지 않다.
+    return await res.json();
   } catch {
     return null;
   }
@@ -73,4 +72,4 @@ async function tick() {
 }
 
 tick();
-setInterval(tick, 30_000);
+setInterval(tick, POLL_INTERVAL_MS);

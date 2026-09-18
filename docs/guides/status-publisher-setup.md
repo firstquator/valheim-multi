@@ -100,8 +100,17 @@ export const GIST_ID = "1a2b3c4d5e6f7890abcdef1234567890";
 
 이 값은 **토큰과 달리 공개되어도 된다.** 사이트가 빌드되면 이 문자열이 브라우저에 그대로 노출되지만, Gist 자체가 읽기 전용으로만 쓰이고(사이트는 조회만 한다) 토큰은 PC 안 `agent/.env` 에만 있으므로 문제가 없다.
 
+같은 파일의 `GIST_OWNER` 는 Gist 를 만든 GitHub 사용자명이다. `firstquator` 로 미리 채워져 있으므로, **본인 계정으로 Gist 를 만들었다면 그대로 두면 된다.** 다른 계정으로 만들었을 때만 바꾼다.
+
+```js
+export const GIST_OWNER = "firstquator";
+```
+
+사이트는 이 두 값으로 `https://gist.githubusercontent.com/<GIST_OWNER>/<GIST_ID>/raw/valheim-status.json` 을 조회한다. 둘 중 하나라도 틀리면 404 가 되고 화면은 "상태 확인 불가" 로 남는다.
+
 - [ ] `agent/.env` 를 만들고 두 값을 채웠다
 - [ ] `web/src/config.mjs` 의 `GIST_ID` 를 채웠다
+- [ ] `web/src/config.mjs` 의 `GIST_OWNER` 가 Gist 를 만든 계정과 같다
 
 ---
 
@@ -278,6 +287,7 @@ tail -50 agent/status-publisher.log
 Gist 페이지를 열어 새로고침한다. 우측 상단에 "edited X ago" 가 표시된다.
 
 - 30초~1분 이내로 계속 갱신되고 있으면 퍼블리셔와 GitHub 연결은 정상이다. 문제는 사이트 쪽(3번)이다
+- 사이트는 60초마다 조회한다. 퍼블리셔가 30초마다 올리므로 화면에 보이는 값의 나이는 최대 90초 안쪽이다
 - 몇 분~몇 시간째 멈춰 있으면 1번으로 돌아가 로그를 다시 본다
 
 ## 3. 페이지 콘솔
@@ -287,7 +297,7 @@ Gist 페이지를 열어 새로고침한다. 우측 상단에 "edited X ago" 가
 | 콘솔에 보이는 것 | 의미 | 조치 |
 |---|---|---|
 | 에러 없이 조용하다, 그런데 계속 "확인 불가" | `GIST_ID` 가 빈 값이거나 잘못됨 | `web/src/config.mjs` 재확인, 빌드/배포 다시 |
-| 네트워크 탭에 `api.github.com/gists/...` 요청이 404 | 사이트에 박힌 `GIST_ID` 가 실제 Gist 와 다름 | `web/src/config.mjs` 수정 후 재배포 |
+| 네트워크 탭에 `gist.githubusercontent.com/...` 요청이 404 | 사이트에 박힌 `GIST_ID` 또는 `GIST_OWNER` 가 실제 Gist 와 다름 | `web/src/config.mjs` 수정 후 재배포 |
 | 네트워크 탭에 요청 자체가 안 보인다 | `LiveStatus.js` 가 로드되지 않았거나 스크립트 오류 | 콘솔 상단의 다른 에러 메시지 확인 |
 | CORS 에러 | GitHub Gist API 자체는 공개 API 라 CORS 를 막지 않는다. 이 에러가 보이면 URL 오타 등 다른 문제일 가능성이 높다 | 요청 URL 을 그대로 브라우저 주소창에 붙여 직접 열어본다 |
 

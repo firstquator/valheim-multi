@@ -17,6 +17,20 @@
 export const GIST_ID = "";
 export const GIST_FILE = "valheim-status.json";
 
+// Gist 를 소유한 GitHub 사용자명. 조회 URL 경로에 들어간다.
+// 비밀이 아니고 저장소 remote 에서 이미 드러나는 값이라 미리 채워 둔다.
+// 다른 계정의 Gist 를 쓰려면 이 값도 함께 바꾼다.
+export const GIST_OWNER = "firstquator";
+
+// 상태 조회 주기.
+//
+// 퍼블리셔가 30초마다 올리므로 60초로 읽어도 화면에 보이는 값의 나이는
+// 최대 90초 안쪽이다. 신선도 임계값(status.mjs 의 STALE_LIMIT_SEC)이
+// 180초라 여유가 있다. 요청 수는 절반이 된다.
+//
+// 이 값을 줄이기 전에 web/src/lib/gist-url.mjs 의 주석을 읽어라.
+export const POLL_INTERVAL_MS = 60_000;
+
 // 접속 정보. 비밀번호는 Gist 에 올리지 않고 여기에만 둔다.
 export const SERVER = {
   address: "182.230.196.27:2456",
