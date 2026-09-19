@@ -7,6 +7,48 @@ const read = (f) =>
 
 const NOW = "2026-09-18T04:00:00Z";
 
+describe("자원 배율", () => {
+  // 실제 서버가 내보낸 문자열 그대로다. 손으로 줄이면 이스케이프가
+  // 달라져 시험의 의미가 없어진다.
+  // String.raw 로 적는다. 보통 문자열로 쓰면 "\=" 가 그냥 "=" 로 접혀
+  // 백슬래시가 사라지고, 정작 시험하려던 이스케이프가 없어진다.
+  const real3x = String.raw`g=1.0.15,n=40,m=0\=85\,1\=150\,14\=110\,15\=120\,19\,13\=15\,35\,40\=1_9:2_6:3_12:4_0:5_6\,4\=300`;
+  const real2x = String.raw`g=1.0.15,n=40,m=0\=85\,1\=150\,14\=110\,15\=120\,19\,13\=15\,35\,40\=1_9:2_6:3_5:4_0:5_6\,4\=200`;
+
+  const build = (keywords) =>
+    buildPayload({
+      statusRaw: JSON.stringify({ server_name: "gaybar", player_count: 0, keywords }),
+      running: true, players: [], backup: { lastAt: null, count: 0 },
+      address: "x", nowIso: "2026-09-20T00:00:00.000Z",
+    });
+
+  it("3배 설정을 300 으로 읽는다", () => {
+    expect(build(real3x).server.resourceRate).toBe(300);
+  });
+
+  it("2배 설정을 200 으로 읽는다", () => {
+    expect(build(real2x).server.resourceRate).toBe(200);
+  });
+
+  it("14번 항목(적 크기 110)을 자원으로 잘못 집지 않는다", () => {
+    // `4\=` 만 찾으면 "14\=110" 의 꼬리가 걸려 110 이 나온다.
+    expect(build(real3x).server.resourceRate).not.toBe(110);
+  });
+
+  it("자원 항목이 없으면 null 이다", () => {
+    expect(build("g=1.0.15,n=40").server.resourceRate).toBe(null);
+  });
+
+  it("keywords 가 없어도 터지지 않는다", () => {
+    const p = buildPayload({
+      statusRaw: JSON.stringify({ server_name: "gaybar", player_count: 0 }),
+      running: true, players: [], backup: { lastAt: null, count: 0 },
+      address: "x", nowIso: "2026-09-20T00:00:00.000Z",
+    });
+    expect(p.server.resourceRate).toBe(null);
+  });
+});
+
 describe("buildPayload", () => {
   it("접속자 0명 상태를 조립한다", () => {
     const p = buildPayload({

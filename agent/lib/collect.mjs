@@ -12,13 +12,36 @@
  * 뽑게 된다.
  */
 function parseKeywords(keywords) {
-  if (typeof keywords !== "string") return { gameVersion: null, networkVersion: null };
+  if (typeof keywords !== "string") {
+    return { gameVersion: null, networkVersion: null, resourceRate: null };
+  }
   const g = keywords.match(/(?:^|(?<!\\),)g=([^,\\]+)/);
   const n = keywords.match(/(?:^|(?<!\\),)n=(\d+)/);
   return {
     gameVersion: g ? g[1] : null,
     networkVersion: n ? Number(n[1]) : null,
+    resourceRate: parseResourceRate(keywords),
   };
+}
+
+/**
+ * 자원 배율을 백분율로 뽑는다. 기본이 100, 3배면 300 이다.
+ *
+ * 왜 여기서 뽑는가.
+ * 월드 탭에 배율을 손으로 적어 두었더니 두 번 어긋났다. 2배로 올릴 때도,
+ * 3배로 올릴 때도 화면은 150% 인 채였다. 서버가 자기 설정을 keywords 로
+ * 알려 주고 있으므로 그 값을 그대로 쓰면 다시 틀릴 일이 없다.
+ *
+ * m= 안쪽은 이스케이프된 구조다. 실제 모양은 이렇다.
+ *   m=0\=85\,1\=150\,...\,4\=300
+ * 여기서 4 번이 자원이다. 그래서 `4\=` 뒤의 숫자를 찾는다. 앞에 `\,` 나
+ * `m=` 가 와야 다른 항목의 꼬리(예: 14\=110)를 잘못 집지 않는다.
+ */
+function parseResourceRate(keywords) {
+  const m = keywords.match(/(?:m=|\\,)4\\=(\d+)/);
+  if (!m) return null;
+  const v = Number(m[1]);
+  return Number.isFinite(v) && v > 0 ? v : null;
 }
 
 /**
@@ -63,6 +86,7 @@ export function buildPayload({ statusRaw, running, players, backup, address, now
       players: safePlayers,
       gameVersion: kw.gameVersion,
       networkVersion: kw.networkVersion,
+      resourceRate: kw.resourceRate,
       address,
     },
     backup: {

@@ -37,6 +37,17 @@ function render(judged) {
   // 버전 불일치는 접속 실패의 가장 흔한 원인이라 정확해야 한다.
   if (ver && judged.gameVersion) ver.textContent = judged.gameVersion;
 
+  // 자원 배율도 같은 이유로 서버 값을 따른다.
+  const res = document.getElementById("resource-rate");
+  if (res && judged.resourceRate) {
+    const rate = judged.resourceRate;
+    const times = rate / 100;
+    // 200 이면 "200% (2배)". 정수로 떨어지지 않으면 배수는 생략한다.
+    res.textContent = Number.isInteger(times) && times > 1
+      ? `${rate}% (${times}배)`
+      : `${rate}%`;
+  }
+
   if (list) {
     list.textContent = judged.players.length ? judged.players.join(" · ") : "";
     list.hidden = judged.players.length === 0;
