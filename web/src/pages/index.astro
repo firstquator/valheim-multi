@@ -20,6 +20,7 @@ import Shot from "../components/Shot.astro";
 import DiagramFlow from "../components/diagrams/DiagramFlow.astro";
 import DiagramLaunch from "../components/diagrams/DiagramLaunch.astro";
 import { SERVER } from "../config.mjs";
+import { formatChangeDate, summarizeChanges } from "../lib/modpack-changes.mjs";
 import modsData from "../../../data/mods.json";
 
 const TABS = [
@@ -57,6 +58,16 @@ const modpackPackageCount = modpackDepCount + tier3.length + tier2.length;
 // 없으면 "지금은 없다" 로 읽힌다. 모드가 추가될 때 이 파일을 다시
 // 고칠 필요가 없어야 한다.
 const needsAnyInstall = tier3.length > 0;
+
+// 모드팩이 언제 무엇 때문에 바뀌었는지다.
+//
+// 친구 입장에서 "내가 파일을 다시 받아야 하나" 를 스스로 판단할 근거가
+// 이것뿐이다. 서버는 친구 PC 에 무엇이 깔려 있는지 알 수 없으므로 화면이
+// 개인별로 "당신은 업데이트가 필요합니다" 라고 말해 줄 방법이 없다.
+// 그래서 갱신 날짜를 보여주고, 그보다 전에 받았으면 다시 받으라고 한다.
+const { latest: latestChange, mustUpdate, older: olderChanges } = summarizeChanges(
+  modsData.modpack.changes,
+);
 
 // 설치 가이드는 한 화면에 한 단계씩 보여준다.
 // 여기 순서가 진행 표시와 화면 순서를 함께 정한다.
@@ -135,6 +146,72 @@ const STEPS = [
 
           <div class="cols cols-wide">
             <section class="block">
+              {/*
+                모드팩이 바뀌었는지 알리는 자리다. 접속 정보보다 위에 둔다.
+                버전이 어긋나면 주소와 비밀번호가 맞아도 들어오지 못하므로
+                순서상 이쪽이 먼저다.
+
+                이력이 없으면 통째로 감춘다. 한 번도 갱신하지 않았다면
+                알릴 것이 없고, 빈 카드는 읽을거리만 늘린다.
+              */}
+              {latestChange && (
+                <div class="upd" data-hot={mustUpdate}>
+                  <h2 class="block-h">
+                    <Icon name="system-update-01" size={17} />
+                    모드팩 갱신
+                  </h2>
+
+                  <div class="card upd-card">
+                    <p class="upd-verdict">
+                      <Icon name={mustUpdate ? "alert-diamond" : "checkmark-circle-02"} size={18} />
+                      {mustUpdate
+                        ? "파일을 다시 받아야 합니다"
+                        : "다시 받지 않아도 됩니다"}
+                    </p>
+
+                    <p class="upd-sum">{latestChange.summary}</p>
+
+                    <p class="upd-when">
+                      <Icon name="clock-01" size={15} />
+                      <span>
+                        {/* time 태그와 조사 "에" 사이에 줄바꿈을 두면 JSX 가
+                            그것을 공백으로 바꿔 "19일 에" 로 렌더된다.
+                            조사는 앞말에 붙어야 하므로 한 줄로 쓴다. */}
+                        <time datetime={latestChange.date}>{formatChangeDate(latestChange.date)}</time>에 바뀌었습니다.{" "}
+                        {mustUpdate
+                          ? "그 전에 프로필을 받으셨다면 지금 다시 받으세요."
+                          : "이 변경은 서버에서만 처리되어 친구들이 할 일은 없습니다."}
+                      </span>
+                    </p>
+
+                    {mustUpdate && (
+                      <label class="upd-go" for="tab-install">
+                        업데이트하는 방법 보기
+                        <Icon name="arrow-right-02" size={17} />
+                      </label>
+                    )}
+
+                    {/*
+                      지난 이력은 접어 둔다. 지금 무엇을 해야 하는지가
+                      먼저고, 옛날 기록은 궁금한 사람만 편다.
+                    */}
+                    {olderChanges.length > 0 && (
+                      <details class="upd-log">
+                        <summary>지난 변경 {olderChanges.length}건</summary>
+                        <ul>
+                          {olderChanges.map((c) => (
+                            <li>
+                              <time datetime={c.date}>{formatChangeDate(c.date)}</time>
+                              <span>{c.summary}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </details>
+                    )}
+                  </div>
+                </div>
+              )}
+
               <h2 class="block-h">
                 <Icon name="key-01" size={17} />
                 접속 정보
@@ -284,7 +361,7 @@ const STEPS = [
             icon="download-04"
             tone={needsAnyInstall ? "accent" : "success"}
             desc={needsAnyInstall
-              ? "아래 순서대로 한 단계씩 넘기며 따라 하시면 됩니다. 처음이라면 10분 정도 걸립니다."
+              ? "이미 설치하셨다면 맨 위 안내만 보시면 됩니다. 처음이라면 그 아래 단계를 순서대로 넘기며 따라 하세요. 10분 정도 걸립니다."
               : "지금은 따라 할 필요가 없습니다. 앞으로 설치가 필요한 모드가 생겼을 때를 위해 적어 둡니다."}
           />
 
@@ -303,6 +380,118 @@ const STEPS = [
               모드가 추가될 때를 위한 안내입니다.
             </Callout>
           )}
+
+          {/*
+            이미 설치한 사람을 위한 자리다.
+
+            지금 친구들은 전원이 한 번씩 설치를 마친 상태라, 이 탭을 다시
+            여는 이유는 대부분 "모드가 바뀌었다니 다시 받아야 한다" 이다.
+            그런 사람에게 8단계를 처음부터 보여주면 이미 아는 것을 다시
+            읽게 되고, 정작 다른 한 곳(Update existing profile)을 놓친다.
+
+            그래서 위저드보다 앞에 두고, 처음 설치와 다른 곳만 적는다.
+            처음인 사람은 제목을 보고 건너뛴다.
+          */}
+          <section class="upg" id="update">
+            <div class="upg-h">
+              <h2>
+                <Icon name="system-update-01" size={19} />
+                이미 설치하셨다면
+              </h2>
+              <p class="lead">
+                r2modman 에 <Hi text="gaybar" ui />{" "}프로필이 이미 있다면 처음부터
+                다시 할 필요가 없습니다. 파일만 새로 받아 덮어쓰면 끝납니다.
+                1분이면 됩니다.
+              </p>
+            </div>
+
+            <Callout title="이럴 때 다시 받으시면 됩니다" tone="info">
+              서버 탭의 모드팩 갱신 날짜가 마지막으로 받은 날보다 뒤일 때, 또는
+              접속하려는데 모드 버전이 서버와 다르다는 창이 뜰 때입니다. 둘 다
+              아니라면 그대로 쓰셔도 됩니다.
+            </Callout>
+
+            <a class="dl" href={base(MODPACK_FILE)} download>
+              <span class="dl-ico" aria-hidden="true">
+                <Icon name="file-download" size={24} />
+              </span>
+              <span class="dl-txt">
+                <strong>프로필 파일 다시 받기</strong>
+                <span class="dl-sub">
+                  {latestChange
+                    ? `${formatChangeDate(latestChange.date)} 기준입니다. 패키지 ${modpackPackageCount}개가 버전까지 들어 있습니다`
+                    : `패키지 ${modpackPackageCount}개가 버전까지 들어 있습니다`}
+                </span>
+              </span>
+              <span class="dl-name mono">{MODPACK_FILE}</span>
+            </a>
+
+            <ol class="upg-steps">
+              <li>
+                <span class="upg-n">1</span>
+                <span class="upg-t">
+                  r2modman 을 켜고 <Hi text="Import / Update" ui />{" "}를 누른 뒤{" "}
+                  <Hi text="From file" ui />{" "}을 고르고 방금 받은 파일을 선택합니다.
+                  여기까지는 처음 설치할 때와 같습니다
+                </span>
+              </li>
+              <li>
+                <span class="upg-n">2</span>
+                <span class="upg-t">
+                  <Hi text="Update existing profile" ui />{" "}을 고릅니다.{" "}
+                  <strong>처음 설치와 다른 곳은 여기 하나뿐입니다.</strong>{" "}
+                  <Hi text="Import new profile" tone="caution" ui />{" "}을 누르면
+                  프로필이 하나 더 생겨서 헷갈립니다
+                </span>
+              </li>
+              <li>
+                <span class="upg-n">3</span>
+                <span class="upg-t">
+                  덮어쓸 프로필을 묻는 목록에서 <Hi text="gaybar" ui />{" "}를 고르고{" "}
+                  <Hi text="Import" ui />{" "}를 누릅니다. 바뀐 모드만 새로 받으므로
+                  처음보다 빨리 끝납니다
+                </span>
+              </li>
+              <li>
+                <span class="upg-n">4</span>
+                <span class="upg-t">
+                  <Hi text="Start modded" ui />{" "}로 게임을 켜고 서버에 들어옵니다.
+                  세이브와 설정은 그대로 남아 있습니다
+                </span>
+              </li>
+            </ol>
+
+            {/*
+              처음 설치 안내(4단계)와 같은 사진을 쓰지만 표시를 뒤집는다.
+              그쪽에서는 왼쪽이 눌러야 할 것이고 여기서는 오른쪽이다.
+              사진이 같은데 표시까지 같으면 반대로 누른다.
+            */}
+            <figure class="wiz-fig">
+              <Shot
+                src={base("guide/08-import-new-or-update.png")}
+                alt="기존 프로필을 고칠지 새로 만들지 묻는 화면. Import new profile 과 Update existing profile 두 버튼이 있습니다."
+                width={980}
+                height={301}
+                marks={[
+                  { x: 3.6, y: 67.5, w: 26.5, h: 20.5, tone: "caution" },
+                  { x: 29.9, y: 67.5, w: 31.2, h: 20.5, n: 1 },
+                ]}
+              />
+              <figcaption>
+                업데이트할 때는 오른쪽입니다. 처음 설치 안내에서는 왼쪽을
+                누르라고 되어 있으니 헷갈리지 마세요.
+              </figcaption>
+            </figure>
+
+            <Callout title="프로필을 덮어써도 세이브는 지워지지 않습니다" tone="success">
+              캐릭터와 월드는 r2modman 프로필이 아니라 발헤임 쪽에 저장됩니다.
+              덮어쓰는 것은 모드 목록과 버전뿐입니다.
+            </Callout>
+          </section>
+
+          <div class="upg-split">
+            <span>처음 설치하시나요? 아래 순서대로 하시면 됩니다</span>
+          </div>
 
           {/*
             단계 전환용 라디오다. 탭 전환과 같은 방식으로 CSS 형제 선택자만
@@ -1143,6 +1332,209 @@ const STEPS = [
      다른 카드보다 크게 보이도록 값 글자를 키운다. */
   .card-lead .v { font-size: 17px; }
   .card-lead .field { padding: 16px 20px; }
+
+  /* 모드팩 갱신 알림.
+
+     접속 정보 위에 놓이므로 무게가 그보다 가벼우면 안 되고, 그렇다고
+     화면을 혼자 차지해서도 안 된다. 그래서 카드 자체는 접속 정보와 같은
+     모양을 쓰고, 다시 받아야 할 때만 테두리와 배경으로 색을 올린다.
+
+     왼쪽에 띠를 긋지 않는다. 이 프로젝트에서 쓰지 않기로 한 장식이다. */
+  .upd { margin-bottom: 24px; }
+  .upd-card { padding: 18px 20px; }
+  .upd[data-hot="true"] .upd-card {
+    border-color: var(--warning);
+    background:
+      linear-gradient(rgb(196 99 74 / 0.07), rgb(196 99 74 / 0.07)),
+      var(--surface);
+    box-shadow: var(--shadow-card), var(--ring-warning);
+  }
+  .upd[data-hot="true"] .block-h .icon { color: var(--warning-bright); }
+
+  /* 판정 한 줄. 이것만 읽어도 무엇을 해야 하는지 알 수 있어야 한다. */
+  .upd-verdict {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--success-bright);
+  }
+  .upd[data-hot="true"] .upd-verdict { color: var(--warning-bright); }
+
+  .upd-sum {
+    margin: 10px 0 0;
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--text);
+    max-width: var(--measure);
+  }
+  .upd-when {
+    display: flex;
+    gap: 7px;
+    margin: 12px 0 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    max-width: var(--measure);
+  }
+  .upd-when .icon { flex: none; margin-top: 3px; color: var(--text-faint); }
+  .upd-when time { color: var(--text); font-weight: 600; }
+
+  /* 설치 가이드 탭으로 보내는 버튼. label 이라 JavaScript 없이 탭이
+     바뀐다. 누르는 것이므로 커서와 눌림 반응을 버튼처럼 준다. */
+  .upd-go {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding: 11px 18px;
+    border: 1px solid var(--warning);
+    border-radius: var(--radius-sm);
+    background: var(--warning);
+    color: var(--bg-deep);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 180ms ease, border-color 180ms ease, transform 180ms var(--ease-out);
+  }
+  .upd-go:hover {
+    background: var(--warning-bright);
+    border-color: var(--warning-bright);
+  }
+  .upd-go:active { transform: translateY(1px); }
+  .upd-go .icon { transition: transform 180ms var(--ease-out); }
+  .upd-go:hover .icon { transform: translateX(3px); }
+
+  .upd-log { margin-top: 16px; }
+  .upd-log summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .upd-log summary:hover { color: var(--text); }
+  .upd-log ul {
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 10px;
+  }
+  .upd-log li {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-dim);
+    max-width: var(--measure);
+  }
+  .upd-log time {
+    display: block;
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .upd-go,
+    .upd-go .icon { transition: none; }
+    .upd-go:active { transform: none; }
+    .upd-go:hover .icon { transform: none; }
+  }
+
+  /* 설치 가이드 탭의 "이미 설치하셨다면" 구역.
+
+     위저드보다 앞에 오지만 위저드처럼 화면을 차지하면 안 된다. 읽을 것이
+     네 줄뿐이라 카드 하나로 묶고, 아래 위저드와는 구분선으로 떼어 놓는다. */
+  /* 아래 위저드와 같은 패널로 만든다.
+
+     처음에는 패널 없이 요소만 늘어놓았는데, Callout 은 화면 끝까지 가고
+     글줄은 --measure 에서 끊겨 폭이 층층이 달라 보였다. 위저드와 같은
+     상자에 담으면 폭이 저절로 맞고 하나의 덩어리로 읽힌다. */
+  .upg {
+    margin: 0 0 8px;
+    padding: 36px 44px 32px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-panel);
+  }
+  .upg-h { margin-bottom: 14px; }
+  .upg-h h2 {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin: 0;
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  .upg-h h2 .icon { color: var(--accent); }
+  .upg-h .lead {
+    max-width: var(--measure);
+    margin: 8px 0 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-dim);
+  }
+  .upg .callout { margin-top: 14px; }
+  .upg .dl { margin-top: 16px; }
+  .upg .wiz-fig { margin-top: 18px; }
+
+  /* 번호를 원문자로 쓰지 않고 칩으로 그린다. 네 단계뿐이라 진행 표시는
+     필요 없지만 순서는 분명해야 한다. */
+  .upg-steps {
+    max-width: var(--measure);
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 12px;
+  }
+  .upg-steps li {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+  .upg-n {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--accent-deep);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .upg-t {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  /* 업데이트 안내와 처음 설치 위저드 사이의 구분선.
+     여기서부터 읽을 사람이 달라진다는 것을 보여 준다. */
+  .upg-split {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 32px 0 24px;
+    color: var(--text-faint);
+    font-size: 13px;
+  }
+  .upg-split::before,
+  .upg-split::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
 
   /* 서버 탭 오른쪽 요약 카드. */
   .side-card .side-row {
