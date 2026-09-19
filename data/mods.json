@@ -177,7 +177,7 @@
     {
       "id": "MyLittleUI",
       "owner": "shudnal",
-      "version": "1.2.20",
+      "version": "1.2.22",
       "tier": 2,
       "name": "UI 편의 모음",
       "summary": "생산 시설 타이머, 아이템 툴팁, 상자 이름 바꾸기, 버프 목록 같은 자잘한 UI 편의 기능을 모아 놓았습니다",
@@ -212,7 +212,7 @@
     {
       "id": "ExtraSlots",
       "owner": "shudnal",
-      "version": "1.2.10",
+      "version": "1.2.11",
       "tier": 3,
       "name": "장비/음식/탄약 확장 슬롯",
       "summary": "장비, 음식, 탄약, 유틸리티 전용 슬롯이 인벤토리 옆에 따로 생깁니다",
