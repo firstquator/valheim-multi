@@ -27,6 +27,7 @@ const TABS = [
   { id: "server", label: "서버", icon: "home-01" },
   { id: "mods", label: "모드", icon: "package-02" },
   { id: "install", label: "설치 가이드", icon: "download-04" },
+  { id: "dex", label: "도감", icon: "book-open-01" },
   { id: "world", label: "월드", icon: "globe-02" },
 ];
 
@@ -1164,6 +1165,64 @@ const STEPS = [
           </div>
         </div>
 
+        <div slot="dex">
+          <PageHead
+            kicker="게임에 있는 것 전부"
+            title="도감"
+            icon="book-open-01"
+            desc="이름으로 찾거나 진행 단계로 좁혀 보세요. 아이템을 누르면 능력치와 만드는 법이 나옵니다."
+          >
+            <div class="count-pills" slot="aside">
+              <span class="pill">
+                <Icon name="package-02" size={14} />
+                <span id="dex-count">불러오는 중</span>
+              </span>
+            </div>
+          </PageHead>
+
+          {/*
+            이 탭만 자바스크립트로 그린다. 아이템이 1000 개가 넘어
+            정적 마크업으로 만들면 HTML 이 수 메가가 되고, 검색과
+            걸러내기도 할 수 없다. 데이터는 public/items.json 에서
+            받아 온다.
+
+            이름과 설명은 게임 파일에 들어 있는 공식 한국어다.
+            손으로 옮기지 않았으므로 게임 안에서 보는 말과 같다.
+          */}
+          <div class="dex-tools">
+            <label class="dex-search">
+              <Icon name="search-01" size={18} />
+              <input
+                type="search"
+                id="dex-q"
+                placeholder="이름으로 찾기 (한국어, 영어 모두 됩니다)"
+                autocomplete="off"
+              />
+            </label>
+            <div class="dex-filter">
+              <span class="dex-f-label">진행 단계</span>
+              <div class="dex-chips" id="dex-stages"></div>
+            </div>
+            <div class="dex-filter">
+              <span class="dex-f-label">종류</span>
+              <div class="dex-chips" id="dex-groups"></div>
+            </div>
+          </div>
+
+          <div class="dex-grid" id="dex-grid">
+            <p class="dex-empty">아이템 정보를 불러오는 중입니다.</p>
+          </div>
+
+          <div class="dex-modal" id="dex-modal" hidden>
+            <div class="dex-panel" role="dialog" aria-modal="true" aria-label="아이템 상세">
+              <button class="dex-close" id="dex-close" type="button" aria-label="닫기">
+                <Icon name="cancel-01" size={18} />
+              </button>
+              <div id="dex-detail"></div>
+            </div>
+          </div>
+        </div>
+
         <div slot="world">
           <PageHead
             kicker="이 서버의 규칙"
@@ -1227,6 +1286,7 @@ const STEPS = [
 
     <script>
       import "../islands/LiveStatus.js";
+      import "../islands/ItemDex.js";
     </script>
   </body>
 </html>
@@ -1536,6 +1596,250 @@ const STEPS = [
     background: var(--border);
   }
 
+
+  /* ===== 도감 =====
+     아이템이 1000 개가 넘는다. 화면을 꽉 채우는 격자로 훑게 하고,
+     자세한 것은 눌렀을 때만 보여 준다. */
+
+  .dex-tools {
+    display: grid;
+    gap: 14px;
+    margin-bottom: 22px;
+  }
+  .dex-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color 160ms ease, box-shadow 160ms ease;
+  }
+  .dex-search:focus-within {
+    border-color: var(--accent);
+    box-shadow: var(--ring-accent);
+  }
+  .dex-search .icon { color: var(--text-faint); flex: none; }
+  .dex-search input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 15px;
+  }
+  .dex-search input::placeholder { color: var(--text-faint); }
+  /* 검색창의 기본 지우기 단추는 다크 테마에서 검게 나와 안 보인다. */
+  .dex-search input::-webkit-search-cancel-button { filter: invert(0.7); }
+
+  .dex-filter { display: flex; align-items: baseline; gap: 12px; }
+  .dex-f-label {
+    flex: none;
+    width: 62px;
+    font-size: 12.5px;
+    color: var(--text-faint);
+  }
+  .dex-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dex-chip {
+    padding: 6px 13px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-dim);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+  }
+  .dex-chip:hover { color: var(--text); border-color: var(--border-strong); }
+  .dex-chip.on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg-deep);
+    font-weight: 700;
+  }
+
+  .dex-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 10px;
+  }
+  .dex-card {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 10px 12px;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-family: var(--font-sans);
+    transition: border-color 160ms ease, transform 160ms var(--ease-out), background 160ms ease;
+  }
+  .dex-card:hover {
+    border-color: var(--accent);
+    background: var(--surface-raised);
+    transform: translateY(-2px);
+  }
+  .dex-ico {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+  }
+  .dex-ico img { width: 40px; height: 40px; object-fit: contain; }
+  .dex-noicon {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    border: 1px dashed var(--border-strong);
+  }
+  .dex-txt { min-width: 0; display: grid; gap: 2px; }
+  .dex-name {
+    font-size: 14px;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .dex-meta { font-size: 11.5px; color: var(--text-faint); }
+
+  .dex-more {
+    grid-column: 1 / -1;
+    padding: 14px;
+    margin-top: 6px;
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--border-strong);
+    background: none;
+    color: var(--text-dim);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .dex-more:hover { color: var(--text); border-color: var(--accent); }
+  .dex-empty {
+    grid-column: 1 / -1;
+    padding: 40px 0;
+    text-align: center;
+    color: var(--text-faint);
+  }
+
+  /* 상세. 카드가 작아 정보를 다 못 담으므로 눌렀을 때 덮어서 보여 준다. */
+  .dex-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    background: rgb(0 0 0 / 0.62);
+  }
+  .dex-modal[hidden] { display: none; }
+  .dex-panel {
+    position: relative;
+    width: min(560px, 100%);
+    max-height: min(82vh, 760px);
+    overflow-y: auto;
+    padding: 26px 28px 24px;
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-panel);
+  }
+  .dex-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-sunken);
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+  .dex-close:hover { color: var(--text); border-color: var(--border-strong); }
+
+  .dex-d-head { display: flex; align-items: center; gap: 16px; padding-right: 40px; }
+  .dex-d-ico { flex: none; width: 64px; height: 64px; display: grid; place-items: center; }
+  .dex-d-ico img { width: 64px; height: 64px; object-fit: contain; }
+  .dex-d-head h3 { margin: 0; font-size: 21px; font-weight: 800; color: var(--text); }
+  .dex-d-en { margin: 2px 0 0; font-size: 13px; color: var(--text-faint); }
+  .dex-d-stage {
+    display: inline-block;
+    margin: 7px 0 0;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--accent-bright);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .dex-d-desc {
+    margin: 16px 0 0;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-dim);
+  }
+  .dex-d-sec { margin-top: 20px; }
+  .dex-d-sec h4 {
+    margin: 0 0 9px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+  }
+  .dex-dmgs { display: flex; flex-wrap: wrap; gap: 7px; }
+  .dex-dmg {
+    padding: 5px 11px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text);
+  }
+  .dex-dmg b { color: var(--text-dim); font-weight: 600; margin-right: 5px; }
+
+  .dex-dl { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 0; }
+  .dex-dl > div {
+    padding: 9px 12px;
+    background: var(--surface-raised);
+    border-radius: var(--radius-sm);
+  }
+  .dex-dl dt { font-size: 11.5px; color: var(--text-faint); }
+  .dex-dl dd { margin: 2px 0 0; font-size: 14px; color: var(--text); }
+
+  .dex-how { margin: 0; font-size: 14px; line-height: 1.65; color: var(--text); }
+  .dex-how em { color: var(--text-faint); font-style: normal; font-size: 13px; }
+  .dex-mats { list-style: none; margin: 11px 0 0; padding: 0; display: grid; gap: 6px; }
+  .dex-mats li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--surface-raised);
+    border-radius: var(--radius-sm);
+  }
+  .dex-mat-ico { flex: none; width: 24px; height: 24px; display: grid; place-items: center; }
+  .dex-mat-ico img { width: 24px; height: 24px; object-fit: contain; }
+  .dex-mat-n { flex: 1; font-size: 14px; color: var(--text); }
+  .dex-mat-a { font-size: 14px; font-weight: 700; color: var(--accent-bright); }
+  .dex-mat-a em { color: var(--text-faint); font-style: normal; font-weight: 400; font-size: 12px; }
+
+  .dex-d-id { margin: 20px 0 0; font-size: 11.5px; color: var(--text-faint); }
+  .dex-d-id code { font-family: var(--font-mono); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dex-card, .dex-chip, .dex-search { transition: none; }
+    .dex-card:hover { transform: none; }
+  }
+
   /* 서버 탭 오른쪽 요약 카드. */
   .side-card .side-row {
     padding: 14px 18px;
@@ -1616,7 +1920,7 @@ const STEPS = [
     margin: 6px 0 0;
     font-size: 14px;
     color: var(--text-dim);
-    text-wrap: pretty;
+    text-wrap: balance;
   }
 
 
@@ -1848,7 +2152,7 @@ const STEPS = [
   .dl-sub,
   .side-note,
   .spec-n {
-    text-wrap: pretty;
+    text-wrap: balance;
   }
 
   /* 마지막 화면은 할 일이 없어 내용이 짧다. 카드 높이는 단계마다 같아야

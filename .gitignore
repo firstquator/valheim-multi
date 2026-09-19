@@ -24,3 +24,6 @@ Thumbs.db
 # Playwright MCP 실물 확인 산출물
 .playwright-mcp/
 agent/apply-server-changes.log
+
+# 도감 데이터 추출 중 생기는 파이썬 캐시
+scripts/itemdb/__pycache__/

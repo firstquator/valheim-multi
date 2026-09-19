@@ -3,6 +3,16 @@ interface Props {
   tabs: { id: string; label: string }[];
 }
 const { tabs } = Astro.props;
+
+// 어떤 라디오가 어떤 패널을 여는지는 탭 목록에서 만든다.
+//
+// 처음에는 이 규칙을 아래 style 블록에 손으로 적어 두었다. 그래서 탭을
+// 하나 추가했을 때 사이드바에는 나타나는데 본문은 빈 화면이 나왔다.
+// 규칙에 그 id 가 없었기 때문이다. 목록에서 만들면 그런 일이 없다.
+const openRules = tabs
+  .map((t) => `#tab-${t.id}:checked ~ .tabs .panel[data-tab="${t.id}"]`)
+  .join(",\n");
+const openCss = `${openRules} { display: block; animation: tab-fade 180ms ease; }`;
 ---
 
 <div class="tabs">
@@ -15,18 +25,16 @@ const { tabs } = Astro.props;
   </div>
 </div>
 
+{/* 라디오는 이 컴포넌트 밖(index.astro 최상단)에 있어 스코프가 다르다.
+    그래서 전역으로 넣는다. 위에서 만든 문자열을 그대로 쓴다. */}
+<style is:global set:html={openCss}></style>
+
 <style>
   /* 라디오 입력은 이 컴포넌트 안이 아니라 index.astro 최상단에 있다.
      Tabs 와 Sidebar 둘 다 라디오의 형제여야 `~` 선택자가 양쪽에 닿는다. */
   .panel { display: none; }
-  :global(#tab-server:checked) ~ .tabs .panel[data-tab="server"],
-  :global(#tab-mods:checked) ~ .tabs .panel[data-tab="mods"],
-  :global(#tab-install:checked) ~ .tabs .panel[data-tab="install"],
-  :global(#tab-world:checked) ~ .tabs .panel[data-tab="world"] {
-    display: block;
-    animation: fade 180ms ease;
-  }
-  @keyframes fade {
+
+  @keyframes tab-fade {
     from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: none; }
   }

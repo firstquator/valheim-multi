@@ -93,6 +93,41 @@ html, body {
      줄을 넘겨 "뭉쳐 다니는 쪽이 유리합니다" 같은 문장을 어색하게 자른다.
      긴 ASCII 값(주소, 패키지명)은 각 요소에서 break-all 로 되돌린다. */
   word-break: keep-all;
+
+}
+
+/* 줄 길이를 고르게 맞춘다.
+ *
+ * keep-all 만으로는 부족하다. 어절은 지켜지지만 문장 끝 한 덩어리가
+ * 혼자 다음 줄로 떨어지는 것은 막지 못한다. 측정해 보니 마지막 줄이
+ * 전체 폭의 22~32% 밖에 안 되는 문단이 네 개 있었다. "10분 정도
+ * 걸립니다." 한 조각만 아래로 내려가는 식이다.
+ *
+ * text-wrap: pretty 를 먼저 body 에 걸어 봤지만 화면이 전혀 달라지지
+ * 않았다. CSS.supports 는 true 를 주는데도 그랬다. 크로미움의 pretty 는
+ * 마지막 줄만 손보는 좁은 구현이라 한국어와 keep-all 조합에서는 끊는
+ * 자리를 바꾸지 않는다. 그래서 balance 를 쓴다. 이쪽은 모든 줄을 고르게
+ * 맞추므로 두세 줄짜리 문단에서 짧은 꼬리가 아예 생기지 않는다.
+ *
+ * 긴 본문에는 쓰지 않는다. 크로미움은 일정 줄 수를 넘으면 balance 를
+ * 그냥 무시하고, 계산도 줄 수에 비례해 무거워진다. 아래 목록은 전부
+ * 서너 줄 안에 끝나는 짧은 설명이다. */
+h1, h2, h3, h4,
+.wiz-title,
+figcaption,
+.callout strong,
+.callout p,
+.lead,
+.wiz-lead,
+.head-desc,
+.upg-t,
+.upd-sum,
+.upd-when,
+.dl-sub,
+.side-note,
+.ticks li span,
+.upg-h .lead {
+  text-wrap: balance;
 }
 
 /* 화면 위쪽에 아주 옅은 모닥불 빛을 깔아 상단이 무겁지 않게 한다.

@@ -62,8 +62,10 @@ const iconName = icon ?? DEFAULT_ICON[tone];
     color: var(--text-dim);
 
     /* 마지막 줄에 한 어절만 떨어지면 문장이 끊긴 것처럼 읽힌다.
-       줄을 고르게 나누는 일은 브라우저에 맡긴다. */
-    text-wrap: pretty;
+       줄을 고르게 나누는 일은 브라우저에 맡긴다.
+       pretty 가 아니라 balance 다. 크로미움의 pretty 는 한국어와
+       keep-all 조합에서 끊는 자리를 바꾸지 않는다. tokens.css 참고. */
+    text-wrap: balance;
   }
 
   /* 아이콘을 칩 안에 넣어 색을 채운다. 띠 없이도 블록의 성격이 한눈에 들어온다. */

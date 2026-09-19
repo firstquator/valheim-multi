@@ -1,0 +1,81 @@
+# 도감 데이터 만들기
+
+`data/items.json` 과 `web/public/items/*.webp` 를 게임 파일에서 직접 뽑는다.
+
+## 왜 게임 파일인가
+
+처음에는 발헤임 위키(Fandom)를 긁으려 했다. 60 개를 시험해 보니 4 개만
+맞았다. 1.0 에서 들어온 것들(딥 노스 재료, 드레스, 고대 보석)이 위키에
+아직 없어서다. 게임 파일에는 지금 서버가 돌리는 그 버전의 내용이 그대로
+들어 있고, **한국어 번역도 공식 그대로** 가져올 수 있다.
+
+## 준비
+
+```
+pip install UnityPy Pillow
+```
+
+서버 컨테이너에서 게임 파일을 꺼낸다. 두 가지가 필요하다.
+
+```
+docker cp valheim:/opt/valheim/server/valheim_server_Data/resources.assets <작업폴더>/
+docker cp valheim:/opt/valheim/server/valheim_server_Data/StreamingAssets/SoftRef/Bundles <작업폴더>/bundles/
+```
+
+번들은 1.7GB 다. 그중 실제로 쓰는 것은 두 개뿐이다.
+
+- `c4210710` 아이템 prefab 과 레시피 (724MB)
+- `6a33a62` 아이콘 스프라이트 1513 개 (7.5MB)
+
+## 순서
+
+1. **로컬라이제이션.** `resources.assets` 안에 언어별 CSV 가 통째로 들어
+   있다. 첫 줄이 언어 헤더이고 한국어는 27 번째 칸이다. `item_wood,Wood,
+   Trä,...,나무,...` 같은 모양이라 텍스트 경계를 훑어 꺼낸 뒤 CSV 로 읽는다.
+   결과는 `loc.json` (키 5570 개).
+
+2. **아이템과 레시피.** `python extract.py <작업폴더>`
+   ItemDrop 1519 개와 Recipe 481 개가 나온다. 무게, 데미지 종류별 수치,
+   방어력, 음식 회복량, 내구도가 전부 들어 있다.
+
+3. **아이콘 참조.** `python icons_refs.py <작업폴더>`
+   큰 번들에서 "prefab 이름 → 아이콘 PathID" 만 꺼낸다. 이미지까지 같이
+   처리하면 메모리가 터진다. 실제로 994 개 중 21 개에서 죽었다.
+
+4. **아이콘 저장.** `python icons_save.py <작업폴더> <출력폴더> 120`
+   PathID 로 스프라이트를 찾아 webp 로 굽는다. 한 번에 다 못 하므로
+   이미 만든 것은 건너뛰게 해 두었다. `남은 것 0` 이 나올 때까지 부른다.
+
+   이름으로 맞추려던 방식은 버렸다. 아이콘 이름이 prefab 과 달라
+   (`AncientCoin` 의 아이콘은 `coin_ancient`) 1070 개 중 704 개밖에
+   맞지 않았다. 참조를 따라가면 이름과 무관하게 정확하다.
+
+5. **병합.** `python build.py <작업폴더> <저장소루트> <아이콘폴더>`
+   위 조각들을 합쳐 `data/items.json` 을 쓴다.
+
+6. **배포본에 반영.**
+   ```
+   cp data/items.json web/public/items.json
+   cp <아이콘폴더>/*.webp web/public/items/
+   ```
+   이걸 잊으면 사이트가 옛 내용을 보여 준다. `tests/itemdex.test.mjs` 가
+   두 파일이 같은지 검사하므로 `npm test` 로 걸린다.
+
+## 진행 단계는 어디서 오나
+
+게임 데이터에 "이 아이템은 늪부터" 같은 값은 없다. `stages.py` 에 기본
+재료마다 바이옴을 적어 두고, 제작품은 레시피를 따라 올라가며 계산한다.
+재료 중 가장 늦은 것과 제작대가 열리는 시점 중 더 뒤가 그 아이템의 단계다.
+
+조리한 음식은 레시피가 Recipe 가 아니라 화덕의 변환표에 있어 이 경로로
+잡히지 않는다. 이름에 재료가 들어 있는 경우가 많아(`CookedLoxMeat` →
+`LoxMeat`) 마지막에 이름으로 짐작한다. 짐작한 것은 `stageGuessed: true`
+로 표시해 둔다.
+
+지금 1086 개 중 841 개가 정해진다. 남는 245 개는 대부분 머리와 수염이라
+단계라는 개념이 없다.
+
+## 게임이 올라가면
+
+버전이 바뀌면 1 번부터 다시 한다. `stages.py` 의 표는 그대로 두되, 새
+바이옴이나 새 기본 재료가 들어왔으면 거기에 추가한다.
