@@ -26,6 +26,45 @@
 - `ServersideQoL_Player` (무한 스태미나)
 - `ValheimPlus` 계열의 배수 설정, 무게 제한 증가, 사망 페널티 제거
 
+### 적용 완료 (2026-09-19 09:30) 및 그때 겪은 것
+
+예약은 06:00 에 돌았고 **접속자가 1명 있어서 안전장치가 작동해 재시작하지 않았다.** 의도한 동작이다. 09:15 에 접속자 0명을 확인하고 수동으로 적용했다.
+
+적용 확인 결과다.
+
+| 항목 | 확인 방법 | 결과 |
+|---|---|---|
+| 자원 2배 | 실행 인자와 status.json keywords | `-modifier resources muchmore`, `4=150` -> `4=200` |
+| 건물 파괴 불가 | cfg 값 | `MakeIndestructible = true` |
+| 비 피해 차단 | cfg 값 | `DisableRainDamage = true` |
+| 건설 무한 스태미나 | cfg 값 | `InfiniteBuildingStamina = true` |
+| 문 자동 닫힘 해제 | cfg 값 | `Enabled = false` |
+
+플러그인 21개 로드, 패처 2개, 오류 0건.
+
+#### 적용 중 겪은 문제 둘
+
+**1. 컨테이너 재생성이 게임 2.2GB 재다운로드를 유발했다.**
+
+`.env` 에 `SERVER_ARGS` 를 추가하면 compose 설정 해시가 바뀌어 `docker compose up -d` 가 컨테이너를 **재생성**한다. 게임 파일은 볼륨이 아니라 컨테이너 안(`/opt/valheim`)에 있어서 그때 전부 사라지고 다시 받는다.
+
+환경 변수를 바꿀 때는 재생성이 불가피하다. 다만 **그 비용을 알고 시작해야 한다.** 설정 파일만 바꾸는 경우라면 `docker compose restart` 로 충분하고 재다운로드가 없다.
+
+**2. 재생성 직후 BepInEx 설치가 실패했다.**
+
+```
+unzip: cannot find or open BepInEx.zip
+ERROR - Failed to extract and install BepInEx - retrying later
+```
+
+그 뒤 `Valheim Server is not yet downloaded - waiting` 루프에 빠진다. 이 프로젝트에서 두 번째로 겪은 같은 실패다.
+
+**복구는 `docker compose restart` 다. `up -d` 로 재생성하면 안 된다.** 게임을 또 받는다. 재시작만으로 BepInEx 를 다시 받아 41초 만에 복구됐다.
+
+**3. 게임 버전이 1.0.14 에서 1.0.15 로 올라갔다.**
+
+`UPDATE_CRON` 을 비워 자동 업데이트를 막아 뒀지만, 재생성은 그 설정과 무관하게 최신 버전을 받는다. 결과적으로 모드는 전부 정상 로드됐지만(21개, 오류 0건), **재생성은 게임 버전을 올린다는 점을 기억해야 한다.** 모드 호환이 깨질 수 있는 경로다.
+
 ### 예약 적용 (2026-09-19 06:00)
 
 접속자가 8명이라 낮에 재시작할 수 없어서 새벽으로 예약했다. 준비는 전날 밤에 끝냈고 6시에는 재시작만 한다.
