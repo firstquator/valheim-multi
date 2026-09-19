@@ -187,6 +187,53 @@ npm --prefix web run dev
 
 # 6단계. 작업 스케줄러로 상시 실행 등록
 
+> **이 단계는 끝나 있다.** `valheim-status-publisher` 작업이 등록되어 로그온 시 자동 시작한다.
+> 아래는 다시 만들거나 문제를 고칠 때를 위한 설명이다.
+
+## 등록하면서 겪은 것 셋
+
+**1. `-AtStartup`(부팅 시) 트리거는 관리자 권한이 필요하다.** 권한 없이 등록하면 `Access is denied` 가 난다. `-AtLogOn`(로그온 시)으로 등록했다. Docker Desktop 도 로그온 후에 뜨므로 어차피 그때가 맞다.
+
+**2. `.cmd` 파일에 한글 주석을 넣으면 안 된다.**
+
+작업 스케줄러가 부르는 `cmd.exe` 는 배치 파일을 **시스템 코드 페이지**(한국어 Windows 는 CP949)로 읽는다. UTF-8 한글 바이트가 잘못 해석되면서 줄바꿈까지 삼켜 명령이 붙어버린다. 실제로 이런 오류가 났다.
+
+```
+'t' is not recognized as an internal or external command
+'\.env' is not recognized as an internal or external command
+```
+
+그래서 `agent/run-status-publisher.cmd` 와 `scripts/apply-server-changes.cmd` 는 **ASCII 로만 쓴다.** 설명은 이 문서에 남긴다. `.gitattributes` 로 `*.cmd` 를 CRLF 로 고정해 두었다.
+
+**3. 고아 `node` 프로세스가 남으면 새 인스턴스가 바로 죽는다.**
+
+수동으로 시험하다가 `cmd.exe` 만 종료하면 그 아래 `node` 가 살아남는다. 그 프로세스가 로그 파일을 잡고 있어서 작업 스케줄러가 띄운 새 인스턴스가 결과 코드 1 로 즉시 종료된다.
+
+증상이 헷갈린다. 로그는 계속 쌓이는데(고아가 쓰는 것) 작업은 `Ready` 로 보인다. 확인 방법은 이렇다.
+
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='node.exe'" |
+  Where-Object { $_.CommandLine -like "*status-publisher*" }
+```
+
+정상이면 작업 상태가 `Running`, 마지막 결과가 `267009`(실행 중)다.
+
+## 등록 명령
+
+```powershell
+$repo = "C:\Users\SangHyeonLee\orca\valheim-multi"
+$action  = New-ScheduledTaskAction -Execute "$repo\agent\run-status-publisher.cmd" -WorkingDirectory $repo
+$trigger = New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -AllowStartIfOnBatteries `
+  -DontStopIfGoingOnBatteries -RestartInterval (New-TimeSpan -Minutes 1) -RestartCount 3 `
+  -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Days 0)
+Register-ScheduledTask -TaskName "valheim-status-publisher" -Action $action -Trigger $trigger -Settings $settings -Force
+```
+
+`ExecutionTimeLimit` 을 0 으로 두는 것이 중요하다. 기본값은 3일이라 그때 강제 종료된다.
+
+## 원래 절차 (참고)
+
 수동 실행은 터미널을 닫으면 같이 끊긴다. PC 를 켜두는 동안 계속 돌게 하려면 Windows 작업 스케줄러에 등록한다.
 
 ## 6-1. 실행용 스크립트
