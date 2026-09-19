@@ -5,6 +5,11 @@
     "r2modmanCode": null,
     "changes": [
       {
+        "date": "2026-09-20",
+        "summary": "포털 목적지를 목록에서 고르는 XPortal 을 넣었습니다. 이제 포털끼리 이름을 맞출 필요가 없습니다. 전원이 같은 버전을 깔아야 하므로 프로필을 다시 받아 주세요.",
+        "mustUpdate": true
+      },
+      {
         "date": "2026-09-19",
         "summary": "게임이 1.0.15 로 올라가면서 ExtraSlots 1.2.10 이 동작하지 않게 됐습니다. 1.2.11 로 올렸고, MyLittleUI 도 1.2.22 로 함께 올렸습니다.",
         "mustUpdate": true
@@ -282,6 +287,17 @@
       "summary": "배, 수레, 공성 장비를 병 아이템으로 줄여서 들고 다니다가 필요한 곳에서 원래 크기로 펼칠 수 있습니다",
       "usage": "설치 가이드의 프로필 파일로 반드시 설치해야 합니다. 제작자가 서버와 접속하는 모든 클라이언트 양쪽에 설치해야 한다고 명시했습니다",
       "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/sighsorry/BottleShips/",
+      "warnings": []
+    },
+    {
+      "id": "XPortal",
+      "owner": "SpikeHimself",
+      "version": "1.2.25",
+      "tier": 3,
+      "name": "포털 목적지 고르기",
+      "summary": "포털끼리 같은 이름을 맞춰 짝지을 필요가 없어집니다. 포털을 열면 지금까지 세운 포털이 목록으로 뜨고, 가고 싶은 곳을 고르면 그리로 연결됩니다",
+      "usage": "포털에 대고 상호작용하면 목록이 나옵니다. 목록에는 각 포털까지의 거리도 같이 적힙니다. 이름 길이 제한이 없어져 긴 이름을 붙일 수 있고, 목록 옆 Ping 을 누르면 그 포털 위치가 지도에 찍히면서 접속한 사람 모두에게 표시됩니다. 게임 언어를 한국어로 두면 메뉴도 한국어로 나옵니다",
+      "thunderstoreUrl": "https://thunderstore.io/c/valheim/p/SpikeHimself/XPortal/",
       "warnings": []
     },
     {
