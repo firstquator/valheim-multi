@@ -13,7 +13,7 @@
 """
 import json, io, os, sys, collections
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from stages import STAGES, STATION_STAGE, base_stage
+from stages import STAGES, STATION_STAGE, CONVERTER_STAGE, base_stage
 
 SP = sys.argv[1]
 ROOT = sys.argv[2]
@@ -23,6 +23,7 @@ g = json.load(io.open(SP + '/game_items.json', encoding='utf-8'))
 raw = json.load(io.open(SP + '/items_raw.json', encoding='utf-8'))
 loc = json.load(io.open(SP + '/loc.json', encoding='utf-8'))
 stations = json.load(io.open(SP + '/stations.json', encoding='utf-8'))
+conv_raw = json.load(io.open(SP + '/conversions.json', encoding='utf-8'))
 have_icon = set(f[:-5] for f in os.listdir(ICONS) if f.endswith('.webp'))
 
 dp = {int(k): v for k, v in g['dropPath'].items()}
@@ -69,6 +70,28 @@ def _name(spec, lang):
         return None
     return ' '.join(out)
 
+# 설비 변환표. 고기를 굽고 광석을 녹이는 것은 Recipe 가 아니라 설비가
+# 들고 있는 표에 들어 있다. 결과물 이름을 열쇠로 정리한다.
+conv_drop = {int(k): v for k, v in conv_raw['dropPath'].items()}
+conversions = {}
+for c in conv_raw['convs']:
+    for r in c['rows']:
+        src = conv_drop.get(r['from'])
+        dst = conv_drop.get(r['to'])
+        if not src or not dst:
+            continue
+        # 같은 결과를 여러 설비에서 만들 수 있다. 먼저 열리는 쪽을 남긴다.
+        cur = conversions.get(dst)
+        if cur and CONVERTER_STAGE.get(cur['station'], 9) <= CONVERTER_STAGE.get(c['station'], 9):
+            continue
+        conversions[dst] = {
+            'station': c['station'],
+            'from': src,
+            'cookTime': r.get('cookTime'),
+            'produced': r.get('produced'),
+        }
+
+
 def ko(key, fallback=''):
     return _name(key, 'ko') or fallback
 
@@ -100,6 +123,7 @@ for prefab, d in g['items'].items():
         'value': d.get('value'),
         'damages': {k: v for k, v in (d.get('damages') or {}).items() if v},
         'recipe': recipes.get(prefab),
+        'conversion': conversions.get(prefab),
         'icon': prefab if prefab in have_icon else None,
         'stage': None,
     }
@@ -108,12 +132,25 @@ for prefab, d in g['items'].items():
 #    기본 재료는 표에서, 제작품은 재료와 제작대를 따라 올라가며 계산한다.
 #    재료가 또 제작품일 수 있어 값이 더 안 변할 때까지 반복한다.
 for p, it in items.items():
-    if not it['recipe']:
+    if not it['recipe'] and not it['conversion']:
         it['stage'] = base_stage(p)
 
 for _ in range(12):
     changed = False
     for p, it in items.items():
+        cv = it['conversion']
+        if cv:
+            # 구운 고기는 날고기가 나오는 시점과 화덕이 열리는 시점 중
+            # 뒤쪽부터 먹을 수 있다.
+            src = items.get(cv['from'], {}).get('stage')
+            if src is None:
+                src = base_stage(cv['from'])
+            if src is not None:
+                v = max(src, CONVERTER_STAGE.get(cv['station'], 0))
+                if it['stage'] != v:
+                    it['stage'] = v
+                    changed = True
+            continue
         r = it['recipe']
         if not r:
             continue

@@ -50,10 +50,17 @@ docker cp valheim:/opt/valheim/server/valheim_server_Data/StreamingAssets/SoftRe
    (`AncientCoin` 의 아이콘은 `coin_ancient`) 1070 개 중 704 개밖에
    맞지 않았다. 참조를 따라가면 이름과 무관하게 정확하다.
 
-5. **병합.** `python build.py <작업폴더> <저장소루트> <아이콘폴더>`
+5. **변환표.** `python extract_conversions.py <작업폴더>`
+   고기를 굽고 광석을 녹이고 벌꿀술을 발효시키는 것은 Recipe 가 아니라
+   설비가 들고 있는 표(`m_conversion`)에 있다. 이걸 빼먹으면 요리와
+   금속이 전부 "채집하거나 몬스터를 잡아 얻습니다" 로 나온다.
+   설비 11 개에서 106 줄이 나온다. 화덕, 철 화덕, 돌 화덕, 용광로, 고로,
+   발효통, 숯가마, 풍차, 물레, 에이트르 정제소, 서리 주조소.
+
+6. **병합.** `python build.py <작업폴더> <저장소루트> <아이콘폴더>`
    위 조각들을 합쳐 `data/items.json` 을 쓴다.
 
-6. **배포본에 반영.**
+7. **배포본에 반영.**
    ```
    cp data/items.json web/public/items.json
    cp <아이콘폴더>/*.webp web/public/items/
@@ -67,12 +74,14 @@ docker cp valheim:/opt/valheim/server/valheim_server_Data/StreamingAssets/SoftRe
 재료마다 바이옴을 적어 두고, 제작품은 레시피를 따라 올라가며 계산한다.
 재료 중 가장 늦은 것과 제작대가 열리는 시점 중 더 뒤가 그 아이템의 단계다.
 
-조리한 음식은 레시피가 Recipe 가 아니라 화덕의 변환표에 있어 이 경로로
-잡히지 않는다. 이름에 재료가 들어 있는 경우가 많아(`CookedLoxMeat` →
-`LoxMeat`) 마지막에 이름으로 짐작한다. 짐작한 것은 `stageGuessed: true`
-로 표시해 둔다.
+설비 변환으로 얻는 것은 재료가 나오는 시점과 그 설비가 열리는 시점 중
+뒤가 기준이다. 구운 고기는 날고기가 나오고 화덕을 지은 뒤부터다.
 
-지금 1086 개 중 841 개가 정해진다. 남는 245 개는 대부분 머리와 수염이라
+그래도 남는 것은 이름에 재료가 들어 있는 경우가 많아(`CookedLoxMeat` →
+`LoxMeat`) 마지막에 이름으로 짐작한다. 짐작한 것은 `stageGuessed: true`
+로 표시해 둔다. 변환표를 넣은 뒤 짐작은 34 개에서 14 개로 줄었다.
+
+지금 1086 개 중 870 개가 정해진다. 남는 216 개는 대부분 머리와 수염이라
 단계라는 개념이 없다.
 
 ## 게임이 올라가면

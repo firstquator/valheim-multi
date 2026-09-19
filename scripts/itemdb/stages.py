@@ -37,6 +37,22 @@ STATION_STAGE = {
     "piece_magetable": 5,
 }
 
+# 굽고 녹이고 발효시키는 설비가 열리는 단계.
+# Recipe 가 아니라 설비의 변환표를 쓰는 것들이라 STATION_STAGE 와 따로 둔다.
+CONVERTER_STAGE = {
+    "piece_cookingstation": 0,       # 나무 꼬치. 시작하자마자 만든다
+    "charcoal_kiln": 1,              # 숯가마, 돌과 구리
+    "smelter": 1,                    # 용광로
+    "fermenter": 1,                  # 발효통, 청동이 필요하다
+    "piece_cookingstation_iron": 2,  # 철 화덕
+    "piece_oven": 4,                 # 돌 화덕, 철과 아마
+    "windmill": 4,                   # 풍차, 보리를 빻는다
+    "piece_spinningwheel": 4,        # 물레, 아마를 잣는다
+    "blastfurnace": 5,               # 용광로 상위, 안개 땅
+    "eitrrefinery": 5,               # 에이트르 정제소
+    "piece_FrostFoundry": 7,         # 서리 주조소, 딥 노스
+}
+
 # 기본 재료(제작할 수 없고 주워야 하는 것)의 단계.
 # 이름을 하나씩 적는다. 규칙으로 뭉뚱그리면 예외가 조용히 틀린다.
 BASE_STAGE = {

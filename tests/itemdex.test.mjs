@@ -54,6 +54,28 @@ describe("도감 데이터", () => {
     expect(missing).toEqual([]);
   });
 
+  it("변환표의 재료도 도감 안의 아이템을 가리킨다", () => {
+    // 굽고 녹이는 것은 Recipe 가 아니라 설비의 변환표에 들어 있다.
+    // from 이 도감에 없으면 상세에 이름 없는 칸이 뜬다.
+    const ids = new Set(db.items.map((i) => i.id));
+    const conv = db.items.filter((i) => i.conversion);
+    expect(conv.length).toBeGreaterThan(50);
+    for (const i of conv) {
+      expect(ids.has(i.conversion.from)).toBe(true);
+      expect(i.conversion.station).toBeTruthy();
+    }
+  });
+
+  it("변환으로 얻는 것은 단계가 정해져 있다", () => {
+    // 재료의 단계를 알면 결과물의 단계도 알 수 있다. 비어 있으면
+    // 계산이 끊긴 것이다.
+    const missing = db.items
+      .filter((i) => i.conversion)
+      .filter((i) => i.stage === null)
+      .map((i) => i.id);
+    expect(missing).toEqual([]);
+  });
+
   it("레시피 재료는 도감 안의 아이템을 가리킨다", () => {
     const ids = new Set(db.items.map((i) => i.id));
     let checked = 0;

@@ -85,7 +85,27 @@ function detail(it) {
     piece_artisanstation: "장인의 작업대", blackforge: "검은 단조장",
     piece_magetable: "마법 주입대", piece_cauldron: "가마솥",
     piece_preptable: "조리대", piece_MeadCauldron: "발효통",
+    // 아래는 Recipe 가 아니라 변환표를 쓰는 설비다.
+    piece_cookingstation: "화덕", piece_cookingstation_iron: "철 화덕",
+    piece_oven: "돌 화덕", fermenter: "발효통", smelter: "용광로",
+    blastfurnace: "고로", charcoal_kiln: "숯가마",
+    eitrrefinery: "에이트르 정제소", windmill: "풍차",
+    piece_spinningwheel: "물레", piece_FrostFoundry: "서리 주조소",
   };
+
+  // 굽고 녹이는 것은 재료가 하나뿐이라 레시피와 모양이 다르다.
+  const cv = it.conversion;
+  const cvSrc = cv ? state.byId.get(cv.from) : null;
+  const cvHtml = cv
+    ? `<p class="dex-how"><strong>${esc(stationKo[cv.station] ?? cv.station)}</strong>에 넣어서 얻습니다${
+        cv.cookTime ? ` <em>(${Math.round(cv.cookTime)}초)</em>` : ""
+      }${cv.produced > 1 ? ` <em>· ${cv.produced}개씩</em>` : ""}</p>
+      <ul class="dex-mats"><li>
+        <span class="dex-mat-ico">${cvSrc ? iconHtml(cvSrc, 24) : ""}</span>
+        <span class="dex-mat-n">${esc(cvSrc ? cvSrc.ko : cv.from)}</span>
+        <span class="dex-mat-a">1</span>
+      </li></ul>`
+    : "";
 
   return `
     <div class="dex-d-head">
@@ -104,12 +124,12 @@ function detail(it) {
     <div class="dex-d-sec">
       <h4>얻는 방법</h4>
       ${r ? `
-        <p class="dex-how">${r.station ? `${esc(stationKo[r.station] ?? r.station)}에서 제작` : "직접 제작"}${
-          r.minLevel > 1 ? ` <em>(작업대 ${r.minLevel}단계 이상)</em>` : ""
+        <p class="dex-how">${r.station ? `<strong>${esc(stationKo[r.station] ?? r.station)}</strong>에서 만듭니다` : "맨손으로 만듭니다"}${
+          r.minLevel > 1 ? ` <em>(${r.minLevel}단계 이상)</em>` : ""
         }${r.amount > 1 ? ` <em>· 한 번에 ${r.amount}개</em>` : ""}</p>
         ${mats ? `<ul class="dex-mats">${mats}</ul>` : ""}
-      ` : `<p class="dex-how">제작법이 없습니다. 채집하거나 몬스터를 잡아 얻습니다.${
-        it.stage === null ? "" : ` ${esc(stageLabel(it.stage))} 지역에서 나옵니다.`
+      ` : cvHtml || `<p class="dex-how">만드는 것이 아닙니다. 채집하거나 몬스터를 잡아 얻습니다.${
+        it.stage === null ? "" : ` ${esc(stageLabel(it.stage))}에서 나옵니다.`
       }</p>`}
     </div>
     <p class="dex-d-id">내부 이름 <code>${esc(it.id)}</code></p>`;
@@ -174,7 +194,12 @@ async function init() {
   const host = el("dex-grid");
   if (!host) return;
   try {
-    const res = await fetch(`${BASE}/items.json`, { cache: "force-cache" });
+    // force-cache 를 쓰면 안 된다. 만료를 무시하고 캐시를 먼저 쓰기 때문에,
+    // 도감을 새로 배포해도 친구 브라우저는 옛 목록을 계속 보여 준다.
+    // 실제로 요리 변환을 추가한 뒤에도 화면이 그대로였다.
+    // no-cache 는 캐시를 버리는 것이 아니라 서버에 "바뀌었나" 를 묻는 것이라,
+    // 안 바뀌었으면 304 로 끝나 전송량도 거의 들지 않는다.
+    const res = await fetch(`${BASE}/items.json`, { cache: "no-cache" });
     const db = await res.json();
     state.items = db.items;
     state.stages = db.stages;
