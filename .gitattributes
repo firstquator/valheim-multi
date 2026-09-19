@@ -1,0 +1,5 @@
+# Windows 배치 파일은 반드시 CRLF 여야 한다.
+# LF 로 저장되면 cmd.exe 가 줄을 제대로 끊지 못해
+# "'\.env' is not recognized" 같은 오류가 난다. 실제로 겪었다.
+*.cmd text eol=crlf
+*.bat text eol=crlf

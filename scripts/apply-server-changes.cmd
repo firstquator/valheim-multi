@@ -1,4 +1,9 @@
 @echo off
-REM 작업 스케줄러가 부르는 진입점. 콘솔 창 없이 돈다.
+rem Applies scheduled Valheim server changes. Restarts only when empty.
+rem
+rem ASCII only on purpose. See agentun-status-publisher.cmd for why.
+rem Korean documentation lives in docs/guides/mods.md
+
 cd /d "%~dp0.."
-node scripts\apply-server-changes.mjs >> agent\apply-server-changes.log 2>&1
+
+node scriptspply-server-changes.mjs >> agentpply-server-changes.log 2>&1
