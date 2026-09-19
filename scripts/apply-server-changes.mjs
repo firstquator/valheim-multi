@@ -1,20 +1,23 @@
-// 예약해 둔 서버 변경을 적용한다. 접속자가 없을 때만 재시작한다.
+// 사람이 없을 때 서버를 다시 띄운다. 매일 06시에 예약되어 있다.
 //
-// 왜 스크립트인가.
-// 변경 자체는 이미 끝나 있다. 모듈 DLL 은 볼륨에 넣었고 설정 파일도 미리
-// 써 두었으며 SERVER_ARGS 도 .env 에 있다. 전부 서버가 시작할 때 읽는
-// 것들이라 재시작만 하면 적용된다.
+// 처음에는 예약해 둔 설정(자원 2배 등)을 적용하려고 만들었다. 그 일은
+// 2026-09-19 에 끝났고, 지금 이 스크립트가 남아 있는 이유는 다른 데 있다.
+// 유니티 GC 가 도는 데 1.4 초까지 걸리고 그동안 서버가 통째로 멈추는데,
+// 오래 켜 둘수록 그 시간이 길어진다. 하루에 한 번 다시 띄우면 짧아진다.
 //
-// 그 재시작을 사람 없이 돌리려니 안전장치가 필요하다. 접속자가 있는데
-// 말없이 끊으면 안 된다. 그래서 인원을 먼저 확인하고, 0 이 아니면
-// 아무것도 하지 않고 종료한다.
+// 접속자가 있는데 말없이 끊으면 안 되므로 인원을 먼저 확인하고,
+// 0 이 아니면 아무것도 하지 않고 종료한다.
 //
-// 적용되는 것
-//   자원 2배            SERVER_ARGS=-modifier resources muchmore
-//   건물 파괴 불가       PrefabConfigurator / MakeIndestructible
-//   비 피해 차단         PrefabConfigurator / DisableRainDamage
-//   건설 무한 스태미나    Player / InfiniteBuildingStamina
-//   문 자동 닫힘 해제     AutoDoors / Enabled = false
+// restart 를 쓴다. up -d 가 아니다.
+//
+// 이 차이가 중요하다. 게임 파일은 볼륨이 아니라 컨테이너 안에 있어서,
+// up -d 가 컨테이너를 다시 만들면 2.2GB 를 새로 받는다. 그것만이면
+// 시간 문제지만 그때 게임 판올림도 같이 딸려 온다. 실제로 그렇게
+// 1.0.14 에서 1.0.15 로 올라가 친구들이 전원 못 들어온 적이 있다.
+// 모드 버전을 다시 맞추느라 하루가 갔다.
+//
+// compose 파일을 고쳐 그 내용을 반영해야 할 때는 사람이 직접
+// `docker compose up -d` 를 하되, 판올림을 감당할 수 있는 때에 한다.
 
 import { execFileSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
@@ -63,7 +66,8 @@ function main() {
   }
 
   log("접속자 0 명 확인. 재시작한다");
-  sh("docker", ["compose", "up", "-d"], { cwd: resolve(root, "server") });
+  // up -d 를 쓰지 않는다. 위의 주석을 본다.
+  sh("docker", ["compose", "restart"], { cwd: resolve(root, "server") });
 
   // 서버가 다시 뜰 때까지 기다린다. 컨테이너가 떴는지가 아니라
   // status.json 이 응답하는지로 판정한다. 컨테이너는 먼저 뜨고
