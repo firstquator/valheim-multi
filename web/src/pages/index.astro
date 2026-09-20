@@ -362,7 +362,7 @@ const STEPS = [
             icon="download-04"
             tone={needsAnyInstall ? "accent" : "success"}
             desc={needsAnyInstall
-              ? "이미 설치하셨다면 맨 위 안내만 보시면 됩니다. 처음이라면 그 아래 단계를 순서대로 넘기며 따라 하세요. 10분 정도 걸립니다."
+              ? "이미 설치하셨다면 맨 위 칸을 펼쳐 보세요. 1분이면 끝납니다. 처음이라면 그 아래 단계를 순서대로 넘기며 따라 하세요. 10분 정도 걸립니다."
               : "지금은 따라 할 필요가 없습니다. 앞으로 설치가 필요한 모드가 생겼을 때를 위해 적어 둡니다."}
           />
 
@@ -392,19 +392,35 @@ const STEPS = [
 
             그래서 위저드보다 앞에 두고, 처음 설치와 다른 곳만 적는다.
             처음인 사람은 제목을 보고 건너뛴다.
+
+            접어 둔다. 펼친 채로 두면 이 탭을 처음 여는 사람이 자기와
+            상관없는 네 단계를 먼저 읽고 나서야 진짜 1단계에 닿는다.
+            제목과 한 줄 요약만 보이면 자기 것인지 아닌지 바로 가른다.
+
+            details 를 쓴다. 탭과 위저드가 그렇듯 여기도 자바스크립트가
+            필요 없고, 열고 닫기와 키보드 조작을 브라우저가 맡는다.
           */}
-          <section class="upg" id="update">
-            <div class="upg-h">
-              <h2>
+          <details class="upg" id="update">
+            <summary class="upg-sum">
+              <span class="upg-sum-ico" aria-hidden="true">
                 <Icon name="system-update-01" size={19} />
-                이미 설치하셨다면
-              </h2>
-              <p class="lead">
-                r2modman 에 <Hi text="gaybar" ui />{" "}프로필이 이미 있다면 처음부터
-                다시 할 필요가 없습니다. 파일만 새로 받아 덮어쓰면 끝납니다.
-                1분이면 됩니다.
-              </p>
-            </div>
+              </span>
+              <span class="upg-sum-t">
+                <h2>이미 설치하셨다면</h2>
+                <span class="upg-sum-n">
+                  프로필 파일만 다시 받아 덮어쓰면 됩니다. 1분이면 끝납니다
+                </span>
+              </span>
+              <span class="upg-chev" aria-hidden="true">
+                <Icon name="arrow-down-01" size={18} />
+              </span>
+            </summary>
+
+            <p class="lead upg-lead">
+              r2modman 에 <Hi text="gaybar" ui />{" "}프로필이 이미 있다면 처음부터
+              다시 할 필요가 없습니다. 아래 네 단계 중 처음 설치와 다른 곳은
+              <strong>2단계 하나뿐</strong>입니다.
+            </p>
 
             <Callout title="이럴 때 다시 받으시면 됩니다" tone="info">
               서버 탭의 모드팩 갱신 날짜가 마지막으로 받은 날보다 뒤일 때, 또는
@@ -488,7 +504,7 @@ const STEPS = [
               캐릭터와 월드는 r2modman 프로필이 아니라 발헤임 쪽에 저장됩니다.
               덮어쓰는 것은 모드 목록과 버전뿐입니다.
             </Callout>
-          </section>
+          </details>
 
           <div class="upg-split">
             <span>처음 설치하시나요? 아래 순서대로 하시면 됩니다</span>
@@ -1292,11 +1308,6 @@ const STEPS = [
               <p class="spec-n">6시간마다 자동으로 저장됩니다. 사고가 나도 되돌릴 수 있습니다</p>
             </article>
           </div>
-
-          <Callout title="난이도를 올려 두었습니다" tone="info">
-            적이 세고 빠른 대신 죽어도 장비를 잃지 않고 자원이 넉넉합니다.
-            혼자보다 둘 이상 뭉쳐 다니는 편이 유리합니다.
-          </Callout>
         </div>
       </Tabs>
       <Sidebar tabs={TABS} />
@@ -1520,40 +1531,101 @@ const STEPS = [
 
   /* 설치 가이드 탭의 "이미 설치하셨다면" 구역.
 
-     위저드보다 앞에 오지만 위저드처럼 화면을 차지하면 안 된다. 읽을 것이
-     네 줄뿐이라 카드 하나로 묶고, 아래 위저드와는 구분선으로 떼어 놓는다. */
-  /* 아래 위저드와 같은 패널로 만든다.
+     위저드보다 앞에 오지만 화면을 차지하면 안 된다. 접어 두고 제목과
+     한 줄 요약만 내놓아, 처음 온 사람은 제목만 보고 지나가게 한다.
 
-     처음에는 패널 없이 요소만 늘어놓았는데, Callout 은 화면 끝까지 가고
-     글줄은 --measure 에서 끊겨 폭이 층층이 달라 보였다. 위저드와 같은
-     상자에 담으면 폭이 저절로 맞고 하나의 덩어리로 읽힌다. */
+     아래 위저드와 같은 패널로 만든다. 처음에는 패널 없이 요소만
+     늘어놓았는데, Callout 은 화면 끝까지 가고 글줄은 --measure 에서
+     끊겨 폭이 층층이 달라 보였다. 위저드와 같은 상자에 담으면 폭이
+     저절로 맞고 하나의 덩어리로 읽힌다. */
   .upg {
     margin: 0 0 8px;
-    padding: 36px 44px 32px;
+    padding: 0 44px 32px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-panel);
   }
-  .upg-h { margin-bottom: 14px; }
-  .upg-h h2 {
+  /* 접혀 있을 때는 여는 손잡이만 남으므로 아래 여백이 필요 없다. */
+  .upg:not([open]) { padding-bottom: 0; }
+
+  /* 여는 손잡이. summary 는 기본으로 삼각형 표시를 달고 나오는데,
+     크로미움은 list-style 로, 사파리는 ::-webkit-details-marker 로
+     지운다. 둘 다 적어야 양쪽에서 사라진다. */
+  .upg-sum {
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: 14px;
+    padding: 26px 0;
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+  }
+  .upg-sum::-webkit-details-marker { display: none; }
+  .upg-sum:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+    border-radius: var(--radius-sm);
+  }
+  .upg-sum-ico {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    transition: border-color 160ms ease, color 160ms ease;
+  }
+  .upg-sum-t { flex: 1; min-width: 0; }
+  .upg-sum-t h2 {
     margin: 0;
-    font-size: 21px;
+    font-size: 19px;
     font-weight: 800;
     letter-spacing: -0.01em;
     color: var(--text);
   }
-  .upg-h h2 .icon { color: var(--accent); }
-  .upg-h .lead {
+  .upg-sum-n {
+    display: block;
+    margin-top: 3px;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+  /* 접혀 있는 것과 펼쳐진 것을 화살표 방향으로 알린다. */
+  .upg-chev {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    transition: transform 200ms var(--ease-out), color 160ms ease, border-color 160ms ease;
+  }
+  .upg[open] .upg-chev { transform: rotate(180deg); }
+  .upg-sum:hover .upg-chev,
+  .upg-sum:hover .upg-sum-ico {
+    color: var(--accent-bright);
+    border-color: var(--border-strong);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .upg-chev, .upg-sum-ico { transition: none; }
+  }
+
+  /* 펼쳤을 때 손잡이와 본문 사이를 선으로 가른다. */
+  .upg[open] .upg-sum { border-bottom: 1px solid var(--border); }
+  .upg-lead {
     max-width: var(--measure);
-    margin: 8px 0 0;
+    margin: 22px 0 0;
     font-size: 14px;
     line-height: 1.7;
     color: var(--text-dim);
   }
+  .upg-lead strong { color: var(--text); font-weight: 700; }
   .upg .callout { margin-top: 14px; }
   .upg .dl { margin-top: 16px; }
   .upg .wiz-fig { margin-top: 18px; }
