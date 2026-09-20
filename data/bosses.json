@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "note": "보스 순서와 바이옴은 items.json 의 stages 와 맞춰 두었습니다. 소환 재료와 힘은 게임 파일에서 뽑히지 않는 값이라 손으로 적었습니다. 확실하지 않은 칸은 비워 두었고, 화면에서도 비어 있는 대로 나옵니다.",
+  "bosses": [
+    {
+      "n": 1,
+      "id": "eikthyr",
+      "ko": "에이크쉬르",
+      "en": "Eikthyr",
+      "stage": 0,
+      "trophy": "TrophyEikthyr",
+      "summon": {
+        "where": "초원에 있는 붉은 룬 돌 제단에 바칩니다",
+        "items": [{ "item": "TrophyDeer", "amount": 2 }]
+      },
+      "power": "달리기와 점프에 스태미나가 덜 듭니다",
+      "drops": ["HardAntler"],
+      "opens": "사슴의 단단한 뿔로 뿔 곡괭이를 만들어 처음으로 땅을 팔 수 있게 됩니다",
+      "tip": "첫 보스라 준비랄 것이 거의 없습니다. 활과 화살을 넉넉히 들고, 번개를 쏘므로 비를 피하듯 옆으로 움직이며 칩니다."
+    },
+    {
+      "n": 2,
+      "id": "elder",
+      "ko": "장로",
+      "en": "The Elder",
+      "stage": 1,
+      "trophy": "TrophyTheElder",
+      "summon": {
+        "where": "검은 숲의 제단에 바칩니다",
+        "items": [{ "item": "AncientSeed", "amount": 3 }]
+      },
+      "power": "나무를 베는 속도가 빨라집니다",
+      "drops": ["CryptKey"],
+      "opens": "늪지대 열쇠로 늪의 무덤을 열 수 있습니다. 철이 거기서 나옵니다",
+      "tip": "나무라서 불에 약합니다. 불화살을 챙기면 훨씬 빨리 끝납니다. 뿌리가 땅에서 솟아오르니 한자리에 서 있지 않습니다."
+    },
+    {
+      "n": 3,
+      "id": "bonemass",
+      "ko": "보네마스",
+      "en": "Bonemass",
+      "stage": 2,
+      "trophy": "TrophyBonemass",
+      "summon": {
+        "where": "늪의 제단에 바칩니다",
+        "items": [{ "item": "WitheredBone", "amount": 10 }]
+      },
+      "power": "물리 피해를 덜 받습니다",
+      "drops": ["Wishbone"],
+      "opens": "위시본을 들면 땅에 묻힌 은과 보물이 보입니다. 산에 올라갈 준비가 됩니다",
+      "tip": "둔기가 잘 듭니다. 베는 무기는 거의 안 통하니 철 철퇴를 만들어 갑니다. 독 안개를 뿜으므로 해독의 벌꿀주를 꼭 챙깁니다."
+    },
+    {
+      "n": 4,
+      "id": "moder",
+      "ko": "모더",
+      "en": "Moder",
+      "stage": 3,
+      "trophy": "TrophyDragonQueen",
+      "summon": {
+        "where": "산 꼭대기의 제단에 바칩니다",
+        "items": [{ "item": "DragonEgg", "amount": 3 }]
+      },
+      "power": "배를 타면 언제나 순풍이 붑니다",
+      "drops": ["DragonTear"],
+      "opens": "드래곤의 눈물로 장인의 작업대를 만듭니다. 평원으로 갈 차례입니다",
+      "tip": "알이 무겁고 차원문으로 옮길 수 없습니다. 제단까지 직접 지고 가야 하니 무게를 비우고 출발합니다. 추위 저항 벌꿀주도 필요합니다."
+    },
+    {
+      "n": 5,
+      "id": "yagluth",
+      "ko": "야글루스",
+      "en": "Yagluth",
+      "stage": 4,
+      "trophy": "TrophyGoblinKing",
+      "summon": {
+        "where": "평원의 제단에 바칩니다",
+        "items": [{ "item": "GoblinTotem", "amount": 5 }]
+      },
+      "power": "화염, 냉기, 번개 피해를 덜 받습니다",
+      "drops": ["YagluthDrop"],
+      "opens": "찢어진 영혼으로 안개 땅의 장비를 만들 수 있게 됩니다",
+      "tip": "토템은 풀링 야영지의 기둥에 걸려 있습니다. 불덩이를 넓게 뿌리므로 엄폐물 뒤로 붙었다 떨어졌다 합니다."
+    },
+    {
+      "n": 6,
+      "id": "queen",
+      "ko": "여왕",
+      "en": "The Queen",
+      "stage": 5,
+      "trophy": "TrophySeekerQueen",
+      "summon": {
+        "where": "제단이 아닙니다. 안개 땅의 봉인된 문을 봉인해제기로 엽니다. 봉인해제기는 조각 9 개를 모아 마법 주입대에서 만듭니다",
+        "items": [{ "item": "DvergrKey", "amount": 1 }, { "item": "DvergrKeyFragment", "amount": 9 }]
+      },
+      "power": null,
+      "drops": [],
+      "opens": "잿빛 황야로 갈 수 있습니다",
+      "tip": "여기서부터는 에이트르를 쓰는 마법이 크게 도움이 됩니다. 안개 땅은 앞이 안 보이므로 안개 제거기를 먼저 구합니다."
+    },
+    {
+      "n": 7,
+      "id": "fader",
+      "ko": "파더",
+      "en": "Fader",
+      "stage": 6,
+      "trophy": "TrophyFader",
+      "summon": {
+        "where": "잿빛 황야의 제단에 바칩니다. 필요한 개수는 제단 앞에서 확인하세요",
+        "items": [{ "item": "HatefulBlood" }]
+      },
+      "power": null,
+      "drops": ["FaderDrop"],
+      "opens": "딥 노스로 갈 수 있습니다",
+      "tip": "잿빛 황야는 지금까지와 난이도가 다릅니다. 화염 저항과 최고 등급 식단을 갖추고 여럿이 함께 갑니다."
+    }
+  ]
+}

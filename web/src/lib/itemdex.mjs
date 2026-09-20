@@ -194,6 +194,145 @@ export function maxima(items) {
 }
 
 /**
+ * 끝까지 강화하는 데 드는 재료의 합.
+ *
+ * @returns {Map<string, number>} 재료 id -> 개수
+ */
+export function upgradeTotals(item) {
+  const total = new Map();
+  const mats = item.recipe?.materials ?? [];
+  const top = Math.max(1, item.maxQuality ?? 1);
+  for (let q = 1; q <= top; q++) {
+    for (const m of mats) {
+      const n = materialAmountAt(m, q);
+      if (n > 0) total.set(m.item, (total.get(m.item) ?? 0) + n);
+    }
+  }
+  return total;
+}
+
+/** 만들 때 드는 재료. 강화까지 칠지 고른다. */
+export function craftCost(item, { maxed = false } = {}) {
+  if (!item.recipe) return new Map();
+  if (maxed) return upgradeTotals(item);
+  const m = new Map();
+  for (const mat of item.recipe.materials ?? []) {
+    if (mat.amount > 0) m.set(mat.item, mat.amount);
+  }
+  return m;
+}
+
+/**
+ * 재료를 원자재까지 펼친다.
+ *
+ * 도감은 "철 20, 사슴 가죽 2" 까지만 알려 준다. 정작 원정을 나가기 전에
+ * 궁금한 것은 "그래서 광석을 몇 개 캐 와야 하나" 다. 레시피와 변환표를
+ * 따라 끝까지 내려가면 그 답이 나온다.
+ *
+ * 채집해서 얻는 것(레시피도 변환도 없는 것)이 잎이다.
+ *
+ * @param {Map<string, object>} byId
+ * @param {string} id
+ * @param {number} count 몇 개가 필요한가
+ * @returns {{id: string, n: number, made: boolean, children: object[]}}
+ */
+export function craftTree(byId, id, count, seen = new Set()) {
+  const node = { id, n: count, made: false, children: [] };
+  const it = byId.get(id);
+  // 순환하는 조합법이 있으면(A 로 B 를 만들고 B 로 A 를 만든다) 거기서
+  // 멈춘다. 지금 데이터에는 없지만, 모드가 하나 들어오면 생길 수 있고
+  // 그때 화면이 멈추는 대신 그 재료를 원자재로 취급하면 그만이다.
+  if (!it || seen.has(id)) return node;
+  const next = new Set(seen).add(id);
+
+  const r = it.recipe;
+  if (r && (r.materials ?? []).length) {
+    // 한 번 만들 때 여러 개가 나오는 것이 있다. 청동은 5 개씩 나오므로
+    // 7 개가 필요하면 두 번 돌려야 한다.
+    const runs = Math.ceil(count / Math.max(1, r.amount ?? 1));
+    node.made = true;
+    for (const m of r.materials) {
+      if (!(m.amount > 0)) continue;
+      node.children.push(craftTree(byId, m.item, m.amount * runs, next));
+    }
+    return node;
+  }
+
+  const cv = it.conversion;
+  if (cv?.from) {
+    const runs = Math.ceil(count / Math.max(1, cv.produced ?? 1));
+    node.made = true;
+    node.children.push(craftTree(byId, cv.from, runs, next));
+  }
+  return node;
+}
+
+/** 트리의 잎만 모아 합친다. 실제로 캐 오거나 주워 와야 하는 것들이다. */
+export function flattenRaw(node, out = new Map()) {
+  if (!node.made || !node.children.length) {
+    out.set(node.id, (out.get(node.id) ?? 0) + node.n);
+    return out;
+  }
+  for (const c of node.children) flattenRaw(c, out);
+  return out;
+}
+
+/**
+ * 여러 재료를 한꺼번에 펼쳐 합친다. 강화까지 치면 재료가 여러 줄이라
+ * 하나씩 펼쳐서는 합계가 나오지 않는다.
+ */
+export function expandCost(byId, cost) {
+  const raw = new Map();
+  const trees = [];
+  for (const [id, n] of cost) {
+    const t = craftTree(byId, id, n);
+    trees.push(t);
+    for (const [k, v] of flattenRaw(t)) raw.set(k, (raw.get(k) ?? 0) + v);
+  }
+  // 많이 드는 것부터. 원정에서 무엇이 병목인지가 먼저 보여야 한다.
+  return { raw: new Map([...raw].sort((a, b) => b[1] - a[1])), trees };
+}
+
+/** 목록 정렬 기준. dir 이 -1 이면 큰 것부터다. */
+export const SORTS = [
+  { id: "name", ko: "이름순", dir: 1 },
+  { id: "stage", ko: "진행 단계", dir: 1 },
+  { id: "damage", ko: "공격력", dir: -1 },
+  { id: "armor", ko: "방어력", dir: -1 },
+  { id: "food", ko: "체력 회복", dir: -1 },
+  { id: "weight", ko: "무게", dir: 1 },
+];
+
+function sortValue(item, key) {
+  const caps = statCaps(item);
+  switch (key) {
+    case "damage": return combatDamage(item);
+    case "armor": return caps.has("armor") ? (item.armor ?? 0) : 0;
+    case "food": return caps.has("food") ? (item.food ?? 0) : 0;
+    case "weight": return item.weight ?? 0;
+    // 단계가 없는 것(머리, 수염)은 맨 뒤로 보낸다.
+    case "stage": return item.stage === null ? Infinity : item.stage;
+    default: return 0;
+  }
+}
+
+/**
+ * 정렬한 새 배열을 준다. 원본은 건드리지 않는다.
+ *
+ * 값이 같을 때는 언제나 이름으로 가른다. 그러지 않으면 공격력이 0 인
+ * 수백 개가 뒤죽박죽 섞여 같은 조건에서도 순서가 달라 보인다.
+ */
+export function sortItems(items, key = "name") {
+  const spec = SORTS.find((s) => s.id === key) ?? SORTS[0];
+  const byName = (a, b) => String(a.ko).localeCompare(String(b.ko), "ko");
+  if (spec.id === "name") return [...items].sort(byName);
+  return [...items].sort((a, b) => {
+    const d = (sortValue(a, spec.id) - sortValue(b, spec.id)) * spec.dir;
+    return d !== 0 ? d : byName(a, b);
+  });
+}
+
+/**
  * 거꾸로 된 목록. "이 재료가 어디에 들어가는가" 다.
  *
  * 나무나 철을 눌렀을 때 정작 궁금한 것이 이것인데, 레시피는 결과물 쪽에만
