@@ -2,7 +2,10 @@ import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { filterItems, matchesQuery, groupOf, damageList, GROUPS } from "../web/src/lib/itemdex.mjs";
+import {
+  filterItems, matchesQuery, groupOf, damageList, GROUPS,
+  statCaps, combatDamage, damagesOf, materialAmountAt, armorAt, maxima, usedByIndex,
+} from "../web/src/lib/itemdex.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const db = JSON.parse(readFileSync(resolve(root, "data/items.json"), "utf8"));
@@ -74,6 +77,16 @@ describe("도감 데이터", () => {
       .filter((i) => i.stage === null)
       .map((i) => i.id);
     expect(missing).toEqual([]);
+  });
+
+  it("차원문 가능 여부는 참거짓이 아니라 1 과 0 이다", () => {
+    // 화면에서 `teleportable === false` 로 보다가 금속에 경고가 하나도
+    // 뜨지 않았다. 값이 false 가 아니라 0 이라 영영 맞지 않는다.
+    const values = new Set(db.items.map((i) => i.teleportable));
+    expect([...values].sort()).toEqual([0, 1]);
+    const blocked = db.items.filter((i) => !i.teleportable).map((i) => i.id);
+    expect(blocked).toContain("Bronze");
+    expect(blocked).toContain("Iron");
   });
 
   it("레시피 재료는 도감 안의 아이템을 가리킨다", () => {
@@ -151,5 +164,98 @@ describe("걸러내기", () => {
     const d = damageList(fake[0]);
     expect(d.map((x) => x.key)).toEqual(["slash", "fire"]);
     expect(d[0].value).toBe(55);
+  });
+});
+
+describe("수치 해석", () => {
+  const byId = new Map(db.items.map((i) => [i.id, i]));
+  const get = (id) => {
+    const it = byId.get(id);
+    if (!it) throw new Error(`데이터에 ${id} 가 없다`);
+    return it;
+  };
+
+  it("쓰이지 않는 칸은 내보내지 않는다. 기본값이 그대로 새어 나가면 거짓말이 된다", () => {
+    // 게임 데이터는 모든 아이템의 내구도를 100, 방어력을 10 으로 채워 둔다.
+    // 드래곤 알에 "내구도 100" 이 붙던 것이 이 때문이었다.
+    expect([...statCaps(get("DragonEgg"))]).toEqual([]);
+    expect([...statCaps(get("Wood"))]).toEqual([]);
+
+    // 방패의 armor 는 100, 200 처럼 쓰이지 않는 값이 들어 있다. 실제
+    // 값은 blockPower 쪽이다.
+    const shield = statCaps(get("ShieldWood"));
+    expect(shield.has("block")).toBe(true);
+    expect(shield.has("armor")).toBe(false);
+
+    // 반대로 갑옷은 armor 가 진짜이고 막기는 의미가 없다.
+    const chest = statCaps(get("ArmorIronChest"));
+    expect(chest.has("armor")).toBe(true);
+    expect(chest.has("block")).toBe(false);
+
+    // 활은 막기를 할 수 없는데 blockPower 3 이 들어 있다.
+    expect(statCaps(get("Bow")).has("block")).toBe(false);
+  });
+
+  it("던졌을 때의 기본 피해를 무기 공격력으로 세지 않는다", () => {
+    // 게임 데이터는 모든 아이템에 던지기 피해(타격 10)를 박아 둔다.
+    // 거르지 않으면 목록에서 가죽 투구와 넥의 트로피가 "공격 10" 인
+    // 무기처럼 보인다. 실제로 그렇게 나왔다.
+    expect(damageList(get("HelmetLeather")).length).toBeGreaterThan(0);
+    expect(damagesOf(get("HelmetLeather"))).toEqual([]);
+    expect(combatDamage(get("HelmetLeather"))).toBe(0);
+    expect(combatDamage(get("TrophyNeck"))).toBe(0);
+    expect(combatDamage(get("ShieldWoodTower"))).toBe(0);
+
+    // 진짜 무기와 화살은 그대로 나와야 한다.
+    expect(combatDamage(get("SwordIron"))).toBe(55);
+    expect(combatDamage(get("ArrowWood"))).toBe(22);
+  });
+
+  it("벌목과 곡괭이는 공격력에 더하지 않는다. 적에게 들어가지 않는 값이다", () => {
+    const axe = get("AxeIron");
+    expect(damagesOf(axe).map((d) => d.key)).toContain("chop");
+    // 베기 60 + 벌목 50 이지만 공격력은 60 이다.
+    expect(combatDamage(axe)).toBe(60);
+  });
+
+  it("강화 단계에 드는 재료는 perLevel x (단계 - 1) 이다", () => {
+    // 철 검은 철 20 으로 만들고 2 단계에 10, 3 단계에 20, 4 단계에 30 이 든다.
+    const iron = get("SwordIron").recipe.materials.find((m) => m.item === "Iron");
+    expect(materialAmountAt(iron, 1)).toBe(20);
+    expect(materialAmountAt(iron, 2)).toBe(10);
+    expect(materialAmountAt(iron, 3)).toBe(20);
+    expect(materialAmountAt(iron, 4)).toBe(30);
+
+    // 우상처럼 perLevel 이 0 인 것은 처음 만들 때만 든다.
+    const idol = get("SwordIron").recipe.materials.find((m) => m.item.startsWith("Upgrader"));
+    expect(materialAmountAt(idol, 1)).toBe(1);
+    expect(materialAmountAt(idol, 2)).toBe(0);
+  });
+
+  it("방어력은 단계마다 armorPerLevel 만큼 오른다", () => {
+    // 철 비늘 갑옷은 14 에서 시작해 4 단계에 20 이 된다.
+    const chest = get("ArmorIronChest");
+    expect(armorAt(chest, 1)).toBe(14);
+    expect(armorAt(chest, 4)).toBe(20);
+  });
+
+  it("막대의 기준이 되는 최댓값은 의미 있는 칸에서만 모은다", () => {
+    const m = maxima(db.items);
+    expect(m.armor).toBeGreaterThan(0);
+    // 방패의 armor 200 을 세어 버리면 갑옷 막대가 전부 짧아진다.
+    expect(m.armor).toBeLessThan(100);
+    expect(m.food).toBeGreaterThan(0);
+    expect(m.damage.slash).toBeGreaterThan(0);
+  });
+
+  it("거꾸로 된 목록이 재료에서 결과물을 찾아 준다", () => {
+    const used = usedByIndex(db.items);
+    const wood = used.get("Wood") ?? [];
+    expect(wood.length).toBeGreaterThan(20);
+    expect(wood.some((u) => u.id === "SwordIron")).toBe(true);
+
+    // 변환도 들어가야 한다. 날고기를 구우면 구운 고기가 된다.
+    const raw = used.get("RawMeat") ?? [];
+    expect(raw.some((u) => u.id === "CookedMeat" && u.via === "conversion")).toBe(true);
   });
 });
