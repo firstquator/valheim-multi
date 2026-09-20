@@ -1,4 +1,59 @@
 import { describe, it, expect } from "vitest";
+import { parseDeaths, parseRaids } from "../agent/lib/logparse.mjs";
+
+// 아래는 집 PC 의 valheim 컨테이너에서 `docker logs --timestamps` 로
+// 그대로 뜬 줄이다. 형식을 짐작해서 쓰지 않았다.
+const REAL = [
+  "2026-09-20T05:04:00.091100072Z Sep 20 14:04:00 supervisord: valheim-server 09/20/2026 14:04:00: Random event set:foresttrolls",
+  "2026-09-20T05:04:46.961575346Z Sep 20 14:04:46 supervisord: valheim-server 09/20/2026 14:04:46: Got character ZDOID from 갓진수 : 0:0",
+  "2026-09-20T05:04:55.029956599Z Sep 20 14:04:55 supervisord: valheim-server 09/20/2026 14:04:55: Got character ZDOID from 갓진수 : 2799088602:11937",
+  "2026-09-20T05:05:12.447221764Z Sep 20 14:05:12 supervisord: valheim-server 09/20/2026 14:05:12: Got character ZDOID from 모카비비 : 0:0",
+  "2026-09-19T17:11:49.350524304Z Sep 20 02:11:49 supervisord: valheim-server 09/20/2026 02:11:49: Random event set:army_bonemass",
+].join("\n");
+
+describe("죽음 읽기", () => {
+  it("ZDOID 가 0:0 인 줄이 죽음이다", () => {
+    expect(parseDeaths(REAL)).toEqual([
+      { at: "2026-09-20T05:04:46.961Z", name: "갓진수" },
+      { at: "2026-09-20T05:05:12.447Z", name: "모카비비" },
+    ]);
+  });
+
+  it("접속 줄을 죽음으로 세지 않는다", () => {
+    const join = "2026-09-20T05:04:55.029956599Z ... Got character ZDOID from 갓진수 : 2799088602:11937";
+    expect(parseDeaths(join)).toEqual([]);
+  });
+
+  it("시각은 컨테이너 안쪽이 아니라 docker 가 붙인 UTC 를 쓴다", () => {
+    // 줄 안에도 09/20/2026 14:04:46 이 있지만 그쪽은 지역 시간이라
+    // 시간대를 알 수 없다. 앞의 05:04:46Z 를 써야 어디서 보든 맞는다.
+    const [d] = parseDeaths(REAL);
+    expect(d.at.endsWith("Z")).toBe(true);
+    expect(Date.parse(d.at)).toBe(Date.parse("2026-09-20T05:04:46.961Z"));
+  });
+
+  it("시각이 없는 줄은 버린다. 언제인지 모르면 셀 수도 막을 수도 없다", () => {
+    expect(parseDeaths("Got character ZDOID from 갓진수 : 0:0")).toEqual([]);
+  });
+
+  it("빈 입력에도 죽지 않는다", () => {
+    expect(parseDeaths("")).toEqual([]);
+    expect(parseDeaths(null)).toEqual([]);
+  });
+});
+
+describe("습격 읽기", () => {
+  it("Random event set 에서 이름과 시각을 뽑는다", () => {
+    expect(parseRaids(REAL)).toEqual([
+      { at: "2026-09-20T05:04:00.091Z", name: "foresttrolls" },
+      { at: "2026-09-19T17:11:49.350Z", name: "army_bonemass" },
+    ]);
+  });
+
+  it("습격이 없으면 빈 목록", () => {
+    expect(parseRaids("아무 일도 없었다")).toEqual([]);
+  });
+});
 import { readFileSync } from "node:fs";
 import { parsePlayers } from "../agent/lib/logparse.mjs";
 

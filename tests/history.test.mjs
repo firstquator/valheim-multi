@@ -1,7 +1,43 @@
 import { describe, it, expect } from "vitest";
 import {
-  hourKey, emptyHistory, foldSample, pruneHistory, readHistory, HISTORY_VERSION,
+  hourKey, emptyHistory, foldSample, pruneHistory, readHistory, mergeEvents,
+  HISTORY_VERSION, MAX_EVENTS,
 } from "../agent/lib/history.mjs";
+
+describe("사건 합치기", () => {
+  const a = { at: "2026-09-20T05:04:46.961Z", name: "갓진수" };
+  const b = { at: "2026-09-20T05:05:12.447Z", name: "모카비비" };
+
+  it("같은 사건을 두 번 세지 않는다", () => {
+    // 퍼블리셔는 30초마다 12시간치 로그를 통째로 다시 읽는다. 거르지
+    // 않으면 한 번 죽은 것이 1440 번 쌓인다.
+    expect(mergeEvents([a], [a, b])).toEqual([a, b]);
+    expect(mergeEvents([a, b], [a, b])).toEqual([a, b]);
+  });
+
+  it("같은 사람이 다른 시각에 죽은 것은 따로 센다", () => {
+    const again = { at: "2026-09-20T06:00:00.000Z", name: "갓진수" };
+    expect(mergeEvents([a], [again])).toHaveLength(2);
+  });
+
+  it("시각 순으로 준다", () => {
+    expect(mergeEvents([b], [a]).map((e) => e.name)).toEqual(["갓진수", "모카비비"]);
+  });
+
+  it("모양이 틀린 것은 버린다", () => {
+    expect(mergeEvents([{ at: 1, name: "x" }, { name: "y" }, null], [a])).toEqual([a]);
+  });
+
+  it("한도를 넘으면 오래된 것부터 버린다", () => {
+    const many = Array.from({ length: MAX_EVENTS + 10 }, (_, i) => ({
+      at: new Date(Date.UTC(2026, 0, 1, 0, 0, i)).toISOString(),
+      name: `p${i}`,
+    }));
+    const out = mergeEvents([], many);
+    expect(out).toHaveLength(MAX_EVENTS);
+    expect(out[out.length - 1].name).toBe(`p${MAX_EVENTS + 9}`);
+  });
+});
 
 describe("접속 기록 쌓기", () => {
   it("같은 시간대의 표본은 한 칸에 모인다", () => {
@@ -62,6 +98,34 @@ describe("접속 기록 쌓기", () => {
     const pruned = pruneHistory(h, now, 30);
     expect(Object.keys(pruned.hours)).toEqual(["2026-09-19T11"]);
   });
+
+  it("오래된 사건도 함께 버린다", () => {
+    const now = Date.parse("2026-09-20T00:00:00Z");
+    const h = foldSample(emptyHistory(), {
+      nowIso: "2026-09-19T11:00:00Z",
+      players: [],
+      deaths: [
+        { at: "2026-09-19T10:00:00.000Z", name: "갓진수" },
+        { at: "2026-07-01T10:00:00.000Z", name: "옛날사람" },
+      ],
+      raids: [{ at: "2026-07-01T10:00:00.000Z", name: "foresttrolls" }],
+    });
+    const pruned = pruneHistory(h, now, 30);
+    expect(pruned.deaths.map((e) => e.name)).toEqual(["갓진수"]);
+    expect(pruned.raids).toEqual([]);
+  });
+
+  it("같은 로그를 다시 읽어도 사건이 늘지 않는다", () => {
+    // 실제 동작 그대로다. 같은 로그 창을 30초마다 다시 읽는다.
+    const deaths = [{ at: "2026-09-20T05:04:46.961Z", name: "갓진수" }];
+    const raids = [{ at: "2026-09-20T05:04:00.091Z", name: "foresttrolls" }];
+    let h = emptyHistory();
+    for (let i = 0; i < 20; i++) {
+      h = foldSample(h, { nowIso: "2026-09-20T05:10:00Z", players: [], deaths, raids });
+    }
+    expect(h.deaths).toHaveLength(1);
+    expect(h.raids).toHaveLength(1);
+  });
 });
 
 describe("기록 읽기", () => {
@@ -76,8 +140,31 @@ describe("기록 읽기", () => {
     expect(readHistory(JSON.stringify({ v: 99, hours: { a: {} } }))).toEqual(emptyHistory());
   });
 
+  it("판 1 기록은 버리지 않고 이어받는다", () => {
+    // 사건 칸이 없던 시절의 파일이다. 판이 올랐다고 버리면 애써 모은
+    // 접속 기록이 통째로 날아간다.
+    const old = { v: 1, hours: { "2026-09-20T11": { min: 30, pmin: 30, u: { 갓진수: 30 } } } };
+    const got = readHistory(JSON.stringify(old));
+    expect(got.v).toBe(HISTORY_VERSION);
+    expect(got.hours).toEqual(old.hours);
+    expect(got.deaths).toEqual([]);
+    expect(got.raids).toEqual([]);
+  });
+
   it("멀쩡하면 그대로 쓴다", () => {
-    const good = { v: HISTORY_VERSION, hours: { "2026-09-20T11": { min: 1, pmin: 1, u: {} } } };
+    const good = {
+      v: HISTORY_VERSION,
+      hours: { "2026-09-20T11": { min: 1, pmin: 1, u: {} } },
+      deaths: [{ at: "2026-09-20T05:04:46.961Z", name: "갓진수" }],
+      raids: [{ at: "2026-09-20T05:04:00.091Z", name: "foresttrolls" }],
+    };
     expect(readHistory(JSON.stringify(good))).toEqual(good);
+  });
+
+  it("사건 칸이 목록이 아니면 빈 목록으로 채운다", () => {
+    const odd = { v: HISTORY_VERSION, hours: {}, deaths: "이상함", raids: null };
+    const got = readHistory(JSON.stringify(odd));
+    expect(got.deaths).toEqual([]);
+    expect(got.raids).toEqual([]);
   });
 });

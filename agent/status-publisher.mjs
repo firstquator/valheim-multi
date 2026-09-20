@@ -14,7 +14,7 @@
 import { execFile } from "node:child_process";
 import { readdir, stat } from "node:fs/promises";
 import { promisify } from "node:util";
-import { parsePlayers } from "./lib/logparse.mjs";
+import { parsePlayers, parseDeaths, parseRaids } from "./lib/logparse.mjs";
 import { buildPayload } from "./lib/collect.mjs";
 import { emptyHistory, readHistory, foldSample, pruneHistory } from "./lib/history.mjs";
 
@@ -64,7 +64,15 @@ async function fetchStatusRaw() {
 
 async function recentLog() {
   try {
-    const { stdout } = await run("docker", ["logs", "--since", "12h", "valheim"], {
+    // --timestamps 가 줄 앞에 UTC 시각을 붙인다.
+    //
+    // 컨테이너 안쪽에도 시각이 찍히지만 그쪽은 지역 시간이라 시간대를
+    // 알 수 없다. 죽음과 습격을 언제 일어난 것으로 기록할지 정하려면
+    // 모호하지 않은 시각이 필요하다.
+    //
+    // 접속자 파싱(parsePlayers)은 줄 앞에 무엇이 붙든 영향을 받지 않는다.
+    // 줄 전체에서 패턴을 찾기 때문이다.
+    const { stdout } = await run("docker", ["logs", "--timestamps", "--since", "12h", "valheim"], {
       maxBuffer: 32 * 1024 * 1024,
     });
     return stdout;
@@ -200,11 +208,17 @@ async function tick() {
       // 접속자 이름은 payload 쪽을 쓴다. collect.mjs 가 status.json 의
       // 인원수로 한 번 걸러 주므로, 로그 파싱이 퇴장을 놓쳤을 때
       // 있지도 않은 사람의 플레이 시간이 쌓이는 것을 막는다.
+      //
+      // 죽음과 습격은 로그에서 그대로 읽는다. 같은 로그 창을 30초마다
+      // 다시 읽으므로 같은 사건이 수없이 되풀이해 나오는데, 시각과
+      // 이름을 열쇠로 합치므로 두 번 세지 않는다.
       history = pruneHistory(
         foldSample(history, {
           nowIso,
           players: payload.server.players,
           minutes: INTERVAL / 60000,
+          deaths: parseDeaths(logText),
+          raids: parseRaids(logText),
         }),
         Date.parse(nowIso),
       );

@@ -6,11 +6,9 @@
 // 자료는 agent/status-publisher.mjs 가 30 초마다 시간 단위로 접어 쌓은
 // 것이다. 계산은 lib/playtime.mjs 가 맡고 여기서는 DOM 만 만진다.
 
-import { buildGistRawUrl } from "../lib/gist-url.mjs";
-import { GIST_ID, GIST_OWNER } from "../config.mjs";
+import { loadHistory, hasAnything } from "../lib/history-load.mjs";
 import { heatmap, playerTotals, span, formatMinutes, DAY_KO } from "../lib/playtime.mjs";
 
-const HISTORY_FILE = "valheim-history.json";
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 const el = (id) => document.getElementById(id);
@@ -18,18 +16,6 @@ const el = (id) => document.getElementById(id);
 function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) =>
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-}
-
-async function load() {
-  const url = buildGistRawUrl(GIST_OWNER, GIST_ID, HISTORY_FILE, Date.now());
-  if (!url) return null;
-  try {
-    const res = await fetch(url, { cache: "no-store" });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch {
-    return null;
-  }
 }
 
 /** 두 시각 사이를 "오후 9시" 처럼. 24 시간제는 한눈에 안 들어온다. */
@@ -94,12 +80,12 @@ async function init() {
   const host = el("heat-grid");
   if (!host) return;
 
-  const hist = await load();
+  const hist = await loadHistory();
   const wrap = el("pt-wrap");
 
   // 기록이 아직 없으면 빈 표를 내놓는 대신 섹션째 감춘다. 서버를 막
   // 세운 사람에게 회색 격자만 보여 주는 것은 설명이 되지 않는다.
-  if (!hist || !Object.keys(hist.hours ?? {}).length) {
+  if (!hasAnything(hist) || !Object.keys(hist.hours ?? {}).length) {
     if (wrap) wrap.hidden = true;
     return;
   }

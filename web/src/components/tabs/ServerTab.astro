@@ -190,4 +190,34 @@ import { latestChange, mustUpdate, olderChanges, requiredDate } from "../../lib/
 
   <p class="pt-foot" id="heat-foot"></p>
 </section>
+
+{/*
+  무슨 일이 있었나.
+
+  습격과 죽음은 서버 로그에 그대로 찍히는데 그동안 읽고 버렸다.
+  습격은 들어가기 전에 알면 준비하고 들어갈 수 있다.
+
+  로그에 습격이 끝났다는 줄이 없다. 일주일치를 훑어 확인했다. 그래서
+  "지금 습격 중" 이라고 말하지 않고 언제 시작했는지만 말한다. 없는 것을
+  아는 척하면 준비를 잘못하게 된다.
+
+  기록이 없으면 islands/Events.js 가 이 구역을 감춘다.
+*/}
+<section class="block ev-wrap" id="ev-wrap" hidden>
+  <h2 class="block-h">
+    <Icon name="alert-02" size={17} />
+    무슨 일이 있었나
+  </h2>
+
+  <h3 class="pt-h">최근 습격</h3>
+  <ul class="raid-list" id="raid-list"></ul>
+
+  <h3 class="pt-h">최근 이레 사망</h3>
+  <ul class="pt-list" id="death-list"></ul>
+
+  <p class="pt-foot">
+    습격이 끝나는 시각은 서버 로그에 남지 않아 시작한 때만 적습니다. 죽은
+    곳도 로그에 없습니다.
+  </p>
+</section>
 </div>

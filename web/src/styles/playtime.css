@@ -118,3 +118,53 @@
   font-size: 12px;
   color: var(--text-faint);
 }
+
+/* ----- 무슨 일이 있었나 -----
+ *
+ * 습격과 죽음. 접속 기록과 같은 파일에서 오므로 같은 모양을 쓴다.
+ * 사망 순위는 .pt-list 를 그대로 쓴다. */
+
+.ev-wrap { margin-top: 28px; }
+.ev-wrap[hidden] { display: none; }
+.ev-empty { margin: 0; font-size: 13px; color: var(--text-faint); }
+
+.raid-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.raid {
+  padding: 12px 15px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+/* 시작한 지 얼마 안 된 것. 아직 진행 중일 수 있다는 뜻이지 진행 중이라는
+   뜻은 아니다. 로그에 끝나는 시각이 없어서 단정할 수 없다. */
+.raid.fresh {
+  border-color: color-mix(in srgb, var(--warning) 50%, transparent);
+  background: color-mix(in srgb, var(--warning) 9%, transparent);
+}
+.raid-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.raid-n { font-size: 14px; font-weight: 700; color: var(--text); }
+.raid.fresh .raid-n { color: var(--warning-bright); }
+.raid-t { flex: none; font-size: 12px; color: var(--text-faint); }
+.raid-note {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+.raid-v {
+  margin: 7px 0 0;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+.raid-v b { color: var(--text-dim); font-weight: 600; }
