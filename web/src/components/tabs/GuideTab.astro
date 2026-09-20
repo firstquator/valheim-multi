@@ -1,0 +1,134 @@
+---
+// 공략 탭. 보스 순서와 식단. 체크와 식단 계산은 islands/Guide.js 가 맡는다.
+//
+// index.astro 가 <GuideTab slot="guide" /> 로 끼운다.
+
+import Icon from "../Icon.astro";
+import PageHead from "../PageHead.astro";
+import { bossNote, bosses, itemKo, stageKo } from "../../lib/boss-view.mjs";
+---
+
+<div>
+<PageHead
+  kicker="다음에 뭘 해야 하나"
+  title="공략"
+  icon="target-02"
+  desc="보스는 정해진 순서가 있고, 하나를 잡을 때마다 다음 바이옴이 열립니다. 무엇을 먹고 가느냐로 최대 체력이 두 배 넘게 갈립니다."
+/>
+
+{/*
+  보스 표는 data/bosses.json 에서 온다. 순서와 바이옴은 도감의
+  stages 와 맞춰 두었고 tests/bosses.test.mjs 가 어긋나면 잡는다.
+
+  체크는 자바스크립트가 브라우저에 남긴다. 친구마다 진행도가
+  다른데 서버는 그것을 알 방법이 없다.
+*/}
+<section class="gsec">
+  <header class="gsec-h">
+    <h2>
+      <Icon name="skull" size={19} />
+      보스 순서
+    </h2>
+    <div class="boss-prog">
+      <span class="boss-prog-n num" id="boss-count">0 / {bosses.length}</span>
+      <span class="boss-prog-bar"><i id="boss-progress"></i></span>
+      <button type="button" class="boss-reset" id="boss-reset">체크 지우기</button>
+    </div>
+  </header>
+  <p class="gsec-lead">
+    잡은 것에 표시해 두면 다음 차례가 어디인지 바로 보입니다. 표시는
+    이 브라우저에만 남습니다.
+  </p>
+
+  <ol class="boss-list" id="boss-list">
+    {bosses.map((b) => (
+      <li class="boss" data-boss={b.id} data-stage={b.stage}>
+        <label class="boss-check">
+          <input type="checkbox" />
+          <span class="sr-only">{b.ko} 잡음</span>
+        </label>
+        <div class="boss-body">
+          <div class="boss-top">
+            <span class="boss-n num">{b.n}</span>
+            <h3>{b.ko}</h3>
+            <span class="boss-en">{b.en}</span>
+            <span class="boss-biome" data-stage={b.stage}>
+              <i class="dex-dot"></i>{stageKo(b.stage)}
+            </span>
+            <span class="boss-next">다음 차례</span>
+          </div>
+
+          <p class="boss-where">{b.summon.where}</p>
+          <ul class="boss-mats">
+            {b.summon.items.map((s) => (
+              <li>
+                <span class="boss-mat-n">{itemKo(s.item)}</span>
+                {s.amount ? <b class="num">{s.amount}</b> : <em>개수 미상</em>}
+              </li>
+            ))}
+          </ul>
+
+          <dl class="boss-facts">
+            {b.power && (
+              <div>
+                <dt>얻는 힘</dt>
+                <dd>{b.power}</dd>
+              </div>
+            )}
+            {b.drops.length > 0 && (
+              <div>
+                <dt>떨구는 것</dt>
+                <dd>{b.drops.map((d) => itemKo(d)).join(", ")}</dd>
+              </div>
+            )}
+            <div>
+              <dt>잡으면</dt>
+              <dd>{b.opens}</dd>
+            </div>
+          </dl>
+
+          <p class="boss-tip">{b.tip}</p>
+        </div>
+      </li>
+    ))}
+  </ol>
+
+  <p class="gsec-foot">{bossNote}</p>
+</section>
+
+{/*
+  식단. 발헤임은 음식을 세 가지까지 동시에 먹고 효과가 더해지는데,
+  게임 안에는 비교표가 없다. 어떤 셋을 고르느냐로 최대 체력이 두
+  배 넘게 갈리므로 계산해서 보여준다.
+
+  계산은 web/src/lib/food.mjs 가 하고 그 자리에서 전수 검사한다.
+*/}
+<section class="gsec">
+  <header class="gsec-h">
+    <h2>
+      <Icon name="chef-hat" size={19} />
+      식단
+    </h2>
+  </header>
+  <p class="gsec-lead">
+    한 번에 <span id="meal-slots">3</span>가지까지 먹을 수 있고 효과가
+    그대로 더해집니다. 어디까지 진행했는지 고르면 그때 구할 수 있는
+    것들로만 골라 드립니다.
+  </p>
+
+  <div class="dex-filter meal-filter">
+    <span class="dex-f-label">진행 단계</span>
+    <div class="dex-chips" id="meal-stages"></div>
+  </div>
+  <p class="meal-note" id="meal-note">계산 중입니다.</p>
+
+  <div class="meal-grid" id="meal-grid">
+    <p class="meal-empty">식단을 계산하는 중입니다.</p>
+  </div>
+
+  <p class="gsec-foot">
+    재료를 구하기 쉬운지는 따지지 않았습니다. 수치만 보고 고른 것이라,
+    손에 있는 재료로는 한두 가지를 바꿔야 할 수 있습니다.
+  </p>
+</section>
+</div>

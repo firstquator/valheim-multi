@@ -1,0 +1,606 @@
+/* 도감 탭.
+ *
+ * 아이템이 1000 개가 넘는다. 화면을 꽉 채우는 격자로 훑게 하고,
+ * 자세한 것은 눌렀을 때만 덮어서 보여 준다.
+ *
+ * 상세는 숫자만 놓지 않는다. "방어력 14" 는 처음 보는 사람에게 뜻이
+ * 없으므로 그것이 무엇인지 한 줄과, 게임 전체에서 어디쯤인지 보여
+ * 주는 막대를 함께 둔다. */
+
+.dex-tools {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.dex-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.dex-search:focus-within {
+  border-color: var(--accent);
+  box-shadow: var(--ring-accent);
+}
+.dex-search .icon { color: var(--text-faint); flex: none; }
+.dex-search input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 15px;
+}
+.dex-search input::placeholder { color: var(--text-faint); }
+/* 검색창의 기본 지우기 단추는 다크 테마에서 검게 나와 안 보인다. */
+.dex-search input::-webkit-search-cancel-button { filter: invert(0.7); }
+
+.dex-filter { display: flex; align-items: baseline; gap: 12px; }
+.dex-f-label {
+  flex: none;
+  width: 62px;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+.dex-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.dex-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+.dex-chip:hover { color: var(--text); border-color: var(--border-strong); }
+.dex-chip.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-deep);
+  font-weight: 700;
+}
+
+/* 바이옴 점. 글자를 읽기 전에 어느 단계인지 알아보게 한다. */
+.dex-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-faint);
+}
+[data-stage="0"] .dex-dot { background: var(--biome-0); }
+[data-stage="1"] .dex-dot { background: var(--biome-1); }
+[data-stage="2"] .dex-dot { background: var(--biome-2); }
+[data-stage="3"] .dex-dot { background: var(--biome-3); }
+[data-stage="4"] .dex-dot { background: var(--biome-4); }
+[data-stage="5"] .dex-dot { background: var(--biome-5); }
+[data-stage="6"] .dex-dot { background: var(--biome-6); }
+[data-stage="7"] .dex-dot { background: var(--biome-7); }
+.dex-chip.on .dex-dot { background: var(--bg-deep); }
+
+.dex-note {
+  margin: 0;
+  padding-left: 74px;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+.dex-note[hidden] { display: none; }
+
+.dex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(216px, 1fr));
+  gap: 10px;
+}
+.dex-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: border-color 160ms ease, transform 160ms var(--ease-out), background 160ms ease;
+}
+.dex-card:hover {
+  border-color: var(--accent);
+  background: var(--surface-raised);
+  transform: translateY(-2px);
+}
+.dex-ico {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+}
+.dex-ico img { width: 38px; height: 38px; object-fit: contain; }
+.dex-noicon {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px dashed var(--border-strong);
+}
+.dex-txt { min-width: 0; display: grid; gap: 4px; }
+.dex-name {
+  font-size: 14px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 한 줄에 단계와 대표 수치를 함께 둔다. 카드를 열지 않고도
+   "늪 것이고 공격력 55" 까지 읽히게 하는 것이 목적이다. */
+.dex-sub {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 11.5px;
+  color: var(--text-faint);
+}
+.dex-biome {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: none;
+}
+.dex-stat {
+  padding-left: 8px;
+  border-left: 1px solid var(--border-strong);
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dex-more {
+  grid-column: 1 / -1;
+  padding: 14px;
+  margin-top: 6px;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border-strong);
+  background: none;
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  cursor: pointer;
+}
+.dex-more .num { color: var(--text-faint); }
+.dex-more:hover { color: var(--text); border-color: var(--accent); }
+.dex-empty {
+  grid-column: 1 / -1;
+  padding: 40px 0;
+  text-align: center;
+  color: var(--text-faint);
+}
+
+/* ----- 상세 ----- */
+
+.dex-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(0 0 0 / 0.62);
+}
+.dex-modal[hidden] { display: none; }
+.dex-panel {
+  position: relative;
+  width: min(680px, 100%);
+  max-height: min(86vh, 860px);
+  overflow-y: auto;
+  padding: 0 30px 26px;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+}
+/* 스크롤해도 닫기와 뒤로는 늘 손에 닿아야 한다. */
+.dex-panel-top {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 -30px;
+  padding: 14px 30px 10px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.dex-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px 6px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-sunken);
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+}
+.dex-back:hover { color: var(--text); border-color: var(--border-strong); }
+.dex-back[hidden] { display: none; }
+.dex-close {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-sunken);
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.dex-close:hover { color: var(--text); border-color: var(--border-strong); }
+
+.dex-d-head { display: flex; align-items: center; gap: 18px; margin-top: 20px; }
+.dex-d-ico {
+  flex: none;
+  width: 84px;
+  height: 84px;
+  display: grid;
+  place-items: center;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.dex-d-ico img { width: 66px; height: 66px; object-fit: contain; }
+.dex-d-title { min-width: 0; }
+.dex-d-head h3 { margin: 0; font-size: 23px; font-weight: 800; color: var(--text); }
+.dex-d-en { margin: 2px 0 0; font-size: 13px; color: var(--text-faint); }
+
+.dex-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.dex-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.dex-tag-stage { color: var(--text); }
+
+.dex-d-desc {
+  margin: 18px 0 0;
+  padding-left: 13px;
+  border-left: 2px solid var(--accent-deep);
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+
+.dex-warn {
+  margin: 16px 0 0;
+  padding: 12px 15px;
+  border-radius: var(--radius-sm);
+  border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent);
+  background: color-mix(in srgb, var(--warning) 12%, transparent);
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--text);
+}
+.dex-warn b { color: var(--warning-bright); }
+
+/* 가장 먼저 봐야 할 숫자. 여기만 보고 덮어도 되게 한다. */
+.dex-keys {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+  margin-top: 18px;
+}
+.dex-key {
+  display: grid;
+  gap: 2px;
+  padding: 13px 14px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.dex-key-v { font-size: 22px; font-weight: 800; color: var(--accent-bright); line-height: 1.2; }
+.dex-key-v em { font-style: normal; font-size: 13px; font-weight: 600; margin-left: 2px; }
+.dex-key-l { font-size: 12px; color: var(--text-faint); }
+
+.dex-sec { margin-top: 26px; }
+.dex-sec h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 11px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+.dex-cnt {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--text-dim);
+}
+.dex-foot {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--text-faint);
+}
+.dex-foot b { color: var(--text-dim); font-weight: 600; }
+
+/* 막대. 숫자 하나로는 55 가 센지 약한지 알 수 없다. */
+.dex-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.dex-bar-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dex-bar-k { font-size: 14px; font-weight: 700; color: var(--text); }
+.dex-bar-v { font-size: 15px; font-weight: 800; color: var(--accent-bright); }
+.dex-bar {
+  margin-top: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  overflow: hidden;
+}
+.dex-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-deep), var(--accent));
+}
+.dex-bar-n {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+
+/* 수치. 값 옆에 그것이 무엇인지 함께 둔다. */
+.dex-dl { display: grid; gap: 8px; margin: 0; }
+.dex-dl > div {
+  display: grid;
+  grid-template-columns: 78px 1fr;
+  column-gap: 14px;
+  padding: 12px 15px;
+  background: var(--surface-raised);
+  border-radius: var(--radius-sm);
+}
+.dex-dl dt { font-size: 12.5px; color: var(--text-faint); padding-top: 2px; }
+.dex-dl dd { margin: 0; display: grid; gap: 3px; }
+.dex-dl dd b { font-size: 15px; font-weight: 700; color: var(--text); }
+.dex-dl dd span { font-size: 12.5px; line-height: 1.6; color: var(--text-dim); }
+
+/* 강화표. 끝까지 올리는 데 뭐가 얼마나 드는지 한 번에 보여 준다. */
+.dex-up-wrap { overflow-x: auto; }
+.dex-up {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+.dex-up th, .dex-up td {
+  padding: 9px 12px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+.dex-up thead th {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+.dex-up tbody th {
+  font-weight: 700;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.dex-up td { color: var(--text); }
+.dex-up-sum th, .dex-up-sum td {
+  border-bottom: none;
+  background: var(--surface-raised);
+  color: var(--text);
+}
+.dex-up-sum th { color: var(--accent-bright); }
+.dex-up-m {
+  display: inline-block;
+  margin: 2px 10px 2px 0;
+  white-space: nowrap;
+}
+.dex-up-m b { color: var(--accent-bright); font-weight: 700; }
+
+.dex-how { margin: 0; font-size: 14px; line-height: 1.7; color: var(--text); }
+.dex-how strong { color: var(--accent-bright); font-weight: 700; }
+
+/* 얻는 길이 둘 이상일 때. 청동은 만들 수도 있고 녹여서 얻을 수도 있다. */
+.dex-way { display: flex; gap: 12px; }
+.dex-way + .dex-way { margin-top: 18px; }
+.dex-way > div { flex: 1; min-width: 0; }
+.dex-way-n {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  margin-top: 2px;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+/* 재료와 쓰임새는 눌러서 그 아이템으로 건너뛴다. */
+.dex-mats { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 6px; }
+.dex-mat {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 9px 13px;
+  background: var(--surface-raised);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+.dex-mat:hover { border-color: var(--accent); background: var(--surface-sunken); }
+.dex-mat-ico { flex: none; width: 26px; height: 26px; display: grid; place-items: center; }
+.dex-mat-ico img { width: 26px; height: 26px; object-fit: contain; }
+.dex-mat-n { flex: 1; min-width: 0; font-size: 14px; color: var(--text); }
+.dex-mat-a { flex: none; font-size: 14px; font-weight: 700; color: var(--accent-bright); }
+.dex-mat-a em { color: var(--text-faint); font-style: normal; font-weight: 400; font-size: 12px; }
+
+.dex-uses { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.dex-use {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px 6px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised);
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease;
+}
+.dex-use:hover { border-color: var(--accent); color: var(--text); }
+.dex-use img { width: 22px; height: 22px; object-fit: contain; flex: none; }
+
+/* 재료 계산기. 원정 나가기 전에 "뭘 몇 개 캐 와야 하나" 를 답한다. */
+.dex-calc-ctl {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 12px 14px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.dex-calc-l { font-size: 12.5px; color: var(--text-faint); }
+.dex-step {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.dex-step-b {
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: var(--surface-sunken);
+  color: var(--text-dim);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.dex-step-b:hover { color: var(--accent-bright); }
+.dex-step-i {
+  width: 52px;
+  height: 30px;
+  border: none;
+  border-left: 1px solid var(--border-strong);
+  border-right: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+}
+/* 숫자 칸의 기본 위아래 화살표는 다크 테마에서 회색 덩어리로 보인다.
+   옆에 우리가 만든 단추가 있으므로 지운다. */
+.dex-step-i::-webkit-outer-spin-button,
+.dex-step-i::-webkit-inner-spin-button { appearance: none; margin: 0; }
+.dex-step-i { appearance: textfield; }
+
+.dex-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.dex-check input { accent-color: var(--accent); width: 15px; height: 15px; }
+.dex-check:hover { color: var(--text); }
+
+.dex-calc-sum {
+  margin: 16px 0 0;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+}
+.dex-calc .dex-mats { margin-top: 8px; }
+
+/* 중간 단계. 대개는 합계만 보면 되므로 접어 둔다. */
+.dex-tree-wrap { margin-top: 12px; }
+.dex-tree-wrap summary {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.dex-tree-wrap summary:hover { color: var(--accent-bright); }
+.dex-tree, .dex-tree ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.dex-tree { margin-top: 10px; }
+.dex-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+.dex-tree-ico { flex: none; width: 20px; height: 20px; display: grid; place-items: center; }
+.dex-tree-ico img { width: 20px; height: 20px; object-fit: contain; }
+.dex-tree-n { flex: 1; min-width: 0; color: var(--text-dim); }
+/* 잎은 실제로 주워 와야 하는 것이다. 중간 단계와 구분해 둔다. */
+.dex-tree-n.raw { color: var(--text); font-weight: 600; }
+.dex-tree-a { flex: none; color: var(--accent-bright); font-weight: 700; }
+
+.dex-d-id { margin: 26px 0 0; font-size: 11.5px; color: var(--text-faint); }
+.dex-d-id code { font-family: var(--font-mono); }
+
+@media (prefers-reduced-motion: reduce) {
+  .dex-card, .dex-chip, .dex-search, .dex-mat, .dex-use { transition: none; }
+  .dex-card:hover { transform: none; }
+}

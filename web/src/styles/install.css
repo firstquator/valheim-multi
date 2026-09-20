@@ -1,0 +1,612 @@
+/* 설치 가이드 탭.
+ *
+ * 이미 설치한 사람을 위한 접이식 안내(.upg), 처음 설치용 단계 화면
+ * (.wizard), 파일 받기 단추(.dl)와 그 대안(.alt-way).
+ *
+ * 단계 전환은 자바스크립트를 쓰지 않는다. 라디오와 형제 선택자로만
+ * 한다. 그래서 #step-N:checked 규칙이 길게 늘어서 있다.
+ *
+ * 막혔을 때(.tsh)는 trouble.css 에 따로 있다. */
+
+/* 설치 가이드 탭의 "이미 설치하셨다면" 구역.
+
+   위저드보다 앞에 오지만 화면을 차지하면 안 된다. 접어 두고 제목과
+   한 줄 요약만 내놓아, 처음 온 사람은 제목만 보고 지나가게 한다.
+
+   아래 위저드와 같은 패널로 만든다. 처음에는 패널 없이 요소만
+   늘어놓았는데, Callout 은 화면 끝까지 가고 글줄은 --measure 에서
+   끊겨 폭이 층층이 달라 보였다. 위저드와 같은 상자에 담으면 폭이
+   저절로 맞고 하나의 덩어리로 읽힌다. */
+.upg {
+  margin: 0 0 8px;
+  padding: 0 44px 32px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+}
+/* 접혀 있을 때는 여는 손잡이만 남으므로 아래 여백이 필요 없다. */
+.upg:not([open]) { padding-bottom: 0; }
+
+/* 여는 손잡이. summary 는 기본으로 삼각형 표시를 달고 나오는데,
+   크로미움은 list-style 로, 사파리는 ::-webkit-details-marker 로
+   지운다. 둘 다 적어야 양쪽에서 사라진다. */
+.upg-sum {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 26px 0;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+.upg-sum::-webkit-details-marker { display: none; }
+.upg-sum:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+.upg-sum-ico {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  transition: border-color 160ms ease, color 160ms ease;
+}
+.upg-sum-t { flex: 1; min-width: 0; }
+.upg-sum-t h2 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+/* 이 브라우저가 파일을 받은 날을 알 때만 나온다. */
+.upg-badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+.upg-badge[hidden] { display: none; }
+.upg-badge[data-state="fresh"] {
+  background: color-mix(in srgb, var(--success) 20%, transparent);
+  color: var(--success-bright);
+}
+.upg-badge[data-state="stale"] {
+  background: color-mix(in srgb, var(--warning) 22%, transparent);
+  color: var(--warning-bright);
+}
+
+.upg-sum-n {
+  display: block;
+  margin-top: 3px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+}
+/* 접혀 있는 것과 펼쳐진 것을 화살표 방향으로 알린다. */
+.upg-chev {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  transition: transform 200ms var(--ease-out), color 160ms ease, border-color 160ms ease;
+}
+.upg[open] .upg-chev { transform: rotate(180deg); }
+.upg-sum:hover .upg-chev,
+.upg-sum:hover .upg-sum-ico {
+  color: var(--accent-bright);
+  border-color: var(--border-strong);
+}
+@media (prefers-reduced-motion: reduce) {
+  .upg-chev, .upg-sum-ico { transition: none; }
+}
+
+/* 펼쳤을 때 손잡이와 본문 사이를 선으로 가른다. */
+.upg[open] .upg-sum { border-bottom: 1px solid var(--border); }
+.upg-lead {
+  max-width: var(--measure);
+  margin: 22px 0 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+.upg-lead strong { color: var(--text); font-weight: 700; }
+.upg .callout { margin-top: 14px; }
+.upg .dl { margin-top: 16px; }
+.upg .wiz-fig { margin-top: 18px; }
+
+/* 번호를 원문자로 쓰지 않고 칩으로 그린다. 네 단계뿐이라 진행 표시는
+   필요 없지만 순서는 분명해야 한다. */
+.upg-steps {
+  max-width: var(--measure);
+  margin: 18px 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+.upg-steps li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px 16px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.upg-n {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-deep);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.upg-t {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--text);
+}
+
+/* 업데이트 안내와 처음 설치 위저드 사이의 구분선.
+   여기서부터 읽을 사람이 달라진다는 것을 보여 준다. */
+.upg-split {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 32px 0 24px;
+  color: var(--text-faint);
+  font-size: 13px;
+}
+.upg-split::before,
+.upg-split::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ----- 처음 설치용 단계 화면 -----
+
+   한 번에 한 단계만 보여준다. 전환은 탭과 같은 방식으로 라디오와
+   CSS 형제 선택자만 쓴다. JavaScript 를 쓰지 않는다.
+
+   라디오(#step-1 ~ #step-6)는 이 div 안, .wizard 앞자리에 있다.
+   `~` 가 닿으려면 같은 부모의 앞 형제여야 한다. */
+.wizard {
+  margin-top: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+  overflow: hidden;
+}
+
+/* 진행 표시. 몇 번째인지, 전체가 몇 단계인지 한눈에 보인다. */
+.wiz-nav {
+  padding: 22px 32px 0;
+  background: var(--surface-sunken);
+}
+.wiz-nav ol {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+.wiz-nav label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 4px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-faint);
+  transition: color 180ms ease;
+}
+.wiz-nav label:hover { color: var(--text-dim); }
+
+.wiz-dot {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  transition: background 200ms ease, color 200ms ease, border-color 200ms ease;
+}
+.wiz-dot-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 여기까지 왔다는 표시. :nth-child(-n+N) 으로 N 번째까지를 한 번에 잡는다. */
+#step-2:checked ~ .wizard .wiz-nav li:nth-child(-n+2) .wiz-dot,
+#step-3:checked ~ .wizard .wiz-nav li:nth-child(-n+3) .wiz-dot,
+#step-4:checked ~ .wizard .wiz-nav li:nth-child(-n+4) .wiz-dot,
+#step-5:checked ~ .wizard .wiz-nav li:nth-child(-n+5) .wiz-dot,
+#step-6:checked ~ .wizard .wiz-nav li:nth-child(-n+6) .wiz-dot,
+#step-7:checked ~ .wizard .wiz-nav li:nth-child(-n+7) .wiz-dot,
+#step-8:checked ~ .wizard .wiz-nav li:nth-child(-n+8) .wiz-dot {
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface-raised));
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--accent-bright);
+}
+
+/* 지금 단계. 채워서 확실히 구분한다. */
+#step-1:checked ~ .wizard .wiz-nav li:nth-child(1) .wiz-dot,
+#step-2:checked ~ .wizard .wiz-nav li:nth-child(2) .wiz-dot,
+#step-3:checked ~ .wizard .wiz-nav li:nth-child(3) .wiz-dot,
+#step-4:checked ~ .wizard .wiz-nav li:nth-child(4) .wiz-dot,
+#step-5:checked ~ .wizard .wiz-nav li:nth-child(5) .wiz-dot,
+#step-6:checked ~ .wizard .wiz-nav li:nth-child(6) .wiz-dot,
+#step-7:checked ~ .wizard .wiz-nav li:nth-child(7) .wiz-dot,
+#step-8:checked ~ .wizard .wiz-nav li:nth-child(8) .wiz-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+#step-1:checked ~ .wizard .wiz-nav li:nth-child(1) label,
+#step-2:checked ~ .wizard .wiz-nav li:nth-child(2) label,
+#step-3:checked ~ .wizard .wiz-nav li:nth-child(3) label,
+#step-4:checked ~ .wizard .wiz-nav li:nth-child(4) label,
+#step-5:checked ~ .wizard .wiz-nav li:nth-child(5) label,
+#step-6:checked ~ .wizard .wiz-nav li:nth-child(6) label,
+#step-7:checked ~ .wizard .wiz-nav li:nth-child(7) label,
+#step-8:checked ~ .wizard .wiz-nav li:nth-child(8) label {
+  color: var(--text);
+}
+
+/* 마지막은 끝났다는 뜻이라 초록으로 맺는다. */
+#step-8:checked ~ .wizard .wiz-nav li:nth-child(8) .wiz-dot {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+/* 라디오는 화면에서만 가려 두었으므로 포커스 링을 해당 진행 표시에 그린다. */
+#step-1:focus-visible ~ .wizard .wiz-nav li:nth-child(1) label,
+#step-2:focus-visible ~ .wizard .wiz-nav li:nth-child(2) label,
+#step-3:focus-visible ~ .wizard .wiz-nav li:nth-child(3) label,
+#step-4:focus-visible ~ .wizard .wiz-nav li:nth-child(4) label,
+#step-5:focus-visible ~ .wizard .wiz-nav li:nth-child(5) label,
+#step-6:focus-visible ~ .wizard .wiz-nav li:nth-child(6) label,
+#step-7:focus-visible ~ .wizard .wiz-nav li:nth-child(7) label,
+#step-8:focus-visible ~ .wizard .wiz-nav li:nth-child(8) label {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.wiz-bar {
+  height: 3px;
+  background: var(--border);
+}
+.wiz-bar-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--accent), var(--highlight));
+  transition: width 320ms var(--ease-out);
+}
+#step-1:checked ~ .wizard .wiz-bar-fill { width: 12.500%; }
+#step-2:checked ~ .wizard .wiz-bar-fill { width: 25.000%; }
+#step-3:checked ~ .wizard .wiz-bar-fill { width: 37.500%; }
+#step-4:checked ~ .wizard .wiz-bar-fill { width: 50.000%; }
+#step-5:checked ~ .wizard .wiz-bar-fill { width: 62.500%; }
+#step-6:checked ~ .wizard .wiz-bar-fill { width: 75.000%; }
+#step-7:checked ~ .wizard .wiz-bar-fill { width: 87.500%; }
+#step-8:checked ~ .wizard .wiz-bar-fill {
+  width: 100%;
+  background: var(--success);
+}
+
+/* 화면이 바뀔 때 카드 높이가 크게 출렁이지 않도록 바닥을 깔아 둔다. */
+.wiz-screens { min-height: 540px; }
+
+.wiz-screen { display: none; }
+#step-1:checked ~ .wizard .wiz-screen[data-step="1"],
+#step-2:checked ~ .wizard .wiz-screen[data-step="2"],
+#step-3:checked ~ .wizard .wiz-screen[data-step="3"],
+#step-4:checked ~ .wizard .wiz-screen[data-step="4"],
+#step-5:checked ~ .wizard .wiz-screen[data-step="5"],
+#step-6:checked ~ .wizard .wiz-screen[data-step="6"],
+#step-7:checked ~ .wizard .wiz-screen[data-step="7"],
+#step-8:checked ~ .wizard .wiz-screen[data-step="8"] {
+  display: flex;
+  flex-direction: column;
+  min-height: 540px;
+  animation: wizin 220ms var(--ease-out);
+}
+@keyframes wizin {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.wiz-body { flex: 1 1 auto; padding: 40px 44px 32px; }
+
+.wiz-kicker {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--accent);
+}
+.wiz-kicker-done { color: var(--success-bright); }
+
+/* 한 화면에 한 가지만 말한다. 제목을 크게 두어 지금 할 일이 먼저 읽히게 한다. */
+.wiz-title {
+  max-width: var(--measure);
+  margin: 0 0 14px;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+.wiz-lead {
+  max-width: var(--measure);
+  margin: 0 0 24px;
+  font-size: 16.5px;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+
+/* 도식이 주인공이다. 화면 폭을 다 쓴다. */
+.wiz-fig {
+  margin: 24px 0;
+  padding: 24px 26px 18px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.wiz-fig figcaption {
+  max-width: var(--measure);
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--text-faint);
+}
+
+/* 세로로 긴 사진은 폭을 묶는다. 본문 폭을 다 쓰면 원본보다 크게 늘어나
+   흐려지고, 한 화면을 혼자 다 차지한다. */
+.wiz-fig-tall { max-width: 720px; }
+
+/* 설치 가이드 본문은 훑어 읽는 글이라 마지막 줄에 한 어절만 떨어지는
+   것이 특히 눈에 띈다. 브라우저가 줄을 고르게 나누도록 맡긴다.
+   지원하지 않는 브라우저에서는 기본 동작으로 떨어질 뿐 깨지지 않는다. */
+.wiz-lead,
+.wiz-fig figcaption,
+.ticks li span,
+.alt-lead,
+.dl-sub,
+.side-note,
+.spec-n {
+  text-wrap: balance;
+}
+
+/* 마지막 화면은 할 일이 없어 내용이 짧다. 카드 높이는 단계마다 같아야
+   하므로 남는 자리를 위아래로 나눠 가운데에 놓는다. 위쪽에만 몰리면
+   아래가 통째로 비어 화면이 덜 만들어진 것처럼 보인다. */
+.wiz-done .wiz-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.wiz-seal {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  margin-bottom: 20px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--success) 18%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--success) 45%, transparent);
+  color: var(--success-bright);
+}
+
+
+/* 단계를 넘기는 줄. 화면 바닥에 붙는다. */
+.wiz-foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 44px 22px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-sunken);
+}
+.wiz-hint { font-size: 12.5px; color: var(--text-faint); }
+
+.wbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 11px 20px;
+  border-radius: 999px;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+/* 다음으로 가는 버튼만 채운다. 어디를 눌러야 할지 헷갈리지 않게 한다. */
+.wbtn-go {
+  margin-left: auto;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--bg);
+}
+.wbtn-go:hover { background: var(--accent-bright); border-color: var(--accent-bright); }
+
+.wbtn-back,
+.wbtn-ghost {
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  color: var(--text-dim);
+}
+.wbtn-back:hover,
+.wbtn-ghost:hover { color: var(--text); border-color: var(--accent); }
+.wbtn-ghost { margin-left: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wiz-screen, .wiz-bar-fill, .wiz-dot, .wiz-nav label, .wbtn, .dl { transition: none; }
+  #step-1:checked ~ .wizard .wiz-screen[data-step="1"],
+  #step-2:checked ~ .wizard .wiz-screen[data-step="2"],
+  #step-3:checked ~ .wizard .wiz-screen[data-step="3"],
+  #step-4:checked ~ .wizard .wiz-screen[data-step="4"],
+  #step-5:checked ~ .wizard .wiz-screen[data-step="5"],
+  #step-6:checked ~ .wizard .wiz-screen[data-step="6"],
+  #step-7:checked ~ .wizard .wiz-screen[data-step="7"],
+  #step-8:checked ~ .wizard .wiz-screen[data-step="8"] { animation: none; }
+}
+
+/* 1024px 에서는 진행 표시의 글자를 지우고 동그라미만 남긴다.
+   여섯 칸에 글자를 다 넣으면 잘린다. */
+@media (max-width: 1160px) {
+  .wiz-nav ol { gap: 6px; }
+  .wiz-dot-label { display: none; }
+  .wiz-nav label { justify-content: center; }
+  .wiz-body { padding: 32px 28px 26px; }
+  .wiz-foot { padding: 16px 28px 20px; }
+  .wiz-nav { padding: 18px 24px 0; }
+  .wiz-title { font-size: 27px; }
+}
+
+.ticks { max-width: var(--measure); margin: 20px 0 0; padding: 0; list-style: none; }
+.ticks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text);
+}
+.ticks li + li { margin-top: 10px; }
+.ticks .icon { margin-top: 5px; color: var(--accent); }
+.ticks a {
+  display: inline;
+  color: var(--accent-bright);
+  text-underline-offset: 3px;
+}
+.ticks a .icon { margin: 0 0 -2px 2px; color: currentColor; }
+.ticks-big li { font-size: 15.5px; }
+
+.code-card { margin-top: 22px; max-width: 640px; }
+
+/* 3단계의 주된 동작. 이 단계에서 해야 할 일이 하나뿐임이 보이도록
+   본문의 어떤 요소보다 눈에 먼저 들어와야 한다. 띠 장식 대신 면을
+   채우고 테두리를 둘러 무게를 준다. */
+.dl {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: 640px;
+  margin: 4px 0 8px;
+  padding: 18px 22px;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  color: var(--text);
+  text-decoration: none;
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+.dl:hover {
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  border-color: var(--accent);
+  box-shadow: var(--ring-accent);
+}
+.dl:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 2px;
+}
+.dl-ico {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--bg);
+}
+.dl-txt { min-width: 0; }
+.dl-txt strong {
+  display: block;
+  font-size: 16.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.dl-sub {
+  display: block;
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+/* 파일 이름은 순수 ASCII 라 모노가 읽기 좋다. 좁아지면 먼저 지운다. */
+.dl-name {
+  flex: none;
+  margin-left: auto;
+  font-size: 12.5px;
+  color: var(--text-faint);
+}
+@media (max-width: 1160px) {
+  .dl-name { display: none; }
+}
+
+/* 코드 방식은 파일 방식의 대안이다. 한 단 들여 놓아 주된 흐름과
+   구분되게 하고, 위에 가는 선 하나만 긋는다. */
+.alt-way {
+  margin-top: 32px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+.alt-h {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-dim);
+}
+.alt-h .icon { color: var(--text-faint); }
+.alt-lead {
+  max-width: var(--measure);
+  margin: 7px 0 0;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+
+
+/* 월드 설정 타일. 한 줄짜리 표보다 훑어보기 쉽다. */

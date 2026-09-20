@@ -9,11 +9,15 @@
 import {
   filterItems, groupOf, groupKo, damagesOf, combatDamage,
   DAMAGE_KO, DAMAGE_NOTE, GROUPS, statCaps, materialAmountAt, armorAt,
-  maxima, usedByIndex,
+  maxima, usedByIndex, sortItems, SORTS, craftCost, expandCost,
 } from "../lib/itemdex.mjs";
+import { loadItems, iconUrl } from "../lib/itemdb.mjs";
 
-const BASE = import.meta.env.BASE_URL.replace(/\/+$/, "");
-const state = { items: [], stages: [], q: "", stage: null, group: null, trail: [] };
+const state = {
+  items: [], stages: [], q: "", stage: null, group: null, sort: "name", trail: [],
+  // 재료 계산기. 아이템을 옮겨 다닐 때마다 처음 값으로 돌린다.
+  calc: { count: 1, maxed: false },
+};
 
 const el = (id) => document.getElementById(id);
 
@@ -37,7 +41,7 @@ function iconHtml(it, size) {
   if (!it || !it.icon) {
     return `<span class="dex-noicon" aria-hidden="true"></span>`;
   }
-  return `<img src="${BASE}/items/${it.icon}.webp" alt="" width="${size}" height="${size}" loading="lazy" decoding="async">`;
+  return `<img src="${iconUrl(it.icon)}" alt="" width="${size}" height="${size}" loading="lazy" decoding="async">`;
 }
 
 function stageOf(n) {
@@ -357,6 +361,78 @@ function howSection(it) {
   </section>`;
 }
 
+/**
+ * 재료 계산기.
+ *
+ * 얻는 방법은 "철 20, 사슴 가죽 2" 까지만 알려 준다. 정작 원정을 나가기
+ * 전에 궁금한 것은 "그래서 광석을 몇 개 캐 와야 하나" 다. 레시피와
+ * 변환표를 끝까지 따라 내려가면 그 답이 나온다.
+ *
+ * 개수를 바꿀 수 있어야 한다. 방패 하나가 아니라 넷을 만들 때가 많다.
+ */
+function calcSection(it) {
+  if (!it.recipe && !it.conversion) return "";
+  const { count, maxed } = state.calc;
+  const cost = it.recipe
+    ? craftCost(it, { maxed })
+    : new Map([[it.conversion.from, Math.ceil(1 / Math.max(1, it.conversion.produced ?? 1))]]);
+
+  // 개수만큼 곱한 뒤 펼친다. 먼저 펼치고 곱하면 올림이 한 번만 일어나
+  // 여러 개 만들 때의 낭비가 사라진다.
+  const scaled = new Map([...cost].map(([id, n]) => [id, n * Math.max(1, count)]));
+  const { raw, trees } = expandCost(state.byId, scaled);
+
+  const nameOf = (id) => esc(state.byId.get(id)?.ko ?? id);
+  const row = (id, n) => `<li>
+    <button type="button" class="dex-mat dex-link" data-go="${esc(id)}">
+      <span class="dex-mat-ico">${iconHtml(state.byId.get(id), 26)}</span>
+      <span class="dex-mat-n">${nameOf(id)}</span>
+      <span class="dex-mat-a num">${n}</span>
+    </button>
+  </li>`;
+
+  // 중간 단계를 접어 둔다. 대개는 합계만 보면 되고, 어디서 뭐가 나오는지
+  // 확인하고 싶을 때만 펼친다.
+  const branch = (node, depth = 0) => {
+    const made = node.made && node.children.length;
+    return `<li>
+      <span class="dex-tree-row" style="padding-left:${depth * 14}px">
+        <span class="dex-tree-ico">${iconHtml(state.byId.get(node.id), 20)}</span>
+        <span class="dex-tree-n${made ? "" : " raw"}">${nameOf(node.id)}</span>
+        <span class="dex-tree-a num">${node.n}</span>
+      </span>
+      ${made ? `<ul>${node.children.map((c) => branch(c, depth + 1)).join("")}</ul>` : ""}
+    </li>`;
+  };
+
+  const hasTree = trees.some((t) => t.made && t.children.length);
+  const upgradable = it.recipe && it.maxQuality > 1;
+
+  return `<section class="dex-sec">
+    <h4>얼마나 필요한가</h4>
+    <div class="dex-calc">
+      <div class="dex-calc-ctl">
+        <span class="dex-calc-l">개수</span>
+        <div class="dex-step">
+          <button type="button" class="dex-step-b" data-calc="minus" aria-label="하나 줄이기">-</button>
+          <input type="number" class="dex-step-i num" id="dex-count-in" min="1" max="999" value="${count}" aria-label="만들 개수">
+          <button type="button" class="dex-step-b" data-calc="plus" aria-label="하나 늘리기">+</button>
+        </div>
+        ${upgradable ? `<label class="dex-check">
+          <input type="checkbox" id="dex-maxed"${maxed ? " checked" : ""}>
+          <span>${it.maxQuality}단계까지 강화</span>
+        </label>` : ""}
+      </div>
+      <p class="dex-calc-sum">모아 와야 할 것</p>
+      <ul class="dex-mats">${[...raw].map(([id, n]) => row(id, n)).join("")}</ul>
+      ${hasTree ? `<details class="dex-tree-wrap">
+        <summary>중간에 무엇을 거치는지 보기</summary>
+        <ul class="dex-tree">${trees.map((t) => branch(t)).join("")}</ul>
+      </details>` : ""}
+    </div>
+  </section>`;
+}
+
 /** 거꾸로 보기. 이 아이템이 어디에 들어가는지. */
 function usedSection(it) {
   const uses = state.usedBy.get(it.id) ?? [];
@@ -405,6 +481,7 @@ function detail(it) {
     ${infoSection(it)}
     ${upgradeSection(it)}
     ${howSection(it)}
+    ${calcSection(it)}
     ${usedSection(it)}
     <p class="dex-d-id">내부 이름 <code>${esc(it.id)}</code></p>`;
 }
@@ -412,7 +489,7 @@ function detail(it) {
 /* 화면 */
 
 function render() {
-  const list = filterItems(state.items, state);
+  const list = sortItems(filterItems(state.items, state), state.sort);
   const grid = el("dex-grid");
   el("dex-count").textContent = `${list.length}개`;
   if (!list.length) {
@@ -437,8 +514,20 @@ function paintDetail(id) {
   el("dex-back").hidden = state.trail.length === 0;
 }
 
+/** 빈 칸이나 0 을 그대로 두면 계산이 통째로 0 이 되어 화면이 빈다. */
+function clampCount(n) {
+  if (!Number.isFinite(n)) return 1;
+  return Math.max(1, Math.min(999, Math.round(n)));
+}
+
+/** 계산기는 아이템마다 따로다. 옮겨 다닐 때 값을 들고 가면 헷갈린다. */
+function resetCalc() {
+  state.calc = { count: 1, maxed: false };
+}
+
 function openDetail(id) {
   state.trail = [];
+  resetCalc();
   paintDetail(id);
   el("dex-modal").hidden = false;
   el("dex-close").focus();
@@ -448,12 +537,16 @@ function openDetail(id) {
 function goTo(id) {
   if (!state.byId.has(id)) return;
   if (state.current) state.trail.push(state.current);
+  resetCalc();
   paintDetail(id);
 }
 
 function goBack() {
   const prev = state.trail.pop();
-  if (prev) paintDetail(prev);
+  if (prev) {
+    resetCalc();
+    paintDetail(prev);
+  }
 }
 
 function closeDetail() {
@@ -490,6 +583,12 @@ function paintChips() {
     state.group,
     (v) => { state.group = v; state.limit = 60; paintChips(); render(); });
 
+  // 정렬은 "전체" 가 없다. 언제나 하나가 켜져 있다.
+  chips(el("dex-sorts"),
+    SORTS.map((s) => ({ value: s.id, label: s.ko })),
+    state.sort,
+    (v) => { state.sort = v ?? "name"; state.limit = 60; paintChips(); render(); });
+
   // 단계를 고르면 그게 언제부터인지 알려 준다. "늪" 만으로는 순서를 모른다.
   const note = el("dex-note");
   const s = state.stage === null ? null : stageOf(state.stage);
@@ -501,16 +600,10 @@ async function init() {
   const host = el("dex-grid");
   if (!host) return;
   try {
-    // force-cache 를 쓰면 안 된다. 만료를 무시하고 캐시를 먼저 쓰기 때문에,
-    // 도감을 새로 배포해도 친구 브라우저는 옛 목록을 계속 보여 준다.
-    // 실제로 요리 변환을 추가한 뒤에도 화면이 그대로였다.
-    // no-cache 는 캐시를 버리는 것이 아니라 서버에 "바뀌었나" 를 묻는 것이라,
-    // 안 바뀌었으면 304 로 끝나 전송량도 거의 들지 않는다.
-    const res = await fetch(`${BASE}/items.json`, { cache: "no-cache" });
-    const db = await res.json();
+    const db = await loadItems();
     state.items = db.items;
     state.stages = db.stages;
-    state.byId = new Map(db.items.map((i) => [i.id, i]));
+    state.byId = db.byId;
     state.max = maxima(db.items);
     state.usedBy = usedByIndex(db.items);
     state.limit = 60;
@@ -538,9 +631,36 @@ async function init() {
     if (c) openDetail(c.dataset.id);
   });
 
-  el("dex-detail").addEventListener("click", (e) => {
+  const detailBox = el("dex-detail");
+
+  detailBox.addEventListener("click", (e) => {
+    const step = e.target.closest("[data-calc]");
+    if (step) {
+      state.calc.count = clampCount(state.calc.count + (step.dataset.calc === "plus" ? 1 : -1));
+      paintDetail(state.current);
+      return;
+    }
     const link = e.target.closest(".dex-link");
     if (link) goTo(link.dataset.go);
+  });
+
+  // 개수 칸과 강화 여부. 다시 그리면 포커스가 날아가므로, 숫자 칸은
+  // 다시 그린 뒤 커서를 돌려놓는다.
+  detailBox.addEventListener("input", (e) => {
+    if (e.target.id !== "dex-count-in") return;
+    state.calc.count = clampCount(Number(e.target.value));
+    paintDetail(state.current);
+    const again = el("dex-count-in");
+    if (again) {
+      again.focus();
+      again.select();
+    }
+  });
+
+  detailBox.addEventListener("change", (e) => {
+    if (e.target.id !== "dex-maxed") return;
+    state.calc.maxed = e.target.checked;
+    paintDetail(state.current);
   });
 
   el("dex-back").addEventListener("click", goBack);

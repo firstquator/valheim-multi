@@ -1,0 +1,56 @@
+/* 월드 탭. 기본값과 다르게 둔 설정을 타일로 늘어놓는다. */
+
+.spec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+  gap: var(--gap);
+  margin-bottom: 24px;
+}
+.spec {
+  padding: 18px 20px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  transition: border-color 200ms ease, transform 240ms var(--ease-out);
+}
+.spec:hover { border-color: var(--border-strong); transform: translateY(-2px); }
+.spec-ico {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.spec-k { margin: 0; font-size: 12px; color: var(--text-faint); }
+.spec-v {
+  margin: 3px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.spec-v-sm { font-size: 14px; font-weight: 600; word-break: break-all; }
+.spec-n { margin: 8px 0 0; font-size: 12.5px; line-height: 1.55; color: var(--text-dim); }
+
+/* 난이도를 올린 항목과 낮춘 항목을 색으로도 구분한다.
+   값 글자가 함께 있으므로 색만으로 판단하게 두지는 않는다. */
+.spec-hard .spec-ico {
+  color: var(--warning-bright);
+  background: color-mix(in srgb, var(--warning) 14%, var(--surface-raised));
+  border-color: color-mix(in srgb, var(--warning) 35%, var(--border));
+}
+.spec-hard .spec-v { color: var(--warning-bright); }
+.spec-soft .spec-ico {
+  color: var(--success-bright);
+  background: color-mix(in srgb, var(--success) 14%, var(--surface-raised));
+  border-color: color-mix(in srgb, var(--success) 35%, var(--border));
+}
+.spec-soft .spec-v { color: var(--success-bright); }
+@media (prefers-reduced-motion: reduce) {
+  .spec { transition: none; }
+  .spec:hover { transform: none; }
+}

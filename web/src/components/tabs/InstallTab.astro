@@ -1,0 +1,887 @@
+---
+// 설치 가이드 탭. 이미 설치한 사람을 위한 접이식 안내, 처음
+// 설치용 여덟 단계, 그리고 막혔을 때 보는 목록.
+//
+// index.astro 가 <InstallTab slot="install" /> 로 끼운다.
+
+import Callout from "../Callout.astro";
+import CopyField from "../CopyField.astro";
+import DiagramFlow from "../diagrams/DiagramFlow.astro";
+import DiagramLaunch from "../diagrams/DiagramLaunch.astro";
+import Hi from "../Hi.astro";
+import Icon from "../Icon.astro";
+import PageHead from "../PageHead.astro";
+import Shot from "../Shot.astro";
+import { SERVER } from "../../config.mjs";
+import { STEPS } from "../../data/steps.mjs";
+import { TROUBLES } from "../../data/troubles.mjs";
+import { base } from "../../lib/base-url.mjs";
+import { formatChangeDate } from "../../lib/modpack-changes.mjs";
+import { MODPACK_FILE, latestChange, modpackCode, modpackDepCount, modpackPackageCount, needsAnyInstall, tier2, tier3 } from "../../lib/modpack-view.mjs";
+---
+
+<div>
+<PageHead
+  kicker="한 화면에 한 단계씩"
+  title="설치 가이드"
+  icon="download-04"
+  tone={needsAnyInstall ? "accent" : "success"}
+  desc={needsAnyInstall
+    ? "이미 설치하셨다면 맨 위 칸을 펼쳐 보세요. 1분이면 끝납니다. 처음이라면 그 아래 단계를 순서대로 넘기며 따라 하세요. 10분 정도 걸립니다."
+    : "지금은 따라 할 필요가 없습니다. 앞으로 설치가 필요한 모드가 생겼을 때를 위해 적어 둡니다."}
+/>
+
+{/*
+  설치할 것이 있다는 안내는 여기 두지 않는다. 이 탭을 연 사람은
+  이미 설치하러 온 사람이고, 개수와 목록은 모드 탭에, 파일 하나로
+  끝난다는 사실은 3단계에 적혀 있다.
+
+  반대로 설치할 것이 없을 때는 알려 줘야 한다. 그냥 켜고 들어오면
+  된다는 사실을 모르면 이 절차를 처음부터 따라 하게 된다.
+*/}
+{!needsAnyInstall && (
+  <Callout title="지금 친구들은 아무것도 설치하지 않아도 접속됩니다" tone="success">
+    현재 서버에는 서버에만 깔리는 모드만 있습니다. 발헤임을 그냥 켜고
+    서버 탭의 주소로 들어오시면 됩니다. 아래 절차는 앞으로 직접 설치할
+    모드가 추가될 때를 위한 안내입니다.
+  </Callout>
+)}
+
+{/*
+  이미 설치한 사람을 위한 자리다.
+
+  지금 친구들은 전원이 한 번씩 설치를 마친 상태라, 이 탭을 다시
+  여는 이유는 대부분 "모드가 바뀌었다니 다시 받아야 한다" 이다.
+  그런 사람에게 8단계를 처음부터 보여주면 이미 아는 것을 다시
+  읽게 되고, 정작 다른 한 곳(Update existing profile)을 놓친다.
+
+  그래서 위저드보다 앞에 두고, 처음 설치와 다른 곳만 적는다.
+  처음인 사람은 제목을 보고 건너뛴다.
+
+  접어 둔다. 펼친 채로 두면 이 탭을 처음 여는 사람이 자기와
+  상관없는 네 단계를 먼저 읽고 나서야 진짜 1단계에 닿는다.
+  제목과 한 줄 요약만 보이면 자기 것인지 아닌지 바로 가른다.
+
+  details 를 쓴다. 탭과 위저드가 그렇듯 여기도 자바스크립트가
+  필요 없고, 열고 닫기와 키보드 조작을 브라우저가 맡는다.
+*/}
+<details class="upg" id="update">
+  <summary class="upg-sum">
+    <span class="upg-sum-ico" aria-hidden="true">
+      <Icon name="system-update-01" size={19} />
+    </span>
+    <span class="upg-sum-t">
+      <h2>
+        이미 설치하셨다면
+        {/* 이 브라우저가 파일을 받은 날을 알 때만 나온다.
+            ModpackFresh.js 가 채운다. */}
+        <span class="upg-badge" id="upg-badge" hidden></span>
+      </h2>
+      <span class="upg-sum-n">
+        프로필 파일만 다시 받아 덮어쓰면 됩니다. 1분이면 끝납니다
+      </span>
+    </span>
+    <span class="upg-chev" aria-hidden="true">
+      <Icon name="arrow-down-01" size={18} />
+    </span>
+  </summary>
+
+  <p class="lead upg-lead">
+    r2modman 에 <Hi text="gaybar" ui />{" "}프로필이 이미 있다면 처음부터
+    다시 할 필요가 없습니다. 아래 네 단계 중 처음 설치와 다른 곳은
+    <strong>2단계 하나뿐</strong>입니다.
+  </p>
+
+  <Callout title="이럴 때 다시 받으시면 됩니다" tone="info">
+    서버 탭의 모드팩 갱신 날짜가 마지막으로 받은 날보다 뒤일 때, 또는
+    접속하려는데 모드 버전이 서버와 다르다는 창이 뜰 때입니다. 둘 다
+    아니라면 그대로 쓰셔도 됩니다.
+  </Callout>
+
+  <a class="dl" href={base(MODPACK_FILE)} download>
+    <span class="dl-ico" aria-hidden="true">
+      <Icon name="file-download" size={24} />
+    </span>
+    <span class="dl-txt">
+      <strong>프로필 파일 다시 받기</strong>
+      <span class="dl-sub">
+        {latestChange
+          ? `${formatChangeDate(latestChange.date)} 기준입니다. 패키지 ${modpackPackageCount}개가 버전까지 들어 있습니다`
+          : `패키지 ${modpackPackageCount}개가 버전까지 들어 있습니다`}
+      </span>
+    </span>
+    <span class="dl-name mono">{MODPACK_FILE}</span>
+  </a>
+
+  <ol class="upg-steps">
+    <li>
+      <span class="upg-n">1</span>
+      <span class="upg-t">
+        r2modman 을 켜고 <Hi text="Import / Update" ui />{" "}를 누른 뒤{" "}
+        <Hi text="From file" ui />{" "}을 고르고 방금 받은 파일을 선택합니다.
+        여기까지는 처음 설치할 때와 같습니다
+      </span>
+    </li>
+    <li>
+      <span class="upg-n">2</span>
+      <span class="upg-t">
+        <Hi text="Update existing profile" ui />{" "}을 고릅니다.{" "}
+        <strong>처음 설치와 다른 곳은 여기 하나뿐입니다.</strong>{" "}
+        <Hi text="Import new profile" tone="caution" ui />{" "}을 누르면
+        프로필이 하나 더 생겨서 헷갈립니다
+      </span>
+    </li>
+    <li>
+      <span class="upg-n">3</span>
+      <span class="upg-t">
+        덮어쓸 프로필을 묻는 목록에서 <Hi text="gaybar" ui />{" "}를 고르고{" "}
+        <Hi text="Import" ui />{" "}를 누릅니다. 바뀐 모드만 새로 받으므로
+        처음보다 빨리 끝납니다
+      </span>
+    </li>
+    <li>
+      <span class="upg-n">4</span>
+      <span class="upg-t">
+        <Hi text="Start modded" ui />{" "}로 게임을 켜고 서버에 들어옵니다.
+        세이브와 설정은 그대로 남아 있습니다
+      </span>
+    </li>
+  </ol>
+
+  {/*
+    처음 설치 안내(4단계)와 같은 사진을 쓰지만 표시를 뒤집는다.
+    그쪽에서는 왼쪽이 눌러야 할 것이고 여기서는 오른쪽이다.
+    사진이 같은데 표시까지 같으면 반대로 누른다.
+  */}
+  <figure class="wiz-fig">
+    <Shot
+      src={base("guide/08-import-new-or-update.png")}
+      alt="기존 프로필을 고칠지 새로 만들지 묻는 화면. Import new profile 과 Update existing profile 두 버튼이 있습니다."
+      width={980}
+      height={301}
+      marks={[
+        { x: 3.6, y: 67.5, w: 26.5, h: 20.5, tone: "caution" },
+        { x: 29.9, y: 67.5, w: 31.2, h: 20.5, n: 1 },
+      ]}
+    />
+    <figcaption>
+      업데이트할 때는 오른쪽입니다. 처음 설치 안내에서는 왼쪽을
+      누르라고 되어 있으니 헷갈리지 마세요.
+    </figcaption>
+  </figure>
+
+  <Callout title="프로필을 덮어써도 세이브는 지워지지 않습니다" tone="success">
+    캐릭터와 월드는 r2modman 프로필이 아니라 발헤임 쪽에 저장됩니다.
+    덮어쓰는 것은 모드 목록과 버전뿐입니다.
+  </Callout>
+</details>
+
+<div class="upg-split">
+  <span>처음 설치하시나요? 아래 순서대로 하시면 됩니다</span>
+</div>
+
+{/*
+  단계 전환용 라디오다. 탭 전환과 같은 방식으로 CSS 형제 선택자만
+  쓴다. JavaScript 를 쓰지 않는다.
+
+  name 은 탭 라디오의 "tab" 과 반드시 달라야 한다. 겹치면 단계를
+  고를 때 탭 라디오가 풀려 화면이 통째로 사라진다.
+
+  화면에서만 가리고 키보드 포커스는 남긴다. display:none 을 쓰면
+  Tab 으로 도달할 수 없고 화살표로 단계를 넘길 수도 없어진다.
+*/}
+{STEPS.map((s, i) => (
+  <input
+    type="radio"
+    name="step"
+    id={`step-${s.n}`}
+    class="step-radio sr-only"
+    checked={i === 0}
+  />
+))}
+
+<div class="wizard">
+  <nav class="wiz-nav" aria-label="설치 단계">
+    <ol>
+      {STEPS.map((s) => (
+        <li>
+          <label for={`step-${s.n}`}>
+            <span class="wiz-dot">{s.n}</span>
+            <span class="wiz-dot-label">{s.label}</span>
+          </label>
+        </li>
+      ))}
+    </ol>
+    <div class="wiz-bar"><span class="wiz-bar-fill"></span></div>
+  </nav>
+
+  <div class="wiz-screens">
+    <section class="wiz-screen" data-step="1">
+      <div class="wiz-body">
+        <p class="wiz-kicker">1 / {STEPS.length} 단계</p>
+        <h3 class="wiz-title">r2modman 을 내려받습니다</h3>
+        <p class="wiz-lead">
+          모드를 프로필 단위로 관리해 주는 프로그램입니다. 게임 폴더를
+          직접 건드리지 않으므로 바닐라로 되돌리기도 쉽습니다.
+        </p>
+
+        <figure class="wiz-fig">
+          <DiagramFlow />
+          <figcaption>앞으로 이런 순서로 갑니다. 4단계만 틀리지 않으면 나머지는 쉽습니다.</figcaption>
+        </figure>
+
+        <ul class="ticks">
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              <a href="https://thunderstore.io/package/ebkr/r2modman/" target="_blank" rel="noopener noreferrer">
+                Thunderstore 의 r2modman 페이지
+                <Icon name="arrow-up-right-01" size={14} />
+                <span class="sr-only">새 탭에서 열림</span>
+              </a>
+              를 열고 오른쪽의 보라색 <Hi text="Download" ui />{" "}를 누릅니다
+            </span>
+          </li>
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              바로 위의 초록색 <Hi text="Install with App" tone="caution" ui />{" "}은 누르지 마세요.
+              Thunderstore 앱이 따로 있어야 동작합니다
+            </span>
+          </li>
+        </ul>
+
+        <figure class="wiz-fig">
+          <Shot
+            src={base("guide/01-thunderstore.png")}
+            alt="Thunderstore 의 r2modman 페이지. 오른쪽 위에 초록색 Install with App 버튼이, 그 아래에 보라색 Download 버튼이 있습니다."
+            width={2105}
+            height={1174}
+            marks={[
+              { x: 75.0, y: 19.8, w: 22.5, h: 7.4, tone: "caution" },
+              { x: 75.0, y: 27.4, w: 14.2, h: 5.6, n: 1 },
+            ]}
+          />
+          <figcaption>
+            1번이 눌러야 하는 버튼입니다. 그 위의 초록색 버튼은 다른
+            프로그램을 요구하니 지나칩니다.
+          </figcaption>
+        </figure>
+
+        <ul class="ticks">
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>받은 압축 파일을 풀고 안에 있는 Setup 파일을 실행합니다</span>
+          </li>
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              윈도우가 알 수 없는 앱이라고 막으면 추가 정보를 누르고
+              실행을 고릅니다
+            </span>
+          </li>
+        </ul>
+
+        <figure class="wiz-fig">
+          <Shot
+            src={base("guide/02-download-folder.png")}
+            alt="압축을 푼 폴더. 여러 파일 가운데 r2modman-Setup 으로 시작하는 응용 프로그램 파일이 골라져 있습니다."
+            width={1051}
+            height={592}
+            marks={[{ x: 16.5, y: 54.5, w: 21.5, h: 5.6 }]}
+          />
+          <figcaption>
+            폴더 안에 파일이 여러 개지만 실행할 것은 Setup 하나입니다.
+            버전 번호는 받은 시점마다 다릅니다.
+          </figcaption>
+        </figure>
+      </div>
+      <footer class="wiz-foot">
+        <span class="wiz-hint">화살표 키로도 단계를 넘길 수 있습니다</span>
+        <label class="wbtn wbtn-go" for="step-2">
+          다음
+          <Icon name="arrow-right-02" size={17} />
+        </label>
+      </footer>
+    </section>
+
+    <section class="wiz-screen" data-step="2">
+      <div class="wiz-body">
+        <p class="wiz-kicker">2 / {STEPS.length} 단계</p>
+        <h3 class="wiz-title">발헤임과 Steam 을 고릅니다</h3>
+        <p class="wiz-lead">
+          r2modman 을 처음 켜면 게임 목록이 나옵니다. 게임을 고르고
+          이어서 플랫폼까지 고르면 다음부터는 묻지 않습니다.
+        </p>
+
+        <ul class="ticks ticks-big">
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              Game selection 화면의 검색창에 valheim 을 칩니다
+            </span>
+          </li>
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              나온 카드 위의 <Hi text="Select game" ui />{" "}을 누릅니다.
+              아래의 Set as default 는 안 눌러도 됩니다
+            </span>
+          </li>
+        </ul>
+
+        <figure class="wiz-fig">
+          <Shot
+            src={base("guide/03-game-selection.png")}
+            alt="r2modman 의 Game selection 화면. 검색창에 valheim 이 입력되어 있고 아래 카드에 Select game 과 Set as default 버튼이 있습니다."
+            width={1787}
+            height={1176}
+            marks={[
+              { x: 10.0, y: 25.2, w: 74.0, h: 6.2, n: 1 },
+              { x: 14.0, y: 59.6, w: 11.6, h: 6.4, n: 2 },
+            ]}
+          />
+          <figcaption>검색창에 치고, 카드 위의 파란 버튼을 누르면 됩니다.</figcaption>
+        </figure>
+
+        <ul class="ticks ticks-big">
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              이어서 어느 스토어로 샀는지 묻는 화면이 나옵니다. Steam 을
+              고르고 <Hi text="Select platform" ui />{" "}을 누릅니다
+            </span>
+          </li>
+        </ul>
+
+        <figure class="wiz-fig">
+          <Shot
+            src={base("guide/04-store-platform.png")}
+            alt="Which store manages your game 화면. Steam 과 Xbox Game Pass 중에서 고르고 아래의 Select platform 버튼을 누릅니다."
+            width={989}
+            height={390}
+            marks={[
+              { x: 3.0, y: 39.0, w: 13.5, h: 12.0, n: 1 },
+              { x: 3.2, y: 72.5, w: 23.0, h: 18.0, n: 2 },
+            ]}
+          />
+          <figcaption>
+            건너뛸 수 없는 화면입니다. Steam 이 이미 골라져 있어도 아래
+            버튼을 눌러야 넘어갑니다.
+          </figcaption>
+        </figure>
+
+      </div>
+      <footer class="wiz-foot">
+        <label class="wbtn wbtn-back" for="step-1">
+          <Icon name="arrow-left-02" size={17} />
+          이전
+        </label>
+        <label class="wbtn wbtn-go" for="step-3">
+          다음
+          <Icon name="arrow-right-02" size={17} />
+        </label>
+      </footer>
+    </section>
+
+    <section class="wiz-screen" data-step="3">
+      <div class="wiz-body">
+        <p class="wiz-kicker">3 / {STEPS.length} 단계</p>
+        <h3 class="wiz-title">프로필 파일을 받아 고릅니다</h3>
+        <p class="wiz-lead">
+          모드를 하나씩 찾아서 받을 필요가 없습니다. 아래 파일 하나에
+          모드 목록과 버전이 통째로 들어 있습니다.
+        </p>
+
+        {/*
+          이 단계의 주된 동작이다. 여기서 파일을 받아야 나머지가
+          의미가 있으므로 다른 요소보다 먼저, 크게 놓는다.
+
+          href 는 반드시 base() 를 거친다. "/gaybar-modpack.r2z" 로
+          쓰면 배포본에서 404 가 난다. download 를 주어 브라우저가
+          파일을 열지 않고 내려받게 한다.
+        */}
+        <a class="dl" href={base(MODPACK_FILE)} download>
+          <span class="dl-ico" aria-hidden="true">
+            <Icon name="file-download" size={24} />
+          </span>
+          <span class="dl-txt">
+            <strong>프로필 파일 내려받기</strong>
+            <span class="dl-sub">
+              전원 필수 {tier3.length}개, 원하면 설치 {tier2.length}개,
+              의존성 {modpackDepCount}개가 버전까지 그대로 들어 있습니다
+            </span>
+          </span>
+          <span class="dl-name mono">{MODPACK_FILE}</span>
+        </a>
+
+        {tier2.length > 0 && (
+          <Callout title="원하면 설치하는 모드도 함께 들어 있습니다" tone="info">
+            전원 필수 모드 말고 각자 고르는 모드 {tier2.length}개도
+            담겨 있습니다. 서버가 이 모드들을 검사하지 않으니 필요
+            없으면 r2modman 의 모드 목록에서 끄거나 지우세요.
+          </Callout>
+        )}
+
+        <ul class="ticks ticks-big">
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              r2modman 의 Profile selection 화면에서{" "}
+              <Hi text="Import / Update" ui />{" "}를 누릅니다
+            </span>
+          </li>
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              가져오는 방법을 묻는 화면에서{" "}
+              <Hi text="From file" ui />{" "}을 고릅니다
+            </span>
+          </li>
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              파일 선택 창이 뜨면 방금 받은 파일을 고릅니다. 압축은 풀지
+              않습니다
+            </span>
+          </li>
+        </ul>
+
+        <figure class="wiz-fig">
+          <Shot
+            src={base("guide/05-profile-selection.png")}
+            alt="r2modman 의 Profile selection 화면. Select profile, Rename, Create new, Import / Update, Delete 버튼이 한 줄로 놓여 있습니다."
+            width={1790}
+            height={731}
+            marks={[{ x: 40.5, y: 75.5, w: 13.2, h: 10.5 }]}
+          />
+          <figcaption>
+            버튼이 다섯 개지만 누를 것은 Import / Update 하나입니다.
+            빨간 Delete 와 헷갈리지 마세요.
+          </figcaption>
+        </figure>
+
+        <figure class="wiz-fig">
+          <Shot
+            src={base("guide/06-import-method.png")}
+            alt="How are you importing a profile 화면. From file 과 From code 두 버튼 중 하나를 고릅니다."
+            width={1202}
+            height={475}
+            marks={[{ x: 13.0, y: 58.3, w: 13.2, h: 14.5 }]}
+          />
+          <figcaption>
+            왼쪽 From file 을 고릅니다. 오른쪽 From code 는 코드를 받았을
+            때 쓰는 자리입니다.
+          </figcaption>
+        </figure>
+
+        {/*
+          프로필 코드는 r2modman GUI 에서 사람이 직접 발급해야 한다.
+          발급해서 data/mods.json 에 적어 두면 이 아래가 저절로
+          나타난다. 지금은 비어 있어 파일 방식만 보인다.
+        */}
+        {modpackCode && (
+          <div class="alt-way">
+            <h4 class="alt-h">
+              <Icon name="copy-01" size={17} />
+              코드로 가져오는 방법도 있습니다
+            </h4>
+            <p class="alt-lead">
+              파일을 받기 어려운 상황이면 가져오는 방법을 묻는 화면에서
+              <Hi text="From code" ui />{" "}를 고르고 아래 코드를 붙여넣어도
+              됩니다. 그 뒤에 나오는 화면은 파일 방식과 같습니다.
+            </p>
+
+            <div class="card code-card">
+              <CopyField label="프로필 코드" value={modpackCode} mono />
+            </div>
+
+            <figure class="wiz-fig">
+              <Shot
+                src={base("guide/07-profile-code.png")}
+                alt="Enter the profile code 화면. 입력칸에 코드를 붙여넣고 아래 Continue 를 누릅니다."
+                width={1021}
+                height={443}
+                marks={[{ x: 6.5, y: 37.5, w: 89.0, h: 16.5 }]}
+              />
+              <figcaption>
+                입력칸에 붙여넣고 Continue 를 누릅니다. 코드 앞뒤에 공백이
+                끼지 않게 복사 버튼을 쓰세요.
+              </figcaption>
+            </figure>
+          </div>
+        )}
+      </div>
+      <footer class="wiz-foot">
+        <label class="wbtn wbtn-back" for="step-2">
+          <Icon name="arrow-left-02" size={17} />
+          이전
+        </label>
+        <label class="wbtn wbtn-go" for="step-4">
+          다음
+          <Icon name="arrow-right-02" size={17} />
+        </label>
+      </footer>
+    </section>
+
+    <section class="wiz-screen" data-step="4">
+      <div class="wiz-body">
+        <p class="wiz-kicker">4 / {STEPS.length} 단계</p>
+        <h3 class="wiz-title">가져오기를 끝냅니다</h3>
+        <p class="wiz-lead">
+          파일을 고르면 확인 화면이 두 개 더 나옵니다. 둘 다 넘기면
+          모드가 저절로 깔립니다.
+        </p>
+
+        <ul class="ticks ticks-big">
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              새로 만들지 기존 것을 고칠지 묻습니다.{" "}
+              <Hi text="Import new profile" ui />{" "}을 누릅니다
+            </span>
+          </li>
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              <Hi text="Update existing profile" tone="caution" ui />{" "}은 고르지 마세요.
+              쓰던 프로필을 통째로 덮어씁니다
+            </span>
+          </li>
+        </ul>
+
+        <figure class="wiz-fig">
+          <Shot
+            src={base("guide/08-import-new-or-update.png")}
+            alt="기존 프로필을 고칠지 새로 만들지 묻는 화면. Import new profile 과 Update existing profile 두 버튼이 있습니다."
+            width={980}
+            height={301}
+            marks={[
+              { x: 3.6, y: 67.5, w: 26.5, h: 20.5, n: 1 },
+              { x: 29.9, y: 67.5, w: 31.2, h: 20.5, tone: "caution" },
+            ]}
+          />
+          <figcaption>
+            왼쪽이 새 프로필을 만드는 쪽입니다. 오른쪽은 이미 쓰던
+            프로필을 덮어쓰니 처음이라면 누르지 않습니다.
+          </figcaption>
+        </figure>
+
+        <ul class="ticks ticks-big">
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              설치될 패키지 목록이 나옵니다. 이름들이 제대로 떠 있으면
+              파일이 정상이라는 뜻입니다
+            </span>
+          </li>
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              아래의 <Hi text="Import" ui />{" "}를 누르고 내려받기가 끝날
+              때까지 기다립니다
+            </span>
+          </li>
+        </ul>
+
+        {/* 세로로 긴 사진이라 폭을 묶는다. 본문 폭을 다 쓰면 한 화면을
+            혼자 다 차지한다. */}
+        <figure class="wiz-fig wiz-fig-tall">
+          <Shot
+            src={base("guide/09-packages-to-install.png")}
+            alt="Packages to be installed 목록 화면. BepInExPack_Valheim 부터 설치될 패키지가 아이콘과 함께 나열되고 아래에 Import 버튼이 있습니다."
+            width={980}
+            height={1072}
+            marks={[
+              { x: 4.0, y: 14.0, w: 90.5, h: 72.0, n: 1 },
+              { x: 3.8, y: 89.3, w: 13.5, h: 8.0, n: 2 },
+            ]}
+          />
+          <figcaption>
+            목록이 뜨면 파일을 제대로 읽었다는 신호입니다. 확인했으면
+            아래 버튼을 누릅니다.
+          </figcaption>
+        </figure>
+
+      </div>
+      <footer class="wiz-foot">
+        <label class="wbtn wbtn-back" for="step-3">
+          <Icon name="arrow-left-02" size={17} />
+          이전
+        </label>
+        <label class="wbtn wbtn-go" for="step-5">
+          다음
+          <Icon name="arrow-right-02" size={17} />
+        </label>
+      </footer>
+    </section>
+
+    <section class="wiz-screen" data-step="5">
+      <div class="wiz-body">
+        <p class="wiz-kicker">5 / {STEPS.length} 단계</p>
+        <h3 class="wiz-title">프로필을 만들고 고릅니다</h3>
+        <p class="wiz-lead">
+          이름을 지을 필요가 없습니다. 파일 안에 이름이 담겨 있어서
+          그대로 채워집니다.
+        </p>
+
+        <ul class="ticks ticks-big">
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              이름 입력칸에 gaybar 가 이미 들어 있습니다. 고치지 말고
+              그대로 둡니다
+            </span>
+          </li>
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              초록색 표시가 뜨면 쓸 수 있는 이름이라는 뜻입니다.{" "}
+              <Hi text="Create" ui />{" "}를 누릅니다
+            </span>
+          </li>
+        </ul>
+
+        <figure class="wiz-fig">
+          <Shot
+            src={base("guide/10-name-profile.png")}
+            alt="Import a profile 화면. 이름 입력칸에 gaybar 가 채워져 있고 그 아래 초록색으로 쓸 수 있는 이름이라는 표시가 떠 있습니다."
+            width={990}
+            height={540}
+            marks={[
+              { x: 4.2, y: 43.0, w: 91.5, h: 13.5, n: 1 },
+              { x: 4.0, y: 79.5, w: 13.5, h: 13.5, n: 2 },
+            ]}
+          />
+          <figcaption>
+            이름은 프로필 파일에서 따라옵니다. 손댈 것이 없습니다.
+          </figcaption>
+        </figure>
+
+        <ul class="ticks ticks-big">
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              프로필 목록으로 돌아오면 Default 아래에 gaybar 가 새로
+              생겨 있습니다
+            </span>
+          </li>
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              gaybar 를 고른 다음 <Hi text="Select profile" ui />{" "}을
+              누릅니다
+            </span>
+          </li>
+        </ul>
+
+        <figure class="wiz-fig">
+          <Shot
+            src={base("guide/11-profile-created.png")}
+            alt="프로필 목록 화면. Default 아래에 gaybar 가 새로 생겨 있고 아래에 Select profile 버튼이 있습니다."
+            width={1513}
+            height={317}
+            marks={[
+              { x: 2.0, y: 33.0, w: 96.0, h: 21.0, n: 1 },
+              { x: 1.7, y: 68.5, w: 13.5, h: 22.0, n: 2 },
+            ]}
+          />
+          <figcaption>
+            Default 는 모드가 없는 원래 프로필입니다. 새로 생긴 gaybar
+            쪽을 골라야 합니다.
+          </figcaption>
+        </figure>
+      </div>
+      <footer class="wiz-foot">
+        <label class="wbtn wbtn-back" for="step-4">
+          <Icon name="arrow-left-02" size={17} />
+          이전
+        </label>
+        <label class="wbtn wbtn-go" for="step-6">
+          다음
+          <Icon name="arrow-right-02" size={17} />
+        </label>
+      </footer>
+    </section>
+
+    <section class="wiz-screen" data-step="6">
+      <div class="wiz-body">
+        <p class="wiz-kicker">6 / {STEPS.length} 단계</p>
+        <h3 class="wiz-title">Start modded 로 게임을 켭니다</h3>
+        <p class="wiz-lead">
+          프로필을 고르면 r2modman 본 화면이 열립니다. 숫자 하나만
+          확인하고 왼쪽 위에서 게임을 켜면 됩니다.
+        </p>
+
+        <ul class="ticks ticks-big">
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              왼쪽의 <Hi text="Installed" ui />{" "}옆 숫자가{" "}
+              {modpackPackageCount}개면 빠짐없이 깔린 것입니다
+            </span>
+          </li>
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              창 제목도 r2modman - gaybar 로 바뀌어 있습니다
+            </span>
+          </li>
+        </ul>
+
+        <figure class="wiz-fig">
+          <Shot
+            src={base("guide/12-installed-list.png")}
+            alt="r2modman 본 화면. 창 제목이 r2modman - gaybar 이고 왼쪽 위에 Start modded 버튼, 그 아래 Installed 개수와 설치된 모드 목록이 보입니다."
+            width={1778}
+            height={1136}
+            marks={[
+              { x: 0.6, y: 23.8, w: 16.5, h: 6.6, n: 1 },
+              { x: 0.6, y: 10.0, w: 16.5, h: 6.4, n: 2 },
+            ]}
+          />
+          <figcaption>
+            1번 자리의 숫자를 봅니다. 사진은 찍을 때의 것이라 숫자가
+            지금과 다를 수 있으니 위에 적힌 개수와 맞춰 보세요. 게임은
+            2번 버튼으로 켭니다.
+          </figcaption>
+        </figure>
+
+        <Callout title="Steam 에서 직접 켜면 모드가 적용되지 않습니다">
+          Steam 라이브러리의 플레이 버튼은 모드 없는 바닐라 게임을
+          켭니다. 반드시 r2modman 왼쪽 위의{" "}
+          <Hi text="Start modded" ui />{" "}를 누르세요. 바탕화면
+          바로가기를 만들어 두면 편합니다.
+        </Callout>
+
+        <figure class="wiz-fig">
+          <DiagramLaunch />
+          <figcaption>
+            같은 게임이라도 어디서 켜느냐에 따라 결과가 달라집니다.
+          </figcaption>
+        </figure>
+
+        <ul class="ticks ticks-big">
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>
+              첫 실행은 모드 로더를 까느라 평소보다 오래 걸립니다.
+              검은 화면이 좀 길어도 기다립니다
+            </span>
+          </li>
+        </ul>
+      </div>
+      <footer class="wiz-foot">
+        <label class="wbtn wbtn-back" for="step-5">
+          <Icon name="arrow-left-02" size={17} />
+          이전
+        </label>
+        <label class="wbtn wbtn-go" for="step-7">
+          다음
+          <Icon name="arrow-right-02" size={17} />
+        </label>
+      </footer>
+    </section>
+
+    <section class="wiz-screen" data-step="7">
+      <div class="wiz-body">
+        <p class="wiz-kicker">7 / {STEPS.length} 단계</p>
+        <h3 class="wiz-title">서버에 들어옵니다</h3>
+        <p class="wiz-lead">
+          캐릭터를 고르고 게임 참가 화면에서{" "}
+          <Hi text="서버 직접 연결" ui />{" "}을 누릅니다. 아래 주소와
+          비밀번호를 넣으면 됩니다. 이 서버는{" "}
+          <Hi text="공개 목록에 뜨지 않으니" tone="caution" /> 목록에서
+          찾지 마세요.
+        </p>
+
+        <div class="card code-card">
+          <CopyField label="주소" value={SERVER.address} mono />
+          <CopyField label="비밀번호" value={SERVER.password} masked />
+        </div>
+
+        <ul class="ticks ticks-big">
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>주소는 포트 번호까지 통째로 붙여넣습니다</span>
+          </li>
+          <li>
+            <Icon name="arrow-right-02" size={16} />
+            <span>비밀번호는 접속할 때마다 묻지 않습니다. 처음 한 번만 칩니다</span>
+          </li>
+        </ul>
+      </div>
+      <footer class="wiz-foot">
+        <label class="wbtn wbtn-back" for="step-6">
+          <Icon name="arrow-left-02" size={17} />
+          이전
+        </label>
+        <label class="wbtn wbtn-go" for="step-8">
+          다 했습니다
+          <Icon name="arrow-right-02" size={17} />
+        </label>
+      </footer>
+    </section>
+
+    <section class="wiz-screen wiz-done" data-step="8">
+      <div class="wiz-body">
+        <span class="wiz-seal" aria-hidden="true">
+          <Icon name="checkmark-circle-02" size={40} />
+        </span>
+        <p class="wiz-kicker wiz-kicker-done">모두 끝났습니다</p>
+        <h3 class="wiz-title">이제 서버에서 만나면 됩니다</h3>
+        <p class="wiz-lead">
+          다음부터는 r2modman 의 <Hi text="Start modded" ui />{" "}만 누르면
+          됩니다. 설치를 다시 할 일은 없습니다. 모드가 바뀌면 파일만 한 번
+          더 받으시면 됩니다.
+        </p>
+      </div>
+      <footer class="wiz-foot">
+        <label class="wbtn wbtn-back" for="step-7">
+          <Icon name="arrow-left-02" size={17} />
+          이전
+        </label>
+        <label class="wbtn wbtn-ghost" for="step-1">
+          <Icon name="arrow-reload-horizontal" size={16} />
+          처음부터 다시 보기
+        </label>
+      </footer>
+    </section>
+  </div>
+</div>
+
+{/*
+  막혔을 때 보는 곳.
+
+  여기 적은 것들은 지금까지 실제로 물어본 것들이다. 그동안
+  답이 설치 단계 여기저기에 흩어져 있어서, 막힌 사람이 8 단계를
+  처음부터 다시 훑어야 찾을 수 있었다.
+
+  전부 접어 둔다. 펼쳐 두면 "설치가 이렇게 어려운가" 로 읽힌다.
+  증상만 훑다가 자기 것을 찾으면 그것만 편다.
+*/}
+<section class="tsh">
+  <h2 class="tsh-h">
+    <Icon name="help-circle" size={19} />
+    막혔을 때
+  </h2>
+  <p class="tsh-lead">
+    증상을 찾아 펼쳐 보세요. 여기 없으면 그냥 물어보시면 됩니다.
+  </p>
+
+  {TROUBLES.map((t) => (
+    <details class="tsh-i">
+      <summary>
+        <span class="tsh-q">{t.q}</span>
+        <Icon name="arrow-down-01" size={16} class="tsh-chev" />
+      </summary>
+      <div class="tsh-a">
+        <p class="tsh-why"><strong>왜 그런가</strong> {t.why}</p>
+        <ol class="tsh-steps">
+          {t.fix.map((f) => <li>{f}</li>)}
+        </ol>
+      </div>
+    </details>
+  ))}
+</section>
+</div>

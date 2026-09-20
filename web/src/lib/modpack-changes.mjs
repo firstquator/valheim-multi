@@ -40,3 +40,36 @@ export function summarizeChanges(changes) {
     older: list.slice(1),
   };
 }
+
+/**
+ * 마지막으로 전원이 파일을 다시 받아야 했던 날.
+ *
+ * 최신 변경만 보면 안 된다. 어제 서버 설정만 고쳤다면 최신 변경은
+ * mustUpdate 가 아니지만, 그 전주에 모드를 추가했다면 아직 안 받은
+ * 사람은 여전히 받아야 한다.
+ *
+ * 목록은 맨 앞이 최신이라는 전제로 쓴다. 그 정렬은 mods-schema.mjs 가
+ * 빌드할 때 검사한다.
+ */
+export function lastRequiredDate(changes) {
+  const list = Array.isArray(changes) ? changes : [];
+  return list.find((c) => c?.mustUpdate === true)?.date ?? null;
+}
+
+/**
+ * 이 브라우저가 받아 둔 파일이 아직 쓸 만한가.
+ *
+ * 서버는 친구 PC 에 무엇이 깔려 있는지 알 수 없다. 그래서 "받기" 를
+ * 누른 날을 브라우저에 적어 두고 그것과 견준다. 서버가 알 필요가 없다.
+ *
+ * 날짜는 "2026-09-19" 꼴이라 문자열끼리 견줘도 순서가 맞는다.
+ *
+ * @param {string|null} gotDate 이 브라우저가 받은 파일의 기준 날짜
+ * @param {string|null} requiredDate 마지막으로 다시 받아야 했던 날
+ * @returns {"unknown"|"fresh"|"stale"} 받은 적 없음 / 최신 / 다시 받아야 함
+ */
+export function freshness(gotDate, requiredDate) {
+  if (!gotDate) return "unknown";
+  if (!requiredDate) return "fresh";
+  return gotDate >= requiredDate ? "fresh" : "stale";
+}

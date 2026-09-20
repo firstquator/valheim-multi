@@ -1,0 +1,103 @@
+/* 설치 가이드 아래의 "막혔을 때".
+ *
+ * 전부 접어 둔다. 펼쳐 두면 증상 여섯 개가 줄줄이 보여서 "설치가 이렇게
+ * 어려운가" 로 읽힌다. 증상만 훑다가 자기 것을 찾으면 그것만 편다.
+ *
+ * 색 리터럴을 두지 않는다. tokens.css 의 커스텀 속성만 쓴다. */
+
+.tsh {
+  margin-top: 28px;
+  padding: 30px 38px 26px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-panel);
+}
+.tsh-h {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+.tsh-h .icon { color: var(--accent); }
+.tsh-lead {
+  max-width: var(--measure);
+  margin: 8px 0 20px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+
+.tsh-i {
+  border-bottom: 1px solid var(--border);
+}
+.tsh-i:first-of-type { border-top: 1px solid var(--border); }
+
+/* summary 의 기본 삼각형은 크로미움에서 list-style 로, 사파리에서
+   ::-webkit-details-marker 로 지운다. 둘 다 적어야 양쪽에서 사라진다. */
+.tsh-i summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 2px;
+  list-style: none;
+  cursor: pointer;
+}
+.tsh-i summary::-webkit-details-marker { display: none; }
+.tsh-i summary:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+.tsh-q {
+  flex: 1;
+  min-width: 0;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--text);
+}
+.tsh-i summary:hover .tsh-q { color: var(--accent-bright); }
+.tsh-chev {
+  flex: none;
+  color: var(--text-faint);
+  transition: transform 200ms var(--ease-out);
+}
+.tsh-i[open] .tsh-chev { transform: rotate(180deg); }
+
+.tsh-a {
+  max-width: var(--measure);
+  padding: 0 2px 20px;
+}
+.tsh-why {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--text-dim);
+}
+.tsh-why strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+.tsh-steps {
+  margin: 14px 0 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+}
+.tsh-steps li {
+  font-size: 13.5px;
+  line-height: 1.75;
+  color: var(--text);
+}
+.tsh-steps li::marker { color: var(--accent); font-weight: 700; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tsh-chev { transition: none; }
+}

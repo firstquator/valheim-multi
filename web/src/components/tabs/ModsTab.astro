@@ -1,0 +1,112 @@
+---
+// 모드 탭. 무엇이 깔려 있고 누가 무엇을 설치해야 하는지.
+//
+// index.astro 가 <ModsTab slot="mods" /> 로 끼운다.
+
+import Callout from "../Callout.astro";
+import Icon from "../Icon.astro";
+import ModCard from "../ModCard.astro";
+import PageHead from "../PageHead.astro";
+import { modsData, needsAnyInstall, tier1, tier2, tier3 } from "../../lib/modpack-view.mjs";
+---
+
+<div>
+<PageHead
+  kicker="이 서버에 적용된 것"
+  title="모드"
+  icon="package-02"
+  desc="위에서부터 반드시 해야 하는 것, 하고 싶으면 하는 것, 신경 쓰지 않아도 되는 것 순서입니다."
+>
+  <div class="count-pills" slot="aside">
+    <span class="pill">
+      <Icon name="package-02" size={14} />
+      전체 {modsData.mods.length}개
+    </span>
+    <span class={`pill ${needsAnyInstall ? "pill-hot" : "pill-ok"}`}>
+      <Icon name={needsAnyInstall ? "download-04" : "checkmark-circle-02"} size={14} />
+      전원 필수 {tier3.length}개
+    </span>
+    {tier2.length > 0 && (
+      <span class="pill pill-pick">
+        <Icon name="puzzle" size={14} />
+        원하면 설치 {tier2.length}개
+      </span>
+    )}
+  </div>
+</PageHead>
+
+{needsAnyInstall ? (
+  <section class="group">
+    <div class="group-h">
+      <h2>
+        <Icon name="download-04" size={19} />
+        전원이 설치해야 하는 모드
+      </h2>
+      <p class="lead">
+        {tier3.length}개입니다. 하나라도 빠지면 접속할 수 없습니다.
+        설치 가이드 탭의 순서대로 하면 한 번에 끝납니다.
+      </p>
+    </div>
+
+    {/*
+      버전 경고와 인벤토리 충돌 경고를 여기 두지 않는다.
+      버전은 이제 프로필 파일이 맞춰 주므로 친구가 고를 일이 없고,
+      인벤토리 충돌은 data/mods.json 의 warnings 를 통해 해당 카드
+      안에 그대로 나온다. 같은 말을 두 번 하면 둘 다 안 읽힌다.
+    */}
+    <div class="grid">
+      {tier3.map((m) => <ModCard mod={m} />)}
+    </div>
+  </section>
+) : (
+  <section class="group">
+    <div class="group-h group-h-ok">
+      <h2>
+        <Icon name="checkmark-circle-02" size={19} />
+        직접 설치할 것은 없습니다
+      </h2>
+    </div>
+    <Callout title="지금은 아무것도 설치하지 않아도 됩니다" tone="success">
+      아래 모드는 전부 서버에만 깔려 있습니다. 그냥 발헤임을 켜고
+      접속하시면 됩니다. 설치가 필요한 모드가 생기면 이 자리에
+      카드로 올라옵니다.
+    </Callout>
+  </section>
+)}
+
+{tier2.length > 0 && (
+  <section class="group">
+    <div class="group-h group-h-pick">
+      <h2>
+        <Icon name="puzzle" size={19} />
+        원하는 사람만 설치하는 모드
+      </h2>
+      <p class="lead">
+        {tier2.length}개입니다. <strong>안 깔아도 접속에는 지장이 없습니다.</strong>{" "}
+        쓰고 싶은 것만 각자 골라 받으시면 됩니다. 사람마다 달라도 되고
+        버전도 맞출 필요가 없습니다.
+      </p>
+    </div>
+    <div class="grid">
+      {tier2.map((m) => <ModCard mod={m} />)}
+    </div>
+  </section>
+)}
+
+{tier1.length > 0 && (
+  <section class="group">
+    <div class="group-h group-h-ok">
+      <h2>
+        <Icon name="server-stack-01" size={19} />
+        서버에만 깔린 모드
+      </h2>
+      <p class="lead">
+        {tier1.length}개입니다. 접속하면 저절로 적용되니 읽고 넘기셔도 됩니다.
+      </p>
+    </div>
+    <div class="grid">
+      {tier1.map((m) => <ModCard mod={m} />)}
+    </div>
+  </section>
+)}
+</div>

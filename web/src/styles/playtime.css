@@ -1,0 +1,120 @@
+/* 접속 기록. 요일 x 시각 표와 사람별 플레이 시간.
+ *
+ * 색 리터럴을 두지 않는다. tokens.css 의 커스텀 속성과 color-mix() 만 쓴다. */
+
+.pt-wrap { margin-top: 28px; }
+.pt-wrap[hidden] { display: none; }
+
+.pt-lead {
+  max-width: var(--measure);
+  margin: 0 0 18px;
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+.pt-lead b { color: var(--accent-bright); font-weight: 700; }
+
+.heat {
+  padding: 20px 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+/* 맨 왼쪽은 요일 이름, 나머지 24 칸이 시각이다.
+   칸을 정사각형으로 두되 화면이 좁으면 같이 줄어든다. */
+.heat-grid {
+  display: grid;
+  grid-template-columns: 26px repeat(24, minmax(0, 1fr));
+  gap: 3px;
+  align-items: center;
+}
+.heat-corner { display: block; }
+.heat-hh {
+  font-size: 10px;
+  color: var(--text-faint);
+  text-align: left;
+  font-variant-numeric: tabular-nums;
+}
+.heat-d {
+  font-size: 11px;
+  color: var(--text-faint);
+  text-align: right;
+  padding-right: 4px;
+}
+.heat-c {
+  display: block;
+  aspect-ratio: 1;
+  border-radius: 3px;
+  background: var(--surface-raised);
+}
+/* 관측한 적 없는 칸과 0 명인 칸을 구분한다. 앞의 것은 아직 모르는
+   것이고 뒤의 것은 확인한 결과다. 같게 칠하면 서버를 켠 적 없는 새벽과
+   아무도 안 온 새벽이 똑같이 보인다. */
+.heat-c[data-lv="none"] {
+  background: none;
+  border: 1px dashed color-mix(in srgb, var(--border) 70%, transparent);
+}
+.heat-c[data-lv="0"] { background: var(--surface-raised); }
+.heat-c[data-lv="1"] { background: color-mix(in srgb, var(--accent) 22%, var(--surface-raised)); }
+.heat-c[data-lv="2"] { background: color-mix(in srgb, var(--accent) 45%, var(--surface-raised)); }
+.heat-c[data-lv="3"] { background: color-mix(in srgb, var(--accent) 70%, var(--surface-raised)); }
+.heat-c[data-lv="4"] { background: var(--accent-bright); }
+
+.heat-legend {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 16px;
+  font-size: 11px;
+  color: var(--text-faint);
+}
+.heat-legend .heat-c { width: 12px; height: 12px; aspect-ratio: auto; }
+
+.pt-h {
+  margin: 26px 0 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+}
+.pt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.pt-list li {
+  display: grid;
+  grid-template-columns: 110px 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+.pt-n {
+  font-size: 13.5px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pt-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  overflow: hidden;
+}
+.pt-bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent-deep), var(--accent));
+}
+.pt-v { font-size: 13px; font-weight: 700; color: var(--accent-bright); }
+.pt-empty { margin: 0; font-size: 13px; color: var(--text-faint); }
+
+.pt-foot {
+  margin: 18px 0 0;
+  font-size: 12px;
+  color: var(--text-faint);
+}

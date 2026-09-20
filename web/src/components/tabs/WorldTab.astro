@@ -1,0 +1,64 @@
+---
+// 월드 탭. 기본값과 다르게 둔 설정만 적는다.
+//
+// index.astro 가 <WorldTab slot="world" /> 로 끼운다.
+
+import Icon from "../Icon.astro";
+import PageHead from "../PageHead.astro";
+---
+
+<div>
+<PageHead
+  kicker="이 서버의 규칙"
+  title="월드"
+  icon="globe-02"
+  desc="기본값과 다른 부분만 적었습니다. 적지 않은 것은 발헤임 기본 설정 그대로입니다."
+/>
+
+<div class="spec-grid">
+  <article class="spec">
+    <span class="spec-ico" aria-hidden="true"><Icon name="map-pinpoint-01" size={20} /></span>
+    <p class="spec-k">월드 이름</p>
+    <p class="spec-v mono">gaybar</p>
+    <p class="spec-n">접속하면 이 월드로 들어옵니다</p>
+  </article>
+
+  <article class="spec spec-hard">
+    <span class="spec-ico" aria-hidden="true"><Icon name="sword-01" size={20} /></span>
+    <p class="spec-k">전투</p>
+    <p class="spec-v">어렵게</p>
+    <p class="spec-n">적 피해 150%, 적 속도와 크기 110%</p>
+  </article>
+
+  <article class="spec spec-soft">
+    <span class="spec-ico" aria-hidden="true"><Icon name="shield-01" size={20} /></span>
+    <p class="spec-k">사망 페널티</p>
+    <p class="spec-v">가볍게</p>
+    <p class="spec-n">장비를 그대로 들고 있고 스킬만 15% 잃습니다</p>
+  </article>
+
+  <article class="spec">
+    <span class="spec-ico" aria-hidden="true"><Icon name="gem" size={20} /></span>
+    <p class="spec-k">자원</p>
+    {/* 손으로 적어 두었더니 두 번 어긋났다. 2배로 올릴 때도,
+        3배로 올릴 때도 화면은 150% 인 채였다. 서버가 상태에
+        실어 보내는 값을 그대로 쓴다. */}
+    <p class="spec-v" id="resource-rate">확인 중</p>
+    <p class="spec-n">채집과 전리품이 기본보다 넉넉합니다</p>
+  </article>
+
+  <article class="spec spec-soft">
+    <span class="spec-ico" aria-hidden="true"><Icon name="connect" size={20} /></span>
+    <p class="spec-k">포탈</p>
+    <p class="spec-v">모든 아이템 이동 가능</p>
+    <p class="spec-n">금속도 옮길 수 있습니다. 배로 나를 필요가 없습니다</p>
+  </article>
+
+  <article class="spec">
+    <span class="spec-ico" aria-hidden="true"><Icon name="database-02" size={20} /></span>
+    <p class="spec-k">백업</p>
+    <p class="spec-v num spec-v-sm" id="backup-at">확인 중</p>
+    <p class="spec-n">6시간마다 자동으로 저장됩니다. 사고가 나도 되돌릴 수 있습니다</p>
+  </article>
+</div>
+</div>

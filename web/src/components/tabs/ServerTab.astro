@@ -1,0 +1,193 @@
+---
+// 서버 탭. 주소와 비밀번호, 지금 상태, 모드팩 갱신 알림, 접속 기록.
+//
+// index.astro 가 <ServerTab slot="server" /> 로 끼운다.
+
+import Callout from "../Callout.astro";
+import CopyField from "../CopyField.astro";
+import Icon from "../Icon.astro";
+import PageHead from "../PageHead.astro";
+import { SERVER } from "../../config.mjs";
+import { formatChangeDate } from "../../lib/modpack-changes.mjs";
+import { latestChange, mustUpdate, olderChanges, requiredDate } from "../../lib/modpack-view.mjs";
+---
+
+<div>
+<PageHead
+  kicker="발헤임 전용 서버"
+  title="gaybar"
+  icon="home-01"
+  desc="주소와 비밀번호만 있으면 들어올 수 있습니다. 설치할 모드가 있는지는 모드 탭에서 확인하세요."
+>
+  <div class="status-pill" slot="aside">
+    <p class="badge" id="status-badge" data-state="unknown" aria-live="polite" aria-atomic="true">상태 확인 중</p>
+    <p class="age" id="status-age"></p>
+  </div>
+</PageHead>
+
+<div class="cols cols-wide">
+  <section class="block">
+    {/*
+      모드팩이 바뀌었는지 알리는 자리다. 접속 정보보다 위에 둔다.
+      버전이 어긋나면 주소와 비밀번호가 맞아도 들어오지 못하므로
+      순서상 이쪽이 먼저다.
+
+      이력이 없으면 통째로 감춘다. 한 번도 갱신하지 않았다면
+      알릴 것이 없고, 빈 카드는 읽을거리만 늘린다.
+    */}
+    {latestChange && (
+      <div class="upd" data-hot={mustUpdate}>
+        <h2 class="block-h">
+          <Icon name="system-update-01" size={17} />
+          모드팩 갱신
+        </h2>
+
+        <div class="card upd-card">
+          <p class="upd-verdict">
+            <Icon name={mustUpdate ? "alert-diamond" : "checkmark-circle-02"} size={18} />
+            {mustUpdate
+              ? "파일을 다시 받아야 합니다"
+              : "다시 받지 않아도 됩니다"}
+          </p>
+
+          <p class="upd-sum">{latestChange.summary}</p>
+
+          <p class="upd-when">
+            <Icon name="clock-01" size={15} />
+            <span>
+              {/* time 태그와 조사 "에" 사이에 줄바꿈을 두면 JSX 가
+                  그것을 공백으로 바꿔 "19일 에" 로 렌더된다.
+                  조사는 앞말에 붙어야 하므로 한 줄로 쓴다. */}
+              <time datetime={latestChange.date}>{formatChangeDate(latestChange.date)}</time>에 바뀌었습니다.{" "}
+              {mustUpdate
+                ? "그 전에 프로필을 받으셨다면 지금 다시 받으세요."
+                : "이 변경은 서버에서만 처리되어 친구들이 할 일은 없습니다."}
+            </span>
+          </p>
+
+          {/*
+            여기부터는 보는 사람마다 다른 문장이다.
+
+            서버는 친구 PC 에 무엇이 깔려 있는지 알 수 없다.
+            그래서 오랫동안 "바뀌었으니 각자 판단하세요" 라고만
+            적어 두었는데, 받기 단추를 누른 날을 브라우저에
+            적어 두면 그 판단을 대신해 줄 수 있다. 아무것도
+            서버로 가지 않는다.
+
+            자바스크립트가 꺼져 있으면 이 줄은 숨은 채로 남고
+            위의 일반 안내만 보인다.
+          */}
+          <p
+            class="upd-you"
+            id="upd-you"
+            hidden
+            data-latest={latestChange.date}
+            data-required={requiredDate ?? ""}
+          ></p>
+
+          {mustUpdate && (
+            <label class="upd-go" for="tab-install">
+              업데이트하는 방법 보기
+              <Icon name="arrow-right-02" size={17} />
+            </label>
+          )}
+
+          {/*
+            지난 이력은 접어 둔다. 지금 무엇을 해야 하는지가
+            먼저고, 옛날 기록은 궁금한 사람만 편다.
+          */}
+          {olderChanges.length > 0 && (
+            <details class="upd-log">
+              <summary>지난 변경 {olderChanges.length}건</summary>
+              <ul>
+                {olderChanges.map((c) => (
+                  <li>
+                    <time datetime={c.date}>{formatChangeDate(c.date)}</time>
+                    <span>{c.summary}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </div>
+      </div>
+    )}
+
+    <h2 class="block-h">
+      <Icon name="key-01" size={17} />
+      접속 정보
+    </h2>
+    <div class="card card-lead">
+      <CopyField label="주소" value={SERVER.address} mono id="server-address" />
+      <CopyField label="비밀번호" value={SERVER.password} masked />
+    </div>
+  </section>
+
+  <aside class="block">
+    <h2 class="block-h">
+      <Icon name="user-group" size={17} />
+      지금 서버
+    </h2>
+
+    <div class="card side-card">
+      <div class="side-row" id="player-wrap">
+        <span class="side-k">접속 중</span>
+        <p class="side-v" id="player-list" hidden></p>
+      </div>
+      <div class="side-row">
+        <span class="side-k">게임 버전</span>
+        <span class="side-v num" id="game-version">확인 중</span>
+        <span class="side-note">클라이언트도 같은 버전이어야 접속됩니다</span>
+      </div>
+      <div class="side-row">
+        <span class="side-k">월드</span>
+        <span class="side-v mono">gaybar</span>
+        <span class="side-note">설정은 월드 탭에 적어 두었습니다</span>
+      </div>
+    </div>
+
+    <Callout title="상태 표시가 늦을 수 있습니다" tone="info">
+      서버 PC 가 1분에 한 번 상태를 올립니다. 방금 켰다면 잠시 뒤
+      다시 보세요.
+    </Callout>
+  </aside>
+</div>
+
+{/*
+  접속 기록.
+
+  위 상태 뱃지는 "지금 몇 명" 만 알려 준다. 아무도 없을 때
+  "그럼 언제 오나" 는 알 수 없어서, 결국 하루에 몇 번씩 새로고침을
+  하게 된다. 로그에서 뽑은 접속자를 버리지 않고 시간 단위로 모으면
+  그 답이 나온다.
+
+  기록이 아직 없으면(서버를 막 세웠거나 수집기를 안 켰으면)
+  자바스크립트가 이 구역을 통째로 감춘다. 회색 격자만 덩그러니
+  보여 주는 것은 설명이 되지 않는다.
+*/}
+<section class="block pt-wrap" id="pt-wrap" hidden>
+  <h2 class="block-h">
+    <Icon name="chart-histogram" size={17} />
+    언제 모이나
+  </h2>
+  <p class="pt-lead" id="heat-lead">기록을 불러오는 중입니다.</p>
+
+  <div class="heat">
+    <div class="heat-grid" id="heat-grid"></div>
+    <div class="heat-legend">
+      <span>적음</span>
+      <span class="heat-c" data-lv="0"></span>
+      <span class="heat-c" data-lv="1"></span>
+      <span class="heat-c" data-lv="2"></span>
+      <span class="heat-c" data-lv="3"></span>
+      <span class="heat-c" data-lv="4"></span>
+      <span>많음</span>
+    </div>
+  </div>
+
+  <h3 class="pt-h">최근 이레</h3>
+  <ul class="pt-list" id="pt-list"></ul>
+
+  <p class="pt-foot" id="heat-foot"></p>
+</section>
+</div>

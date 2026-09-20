@@ -1,4 +1,42 @@
 import { describe, it, expect } from "vitest";
+import { lastRequiredDate, freshness } from "../src/lib/modpack-changes.mjs";
+
+describe("이 브라우저가 파일을 다시 받아야 하는가", () => {
+  const changes = [
+    { date: "2026-09-20", summary: "서버 설정만 고침" },
+    { date: "2026-09-15", summary: "모드 추가", mustUpdate: true },
+    { date: "2026-09-01", summary: "처음", mustUpdate: true },
+  ];
+
+  it("최신 변경이 아니라 마지막으로 다시 받아야 했던 날을 본다", () => {
+    // 어제 서버 설정만 고쳤어도, 그 전주에 모드를 추가했다면
+    // 아직 안 받은 사람은 여전히 받아야 한다.
+    expect(lastRequiredDate(changes)).toBe("2026-09-15");
+  });
+
+  it("다시 받을 일이 한 번도 없었으면 null", () => {
+    expect(lastRequiredDate([{ date: "2026-09-20" }])).toBe(null);
+    expect(lastRequiredDate([])).toBe(null);
+    expect(lastRequiredDate(null)).toBe(null);
+  });
+
+  it("받은 적이 없으면 단정하지 않는다", () => {
+    expect(freshness(null, "2026-09-15")).toBe("unknown");
+  });
+
+  it("받은 날이 기준일보다 뒤면 최신이다", () => {
+    expect(freshness("2026-09-15", "2026-09-15")).toBe("fresh");
+    expect(freshness("2026-09-16", "2026-09-15")).toBe("fresh");
+  });
+
+  it("받은 날이 기준일보다 앞이면 다시 받아야 한다", () => {
+    expect(freshness("2026-09-14", "2026-09-15")).toBe("stale");
+  });
+
+  it("다시 받을 일이 없었으면 언제 받았든 최신이다", () => {
+    expect(freshness("2020-01-01", null)).toBe("fresh");
+  });
+});
 import { validateMods } from "../src/lib/mods-schema.mjs";
 
 const valid = {

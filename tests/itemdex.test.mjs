@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import {
   filterItems, matchesQuery, groupOf, damageList, GROUPS,
   statCaps, combatDamage, damagesOf, materialAmountAt, armorAt, maxima, usedByIndex,
+  craftCost, craftTree, flattenRaw, expandCost, sortItems, SORTS, upgradeTotals,
 } from "../web/src/lib/itemdex.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -248,6 +249,53 @@ describe("수치 해석", () => {
     expect(m.damage.slash).toBeGreaterThan(0);
   });
 
+  it("원자재까지 펼친다", () => {
+    // 도감은 "흑철 80" 까지만 알려 준다. 원정 전에 궁금한 것은
+    // "그래서 고철을 몇 개 캐 와야 하나" 다.
+    const sword = get("SwordBlackmetal");
+    const { raw } = expandCost(byId, craftCost(sword, { maxed: true }));
+    const ko = Object.fromEntries([...raw].map(([k, v]) => [byId.get(k).ko, v]));
+    expect(ko["흑철 고철"]).toBe(80);
+    expect(ko["아마 섬유"]).toBe(35);
+    // 중간 단계인 흑철과 아마포 실은 남아 있으면 안 된다. 그건 만드는 것이다.
+    expect(ko["흑철"]).toBeUndefined();
+    expect(ko["아마포 실"]).toBeUndefined();
+  });
+
+  it("한 번에 여러 개가 나오는 것은 횟수를 올림한다", () => {
+    // 청동은 한 번에 5 개가 나온다. 7 개가 필요하면 두 번 돌려야 하므로
+    // 구리 20, 주석 10 이 든다. 내림하면 재료가 모자란 표가 나간다.
+    const { raw } = expandCost(byId, new Map([["Bronze", 7]]));
+    const ko = Object.fromEntries([...raw].map(([k, v]) => [byId.get(k).ko, v]));
+    expect(ko["구리 광석"]).toBe(20);
+    expect(ko["주석 광석"]).toBe(10);
+  });
+
+  it("펼치기가 변환도 따라간다", () => {
+    // 철은 레시피가 없고 용광로 변환으로만 나온다. 여기서 끊기면
+    // 철이 원자재로 잡혀 "광석을 캐야 한다" 는 사실이 사라진다.
+    const { raw } = expandCost(byId, new Map([["Iron", 20]]));
+    expect(raw.get("IronOre")).toBe(20);
+    expect(raw.has("Iron")).toBe(false);
+  });
+
+  it("강화까지 칠지 고를 수 있다", () => {
+    const chest = get("ArmorIronChest");
+    expect(craftCost(chest, { maxed: false }).get("Iron")).toBe(20);
+    expect(craftCost(chest, { maxed: true }).get("Iron")).toBe(50);
+  });
+
+  it("조합법이 돌고 돌아도 멈춘다", () => {
+    // 지금 데이터에는 없지만 모드가 하나 들어오면 생길 수 있다.
+    // 그때 화면이 멈추는 대신 그 재료를 원자재로 취급하면 그만이다.
+    const loop = new Map([
+      ["A", { id: "A", ko: "A", recipe: { amount: 1, materials: [{ item: "B", amount: 1 }] } }],
+      ["B", { id: "B", ko: "B", recipe: { amount: 1, materials: [{ item: "A", amount: 1 }] } }],
+    ]);
+    const tree = craftTree(loop, "A", 1);
+    expect(flattenRaw(tree).get("A")).toBe(1);
+  });
+
   it("거꾸로 된 목록이 재료에서 결과물을 찾아 준다", () => {
     const used = usedByIndex(db.items);
     const wood = used.get("Wood") ?? [];
@@ -257,5 +305,46 @@ describe("수치 해석", () => {
     // 변환도 들어가야 한다. 날고기를 구우면 구운 고기가 된다.
     const raw = used.get("RawMeat") ?? [];
     expect(raw.some((u) => u.id === "CookedMeat" && u.via === "conversion")).toBe(true);
+  });
+});
+
+describe("정렬", () => {
+  it("기준마다 큰 것과 작은 것 중 쓸모 있는 쪽을 앞에 둔다", () => {
+    const byDamage = sortItems(db.items, "damage");
+    const byArmor = sortItems(db.items, "armor");
+    const byWeight = sortItems(db.items, "weight");
+    // 공격력과 방어력은 센 것부터, 무게는 가벼운 것부터가 쓸모 있다.
+    expect(combatDamage(byDamage[0])).toBeGreaterThan(combatDamage(byDamage[500]));
+    expect(byArmor[0].armor).toBeGreaterThan(0);
+    expect(byWeight[0].weight).toBeLessThanOrEqual(byWeight[500].weight);
+  });
+
+  it("값이 같으면 이름으로 가른다. 아니면 순서가 들쭉날쭉해 보인다", () => {
+    // 공격력 0 인 것이 수백 개다. 2 차 기준이 없으면 같은 조건인데도
+    // 다시 그릴 때마다 줄이 바뀌는 것처럼 보인다.
+    const sorted = sortItems(db.items, "damage");
+    const zeros = sorted.filter((i) => combatDamage(i) === 0).slice(0, 20).map((i) => i.ko);
+    expect(zeros).toEqual([...zeros].sort((a, b) => a.localeCompare(b, "ko")));
+  });
+
+  it("단계가 없는 것은 맨 뒤로 보낸다", () => {
+    const sorted = sortItems(db.items, "stage");
+    expect(sorted[0].stage).toBe(0);
+    expect(sorted[sorted.length - 1].stage).toBe(null);
+  });
+
+  it("원본 배열을 건드리지 않는다", () => {
+    const before = db.items.map((i) => i.id);
+    sortItems(db.items, "damage");
+    expect(db.items.map((i) => i.id)).toEqual(before);
+  });
+
+  it("모르는 기준은 이름순으로 떨어진다", () => {
+    expect(sortItems(db.items, "없는기준")[0].ko)
+      .toBe(sortItems(db.items, "name")[0].ko);
+  });
+
+  it("정렬 목록의 id 가 모두 다르다", () => {
+    expect(new Set(SORTS.map((s) => s.id)).size).toBe(SORTS.length);
   });
 });
